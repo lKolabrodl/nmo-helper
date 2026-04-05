@@ -23,6 +23,8 @@ Tampermonkey-скрипт для автоподсветки правильных
 
 Перейди в [Chrome Web Store](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) и установи расширение.
 
+<video src="demo/step_1.mp4" controls width="600"></video>
+
 ### 2. Включить режим разработчика
 
 Tampermonkey требует включённый режим разработчика в Chrome для корректной работы:
@@ -43,6 +45,8 @@ Tampermonkey требует включённый режим разработчи
 
 
 6. Перезапусти браузер
+ 
+<video src="demo/step_2.mp4" controls width="600"></video>
 
 ### 3. Установить скрипт
 1. Кликни на иконку Tampermonkey → **Создать новый скрипт**
@@ -72,6 +76,8 @@ Tampermonkey требует включённый режим разработчи
 9. Нажми **▶ Запуск**
 
 Скрипт будет автоматически подсвечивать правильные ответы красным цветом при переходе между вопросами.
+
+<video src="demo/step_3.mp4" controls width="600"></video>
 
 ### Статусы панели
 
