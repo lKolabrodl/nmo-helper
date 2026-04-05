@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NMO Helper
 // @namespace    https://github.com/lKolabrodl/nmo-helper
-// @version      1.2
+// @version      1.3
 // @description  Автоподсветка правильных ответов на тестах НМО
 // @author       lKolabrodl
 // @homepageURL  https://github.com/lKolabrodl/nmo-helper
