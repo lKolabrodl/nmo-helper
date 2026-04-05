@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NMO Helper
 // @namespace    https://github.com/lKolabrodl/nmo-helper
-// @version      1.4
+// @version      1.4.1
 // @description  Автоподсветка правильных ответов на тестах НМО
 // @author       lKolabrodl
 // @homepageURL  https://github.com/lKolabrodl/nmo-helper
@@ -290,13 +290,17 @@
     // СОЗДАНИЕ ПАНЕЛИ
     // ========================
     const savedUrl = GM_getValue('customUrl', '');
+    const savedCollapsed = GM_getValue('panelCollapsed', false);
+    const savedLeft = GM_getValue('panelLeft', null);
+    const savedTop = GM_getValue('panelTop', null);
 
     const panel = document.createElement('div');
     panel.id = 'nmo-panel';
+    if (savedCollapsed) panel.classList.add('collapsed');
     panel.innerHTML = `
         <div class="nmo-header">
             <span class="nmo-header-title">NMO Helper</span>
-            <button class="nmo-toggle-btn" id="nmo-collapse" title="Свернуть">—</button>
+            <button class="nmo-toggle-btn" id="nmo-collapse" title="Свернуть">${savedCollapsed ? '+' : '—'}</button>
         </div>
         <div class="nmo-body">
             <div class="nmo-field">
@@ -321,6 +325,13 @@
         </div>
     `;
     document.body.appendChild(panel);
+
+    // Восстановление позиции
+    if (savedLeft !== null && savedTop !== null) {
+        panel.style.left = savedLeft + 'px';
+        panel.style.top = savedTop + 'px';
+        panel.style.right = 'auto';
+    }
 
     // ========================
     // DRAG
@@ -348,13 +359,18 @@
         if (isDragging) {
             isDragging = false;
             panel.style.willChange = '';
+            const rect = panel.getBoundingClientRect();
+            GM_setValue('panelLeft', rect.left);
+            GM_setValue('panelTop', rect.top);
         }
     });
 
     // Сворачивание
     document.getElementById('nmo-collapse').addEventListener('click', () => {
         panel.classList.toggle('collapsed');
-        document.getElementById('nmo-collapse').textContent = panel.classList.contains('collapsed') ? '+' : '—';
+        const isCollapsed = panel.classList.contains('collapsed');
+        document.getElementById('nmo-collapse').textContent = isCollapsed ? '+' : '—';
+        GM_setValue('panelCollapsed', isCollapsed);
     });
 
     // Сохранение настроек
