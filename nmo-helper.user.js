@@ -515,14 +515,14 @@
             });
         });
 
-        exact.forEach(el => { if (el.style.color !== 'red') el.style.color = 'red'; });
+        exact.forEach(el => { if (el.style.color !== '#4ecca3') el.style.color = '#4ecca3'; });
         if (exact.length) return;
 
         allVariant.forEach(el => {
             const variant = el.innerText;
             answers.forEach(ans => {
                 if (ans.includes(variant) || variant.includes(ans)) {
-                    if (el.style.color !== 'red') el.style.color = 'red';
+                    if (el.style.color !== '#4ecca3') el.style.color = '#4ecca3';
                 }
             });
         });
@@ -788,7 +788,7 @@
                             });
                         });
 
-                        exact.forEach(el => { if (el.style.color !== 'red') el.style.color = 'red'; });
+                        exact.forEach(el => { if (el.style.color !== '#4ecca3') el.style.color = '#4ecca3'; });
                         if (exact.length) found = true;
 
                         // нечёткое — но только по границе слова
@@ -810,7 +810,7 @@
                                     const isEndBoundary = /[\s,;.\-—():]/.test(charAfter) || (idx + shorter.length === longer.length);
 
                                     if (isBoundary && isEndBoundary) {
-                                        if (el.style.color !== 'red') el.style.color = 'red';
+                                        if (el.style.color !== '#4ecca3') el.style.color = '#4ecca3';
                                         found = true;
                                     }
                                 });
