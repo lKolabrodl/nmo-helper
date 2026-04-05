@@ -106,7 +106,7 @@ Tampermonkey требует включённый режим разработчи
 
 Если скрипт оказался полезен, можете поддержать разработку:
 
-**[Boosty](https://boosty.to/kolabrod/donate)**
+[![Support on Boosty](https://img.shields.io/badge/Boosty-Support-orange?style=for-the-badge)](https://boosty.to/kolabrod/donate)
 
 ## Лицензия
 
