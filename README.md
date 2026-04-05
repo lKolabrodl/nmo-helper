@@ -1,4 +1,4 @@
-# NMO Helper v1.4.1
+# NMO Helper v1.4.2
 
 Tampermonkey-скрипт для помощи в прохождении тестов НМО.
 </br>
