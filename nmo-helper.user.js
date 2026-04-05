@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NMO Helper
 // @namespace    https://github.com/lKolabrodl/nmo-helper
-// @version      1.3
+// @version      1.4
 // @description  Автоподсветка правильных ответов на тестах НМО
 // @author       lKolabrodl
 // @homepageURL  https://github.com/lKolabrodl/nmo-helper
@@ -184,12 +184,111 @@
         .nmo-btn-row .nmo-btn {
             flex: 1;
         }
+
+        /* --- Секция автопоиска --- */
+        .nmo-separator {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            margin: 4px 0;
+        }
+
+        .nmo-beta-badge {
+            display: inline-block;
+            background: #f0a040;
+            color: #1a1a2e;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 1px 5px;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+            letter-spacing: 0.5px;
+        }
+
+        .nmo-btn-search {
+            background: linear-gradient(135deg, #4ecca3, #36b08a);
+            color: #fff;
+        }
+
+        .nmo-btn-search:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(78,204,163,0.4);
+        }
+
+        .nmo-btn-search:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .nmo-search-results {
+            max-height: 150px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nmo-search-results::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .nmo-search-results::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 2px;
+        }
+
+        .nmo-result-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1.3;
+            transition: all 0.15s;
+        }
+
+        .nmo-result-item:hover {
+            background: rgba(78,204,163,0.1);
+            border-color: rgba(78,204,163,0.3);
+        }
+
+        .nmo-result-src {
+            flex-shrink: 0;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .nmo-result-src.src-24 {
+            background: #2d6a9f;
+            color: #fff;
+        }
+
+        .nmo-result-src.src-ros {
+            background: #9f2d6a;
+            color: #fff;
+        }
+
+        .nmo-result-title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
     `);
 
     // ========================
     // СОЗДАНИЕ ПАНЕЛИ
     // ========================
-    const savedSource = GM_getValue('activeSource', 'rosmedicinfo');
     const savedUrl = GM_getValue('customUrl', '');
 
     const panel = document.createElement('div');
@@ -201,12 +300,15 @@
         </div>
         <div class="nmo-body">
             <div class="nmo-field">
-                <label>Источник</label>
-                <select id="nmo-source">
-                    <option value="rosmedicinfo" ${savedSource === 'rosmedicinfo' ? 'selected' : ''}>rosmedicinfo.ru</option>
-                    <option value="24forcare" ${savedSource === '24forcare' ? 'selected' : ''}>24forcare.com</option>
-                </select>
+                <label>Автопоиск <span class="nmo-beta-badge">BETA</span></label>
+                <input type="text" id="nmo-search-query" placeholder="Название теста..." />
             </div>
+            <button class="nmo-btn nmo-btn-search" id="nmo-search-btn">🔍 Найти ответы</button>
+            <div class="nmo-status" id="nmo-search-status"></div>
+            <div class="nmo-search-results" id="nmo-search-results" style="display:none"></div>
+
+            <hr class="nmo-separator">
+
             <div class="nmo-field">
                 <label>URL страницы с ответами</label>
                 <input type="text" id="nmo-url" placeholder="https://..." value="${savedUrl}" />
@@ -256,7 +358,6 @@
     });
 
     // Сохранение настроек
-    document.getElementById('nmo-source').addEventListener('change', e => GM_setValue('activeSource', e.target.value));
     document.getElementById('nmo-url').addEventListener('change', e => GM_setValue('customUrl', e.target.value.trim()));
 
     // ========================
@@ -264,6 +365,12 @@
     // ========================
     const status = (msg, cls = '') => {
         const el = document.getElementById('nmo-status');
+        el.textContent = msg;
+        el.className = 'nmo-status ' + cls;
+    };
+
+    const searchStatus = (msg, cls = '') => {
+        const el = document.getElementById('nmo-search-status');
         el.textContent = msg;
         el.className = 'nmo-status ' + cls;
     };
@@ -406,6 +513,130 @@
     }
 
     // ========================
+    // АВТОПОИСК (BETA)
+    // ========================
+    const searchBtn = document.getElementById('nmo-search-btn');
+    const searchResultsContainer = document.getElementById('nmo-search-results');
+
+    searchBtn.addEventListener('click', () => {
+        const query = document.getElementById('nmo-search-query').value.trim();
+        if (!query) {
+            searchStatus('введите название теста', 'err');
+            return;
+        }
+
+        searchStatus('ищу на обоих сайтах...', 'loading');
+        searchBtn.disabled = true;
+        searchResultsContainer.style.display = 'none';
+        searchResultsContainer.innerHTML = '';
+
+        const allResults = [];
+        let completed = 0;
+        const totalRequests = 2;
+
+        function checkDone() {
+            completed++;
+            if (completed < totalRequests) return;
+
+            searchBtn.disabled = false;
+
+            if (allResults.length === 0) {
+                searchStatus('ничего не найдено :(', 'warn');
+                return;
+            }
+
+            searchStatus(`найдено ${allResults.length} результат(ов)`, 'ok');
+            searchResultsContainer.style.display = 'flex';
+
+            allResults.forEach(r => {
+                const item = document.createElement('div');
+                item.className = 'nmo-result-item';
+                item.innerHTML = `
+                    <span class="nmo-result-src ${r.source === '24forcare' ? 'src-24' : 'src-ros'}">${r.source === '24forcare' ? '24fc' : 'rosmed'}</span>
+                    <span class="nmo-result-title">${r.title}</span>
+                `;
+                item.addEventListener('click', () => {
+                    document.getElementById('nmo-url').value = r.url;
+                    GM_setValue('customUrl', r.url);
+
+                    searchStatus(`выбрано • ${r.source}`, 'ok');
+                    searchResultsContainer.style.display = 'none';
+                });
+                searchResultsContainer.appendChild(item);
+            });
+        }
+
+        // --- Поиск на 24forcare.com (GET) ---
+        GM_xmlhttpRequest({
+            method: 'GET',
+            url: 'https://24forcare.com/search/?query=' + encodeURIComponent(query),
+            timeout: 15000,
+            onload: function (response) {
+                try {
+                    const div = document.createElement('div');
+                    div.innerHTML = response.responseText;
+
+                    const links = Array.from(div.querySelectorAll('a.item-name'));
+                    links.forEach(a => {
+                        const href = a.getAttribute('href') || '';
+                        const title = (a.textContent || '').trim();
+                        if (!href || !title) return;
+
+                        const fullUrl = href.startsWith('http') ? href : 'https://24forcare.com/' + href.replace(/^\//, '');
+                        allResults.push({ source: '24forcare', title, url: fullUrl });
+                    });
+                } catch (e) {
+                    console.error('24forcare search parse error:', e);
+                }
+                checkDone();
+            },
+            onerror: () => checkDone(),
+            ontimeout: () => checkDone(),
+        });
+
+        // --- Поиск на rosmedicinfo.ru (POST) ---
+        GM_xmlhttpRequest({
+            method: 'POST',
+            url: 'https://rosmedicinfo.ru/',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Origin': 'https://rosmedicinfo.ru',
+                'Referer': 'https://rosmedicinfo.ru/',
+            },
+            data: 'do=search&subaction=search&story=' + encodeURIComponent(query),
+            timeout: 15000,
+            onload: function (response) {
+                try {
+                    const div = document.createElement('div');
+                    div.innerHTML = response.responseText;
+
+                    const titles = Array.from(div.querySelectorAll('.short__title a'));
+                    titles.forEach(a => {
+                        const href = a.getAttribute('href') || '';
+                        const title = (a.textContent || '').trim();
+                        if (!href || !title) return;
+
+                        allResults.push({ source: 'rosmedicinfo', title, url: href });
+                    });
+                } catch (e) {
+                    console.error('rosmedicinfo search parse error:', e);
+                }
+                checkDone();
+            },
+            onerror: () => checkDone(),
+            ontimeout: () => checkDone(),
+        });
+    });
+
+    // Enter в поле поиска
+    document.getElementById('nmo-search-query').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            searchBtn.click();
+        }
+    });
+
+    // ========================
     // ЗАПУСК / СТОП
     // ========================
     let intervalId = null;
@@ -413,16 +644,15 @@
     const runBtn = document.getElementById('nmo-run');
     const stopBtn = document.getElementById('nmo-stop');
 
+    function detectSource(url) {
+        if (url.includes('24forcare.com')) return '24forcare';
+        if (url.includes('rosmedicinfo.ru')) return 'rosmedicinfo';
+        return null;
+    }
+
     runBtn.addEventListener('click', () => {
-        const activeSource = document.getElementById('nmo-source').value;
         const customUrl = document.getElementById('nmo-url').value.trim();
         const urlInput = document.getElementById('nmo-url');
-        const source = SOURCES[activeSource];
-
-        if (!source) {
-            status('неизвестный источник', 'err');
-            return;
-        }
 
         // Валидация URL
         if (!customUrl) {
@@ -443,9 +673,19 @@
             return;
         }
 
+        const activeSource = detectSource(customUrl);
+        const source = SOURCES[activeSource];
+
+        if (!source) {
+            urlInput.classList.add('input-error');
+            status('URL не от rosmedicinfo.ru или 24forcare.com', 'err');
+            setTimeout(() => urlInput.classList.remove('input-error'), 600);
+            urlInput.focus();
+            return;
+        }
+
         const url = customUrl;
 
-        GM_setValue('activeSource', activeSource);
         GM_setValue('customUrl', customUrl);
 
         status('загружаю ответы...', 'loading');
