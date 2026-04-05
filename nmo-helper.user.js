@@ -1,8 +1,12 @@
 // ==UserScript==
 // @name         NMO Helper
-// @namespace    http://tampermonkey.net/
-// @version      1.0
+// @namespace    https://github.com/lKolabrodl/nmo-helper
+// @version      1.2
 // @description  Автоподсветка правильных ответов на тестах НМО
+// @author       lKolabrodl
+// @homepageURL  https://github.com/lKolabrodl/nmo-helper
+// @updateURL    https://raw.githubusercontent.com/lKolabrodl/nmo-helper/main/nmo-helper.user.js
+// @downloadURL  https://raw.githubusercontent.com/lKolabrodl/nmo-helper/main/nmo-helper.user.js
 // @match        https://edu.rosminzdrav.ru/*
 // @match        https://*.edu.rosminzdrav.ru/*
 // @grant        GM_xmlhttpRequest
