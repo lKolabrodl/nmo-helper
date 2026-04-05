@@ -65,6 +65,12 @@
 | ответ не совпал с вариантами | 🟠 оранжевый | ответ найден, но не совпадает с вариантами |
 | ошибка сети | 🔴 красный   | не удалось загрузить страницу с ответами |
 
+## Безопасность
+
+Расширение проверено на вирусы через VirusTotal:
+
+[![VirusTotal Scan](https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=for-the-badge&logo=virustotal)](https://www.virustotal.com/gui/file/c635f23e799c417d2ca43f5635d468b476aaecf04d5ccf15be1cf452b6f5abf0?nocache=1)
+
 ## Поддержать проект
 
 Если расширение оказалось полезным, можете поддержать разработку:
