@@ -53,6 +53,7 @@ Tampermonkey требует включённый режим разработчи
 2. Удали всё содержимое и вставь код из `nmo-helper.user.js`
 3. Нажми `Ctrl + S` для сохранения
 
+![demo](demo/step_2-5.gif)
 
 ![Скрипт](screenshots/script-on.png)
 
