@@ -42,7 +42,7 @@
         "softwareVersion": "2.0.0",
         "license": "https://opensource.org/licenses/MIT",
         "isAccessibleForFree": true,
-        "downloadUrl": "https://github.com/lKolabrodl/nmo-helper/archive/refs/heads/main.zip",
+        "downloadUrl": "https://github.com/lKolabrodl/nmo-helper/releases/download/v2.0.0/nmo-helper-main.zip",
         "codeRepository": "https://github.com/lKolabrodl/nmo-helper"
     }
     </script>
@@ -71,6 +71,7 @@
 
         html {
             scroll-behavior: smooth;
+            overflow-x: hidden;
         }
 
         body {
@@ -126,6 +127,127 @@
             padding: 0 24px;
             position: relative;
             z-index: 1;
+        }
+
+        /* Hero rings */
+        .hero-rings {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .hero-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            top: 50%;
+            left: 50%;
+        }
+
+        .hero-ring:nth-child(1) {
+            width: 300px; height: 300px;
+            margin: -150px 0 0 -150px;
+            border-color: rgba(102, 126, 234, 0.12);
+            animation: ringRotate 20s linear infinite;
+        }
+
+        .hero-ring:nth-child(2) {
+            width: 500px; height: 500px;
+            margin: -250px 0 0 -250px;
+            border-color: rgba(240, 147, 251, 0.08);
+            animation: ringRotate 30s linear infinite reverse;
+        }
+
+        .hero-ring:nth-child(3) {
+            width: 700px; height: 700px;
+            margin: -350px 0 0 -350px;
+            border-color: rgba(251, 191, 36, 0.05);
+            animation: ringRotate 40s linear infinite;
+        }
+
+        .hero-ring::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            top: 0;
+            left: 50%;
+            margin-left: -4px;
+        }
+
+        .hero-ring:nth-child(1)::after {
+            background: rgba(102, 126, 234, 0.4);
+            box-shadow: 0 0 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .hero-ring:nth-child(2)::after {
+            background: rgba(240, 147, 251, 0.3);
+            box-shadow: 0 0 12px rgba(240, 147, 251, 0.2);
+            width: 6px; height: 6px; margin-left: -3px;
+        }
+
+        .hero-ring:nth-child(3)::after {
+            background: rgba(251, 191, 36, 0.2);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.15);
+            width: 5px; height: 5px; margin-left: -2.5px;
+        }
+
+        @keyframes ringRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Hero floating icon */
+        .hero-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            margin: 0 auto 24px;
+            animation: heroFloat 4s ease-in-out infinite;
+            box-shadow: 0 8px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        @keyframes heroFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
+        }
+
+        /* Particles */
+        .particles {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            animation: particleFloat linear infinite;
+        }
+
+        .particle:nth-child(1) { left: 10%; top: 20%; animation-duration: 12s; width: 3px; height: 3px; }
+        .particle:nth-child(2) { left: 25%; top: 60%; animation-duration: 16s; animation-delay: -3s; }
+        .particle:nth-child(3) { left: 45%; top: 30%; animation-duration: 14s; animation-delay: -6s; width: 5px; height: 5px; background: rgba(102, 126, 234, 0.2); }
+        .particle:nth-child(4) { left: 70%; top: 50%; animation-duration: 18s; animation-delay: -2s; }
+        .particle:nth-child(5) { left: 85%; top: 15%; animation-duration: 13s; animation-delay: -8s; width: 3px; height: 3px; }
+        .particle:nth-child(6) { left: 55%; top: 75%; animation-duration: 15s; animation-delay: -5s; background: rgba(240, 147, 251, 0.15); }
+        .particle:nth-child(7) { left: 35%; top: 85%; animation-duration: 17s; animation-delay: -1s; width: 3px; height: 3px; }
+        .particle:nth-child(8) { left: 90%; top: 70%; animation-duration: 11s; animation-delay: -9s; background: rgba(251, 191, 36, 0.12); }
+
+        @keyframes particleFloat {
+            0% { transform: translate(0, 0) scale(1); opacity: 0; }
+            10% { opacity: 1; }
+            50% { transform: translate(-30px, -60px) scale(1.5); }
+            90% { opacity: 1; }
+            100% { transform: translate(20px, -120px) scale(0.5); opacity: 0; }
         }
 
         /* Nav */
@@ -502,13 +624,215 @@
 
         /* Mobile */
         @media (max-width: 768px) {
+            .container { padding: 0 16px; }
             .nav-links { display: none; }
             .hero { padding: 60px 0 50px; }
+            .hero h1 { font-size: 2rem; }
+            .hero p { font-size: 1rem; }
+            .hero-buttons { flex-direction: column; align-items: center; }
             .section { padding: 50px 0; }
-            .ai-section { padding: 24px; }
+            .section-title { font-size: 1.5rem; }
+            .section-subtitle { font-size: 0.9rem; padding: 0 8px; }
+            .ai-section { padding: 20px 16px; }
             .features-grid { grid-template-columns: 1fr; }
+            .feature-card { padding: 20px; }
+            .steps { flex-direction: column; align-items: center; }
+            .step { max-width: 100%; min-width: unset; }
             .models-table { font-size: 0.8rem; }
             .models-table th, .models-table td { padding: 8px 10px; }
+            .faq-question { padding: 16px; font-size: 0.92rem; }
+            .faq-answer-inner { padding: 0 16px 16px; }
+            .hero-ring:nth-child(3) { display: none; }
+            .feature-card, .step, .faq-item, .ai-section { backdrop-filter: none; background: rgba(30, 27, 60, 0.8); }
+        }
+
+        /* FAQ Accordion */
+        .faq-list {
+            max-width: 740px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .faq-item {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            transition: background 0.3s;
+        }
+
+        .faq-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .faq-question {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text);
+            padding: 20px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .faq-question svg {
+            flex-shrink: 0;
+            transition: transform 0.3s;
+            color: var(--text-muted);
+        }
+
+        .faq-item.open .faq-question svg {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+        }
+
+        .faq-item.open .faq-answer {
+            max-height: 400px;
+        }
+
+        .faq-answer-inner {
+            padding: 0 24px 20px;
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            line-height: 1.7;
+        }
+
+        /* Carousel */
+        .carousel {
+            position: relative;
+            max-width: 320px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            background: var(--card-bg);
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.4s ease;
+        }
+
+        .carousel-slide {
+            width: 320px;
+            height: 280px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .carousel-slide img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--glass-border);
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            z-index: 2;
+        }
+
+        .carousel-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        .carousel-btn.prev { left: 8px; }
+        .carousel-btn.next { right: 8px; }
+
+        .carousel-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            padding: 0;
+        }
+
+        .carousel-dot.active {
+            background: var(--gradient-1);
+            transform: scale(1.3);
+        }
+
+        .carousel-captions {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 12px;
+            min-height: 1.2em;
+        }
+
+        /* Scroll to top */
+        .scroll-top {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+            z-index: 10;
+        }
+
+        .scroll-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .scroll-top:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text);
+            transform: translateY(-2px);
         }
 
         /* Boosty button */
@@ -535,20 +859,35 @@
                 NMO Helper
             </a>
             <ul class="nav-links">
-                <li><a href="#features">Возможности</a></li>
-                <li><a href="#install">Установка</a></li>
-                <li><a href="#ai">AI-режим</a></li>
-                <li><a href="https://github.com/lKolabrodl/nmo-helper" target="_blank">GitHub</a></li>
+                <li><a href="#features"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>Возможности</a></li>
+                <li><a href="#install"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Установка</a></li>
+                <li><a href="#ai"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>AI-режим</a></li>
+                <li><a href="https://github.com/lKolabrodl/nmo-helper" target="_blank"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-2px;margin-right:4px;"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>GitHub</a></li>
             </ul>
         </nav>
 
         <!-- Hero -->
-        <section class="hero">
-            <div class="hero-badge">v2.0.0 — бесплатный и open source</div>
+        <section class="hero" style="position: relative;">
+            <div class="hero-rings">
+                <div class="hero-ring"></div>
+                <div class="hero-ring"></div>
+                <div class="hero-ring"></div>
+            </div>
+            <div class="particles">
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+                <div class="particle"></div>
+            </div>
+            <img src="icon128.png" alt="" class="hero-icon">
             <h1>Помощник для тестов НМО</h1>
             <p>Ваш умный помощник в прохождении тестов НМО. Бесплатное расширение с открытым исходным кодом — авто-поиск ответов, AI-режим, работает из коробки.</p>
             <div class="hero-buttons">
-                <a href="https://github.com/lKolabrodl/nmo-helper/archive/refs/heads/main.zip" class="btn btn-primary">
+                <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.0.0/nmo-helper-main.zip" class="btn btn-primary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     Скачать .zip
                 </a>
@@ -559,8 +898,32 @@
             </div>
         </section>
 
+        <!-- Carousel -->
+        <section class="section" style="padding-top: 0; padding-bottom: 20px;">
+            <h2 class="section-title fade-in">Как это выглядит</h2>
+            <p class="section-subtitle fade-in">Компактная панель прямо на странице теста</p>
+            <div class="fade-in">
+                <div class="carousel" id="carousel">
+                    <div class="carousel-track" id="carouselTrack">
+                        <div class="carousel-slide"><img src="screen1.png" alt="Авто-поиск"></div>
+                        <div class="carousel-slide"><img src="screen2.png" alt="Ручной поиск"></div>
+                        <div class="carousel-slide"><img src="screen3.png" alt="AI-режим"></div>
+                        <div class="carousel-slide"><img src="screen4.png" alt="Выбор модели"></div>
+                    </div>
+                    <button class="carousel-btn prev" onclick="moveCarousel(-1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <button class="carousel-btn next" onclick="moveCarousel(1)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+                <div class="carousel-dots" id="carouselDots"></div>
+                <div class="carousel-captions" id="carouselCaption"></div>
+            </div>
+        </section>
+
         <!-- Features -->
-        <section id="features" class="section">
+        <section id="features" class="section" style="padding-top: 30px;">
             <h2 class="section-title fade-in">Возможности</h2>
             <p class="section-subtitle fade-in">Всё что нужно для прохождения тестов НМО</p>
             <div class="features-grid">
@@ -605,7 +968,7 @@
                 <div class="step fade-in">
                     <div class="step-number">1</div>
                     <h3>Скачайте</h3>
-                    <p>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/archive/refs/heads/main.zip" style="color: var(--gradient-1);">.zip архив</a> и разархивируйте в любую папку</p>
+                    <p>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.0.0/nmo-helper-main.zip" style="color: var(--gradient-1);">.zip архив</a> и разархивируйте в любую папку</p>
                 </div>
                 <div class="step fade-in">
                     <div class="step-number">2</div>
@@ -695,6 +1058,65 @@
             </div>
         </section>
 
+        <!-- FAQ -->
+        <section class="section">
+            <h2 class="section-title fade-in">Частые вопросы</h2>
+            <p class="section-subtitle fade-in">Всё, что вы хотели узнать</p>
+            <div class="faq-list fade-in">
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this.parentElement)">
+                        Зачем это нужно?
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="faq-answer"><div class="faq-answer-inner">
+                        Врачи — одни из самых загруженных специалистов. Помимо основной работы с пациентами, им приходится тратить часы на прохождение обязательных тестов НМО. NMO Helper создан, чтобы снять эту бюрократическую нагрузку и дать врачам возможность посвятить своё время и энергию тому, что действительно важно — заботе о пациентах. Мы глубоко уважаем профессию врача и хотим, чтобы формальности не отнимали силы и воодушевление у тех, кто спасает жизни.
+                    </div></div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this.parentElement)">
+                        Это правда бесплатно?
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="faq-answer"><div class="faq-answer-inner">
+                        Да, полностью бесплатно. Без подписок, без скрытых платежей, без рекламы. Проект создан на альтруистических началах — просто чтобы помочь. Исходный код открыт и доступен каждому на GitHub.
+                    </div></div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this.parentElement)">
+                        Это безопасно?
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="faq-answer"><div class="faq-answer-inner">
+                        Расширение не собирает данные, не требует регистрации и не отправляет аналитику. Но не верьте на слово — проверьте сами. Весь исходный код открыт на <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank" style="color: var(--gradient-1);">GitHub</a>, а расширение прошло проверку <a href="https://www.virustotal.com/gui/file/f88ca56932c00ededf4c29234c5f7ef0f3036439e714b294c5f0b68006064d85?nocache=1" target="_blank" style="color: var(--green);">VirusTotal</a>. Вы также можете скачать файлы и отправить их в любую бесплатную нейросеть (YandexGPT, GigaChat, DeepSeek, Qwen) с просьбой проверить код на безопасность — они подтвердят, что всё чисто.
+                    </div></div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this.parentElement)">
+                        Работает ли в Edge, Brave, Яндекс Браузере?
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="faq-answer"><div class="faq-answer-inner">
+                        Да, расширение работает во всех браузерах на основе Chromium — Google Chrome, Microsoft Edge, Brave, Opera, Яндекс Браузер и других. Установка одинаковая для всех.
+                    </div></div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this.parentElement)">
+                        Нужен ли VPN?
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="faq-answer"><div class="faq-answer-inner">
+                        Нет. Авто-поиск и ручной поиск работают без VPN. Для AI-режима используется <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> — российский сервис с оплатой в рублях, VPN тоже не нужен.
+                    </div></div>
+                </div>
+
+            </div>
+        </section>
+
         <!-- Support -->
         <section class="section" style="text-align: center;">
             <h2 class="section-title fade-in">Поддержать проект</h2>
@@ -721,11 +1143,61 @@
                 <a href="https://github.com/lKolabrodl/nmo-helper/issues" target="_blank">Баг-репорты</a>
                 <a href="https://boosty.to/kolabrod/donate" target="_blank">Поддержать</a>
             </div>
-            <p class="footer-copy">NMO Helper &copy; 2025. MIT License.</p>
+            <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px;">
+                <img src="https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea" alt="Downloads">
+                <img src="https://img.shields.io/github/stars/lKolabrodl/nmo-helper?style=flat-square&label=stars&color=fbbf24" alt="Stars">
+            </div>
+            <p class="footer-copy">NMO Helper &copy; 2026. MIT License.</p>
         </footer>
     </div>
 
+    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+
     <script>
+        // Carousel
+        const captions = ['Компактный вид', 'Ручной поиск', 'AI-режим', 'Выбор AI-модели'];
+        let carouselIdx = 0;
+        const track = document.getElementById('carouselTrack');
+        const dotsContainer = document.getElementById('carouselDots');
+        const captionEl = document.getElementById('carouselCaption');
+
+        captions.forEach((_, i) => {
+            const dot = document.createElement('button');
+            dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+            dot.onclick = () => goToSlide(i);
+            dotsContainer.appendChild(dot);
+        });
+        captionEl.textContent = captions[0];
+
+        function goToSlide(i) {
+            carouselIdx = i;
+            track.style.transform = 'translateX(-' + (i * 320) + 'px)';
+            dotsContainer.querySelectorAll('.carousel-dot').forEach((d, j) => d.classList.toggle('active', j === i));
+            captionEl.textContent = captions[i];
+        }
+
+        function moveCarousel(dir) {
+            let next = carouselIdx + dir;
+            if (next < 0) next = captions.length - 1;
+            if (next >= captions.length) next = 0;
+            goToSlide(next);
+        }
+
+        // FAQ accordion — only one open at a time
+        function toggleFaq(item) {
+            const isOpen = item.classList.contains('open');
+            document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+            if (!isOpen) item.classList.add('open');
+        }
+
+        // Scroll to top
+        const scrollBtn = document.getElementById('scrollTop');
+        window.addEventListener('scroll', () => {
+            scrollBtn.classList.toggle('visible', window.scrollY > 300);
+        });
+
         // Scroll fade-in animation
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
