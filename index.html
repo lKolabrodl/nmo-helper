@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NMO Helper — помощник для тестов НМО</title>
+    <meta name="description" content="Расширение для браузера, которое поможет решить тесты (ИОМ'ы) на портале НМО. Авто-поиск ответов, AI-режим, работает из коробки.">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gradient-1: #667eea;
+            --gradient-2: #764ba2;
+            --gradient-3: #f093fb;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #fff;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --accent: #fbbf24;
+            --green: #34d399;
+            --card-bg: rgba(255, 255, 255, 0.06);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-glow {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-glow::before,
+        .bg-glow::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.3;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        .bg-glow::before {
+            width: 600px; height: 600px;
+            background: var(--gradient-1);
+            top: -200px; left: -100px;
+        }
+
+        .bg-glow::after {
+            width: 500px; height: 500px;
+            background: var(--gradient-3);
+            bottom: -150px; right: -100px;
+            animation-delay: -7s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 20px) scale(0.95); }
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Nav */
+        nav {
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo img {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--text);
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 100px 0 80px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 6px 20px;
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, var(--gradient-3) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            color: var(--text);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        /* Features */
+        .section {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 48px;
+            font-size: 1.05rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 28px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 40px rgba(102, 126, 234, 0.15);
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+        }
+
+        .feature-icon.purple { background: rgba(139, 92, 246, 0.2); }
+        .feature-icon.blue { background: rgba(59, 130, 246, 0.2); }
+        .feature-icon.green { background: rgba(52, 211, 153, 0.2); }
+        .feature-icon.orange { background: rgba(251, 191, 36, 0.2); }
+        .feature-icon.pink { background: rgba(240, 147, 251, 0.2); }
+        .feature-icon.cyan { background: rgba(34, 211, 238, 0.2); }
+
+        .feature-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Steps */
+        .steps {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .step {
+            flex: 1;
+            min-width: 250px;
+            max-width: 340px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 28px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .step-number {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 0 auto 16px;
+        }
+
+        .step h3 {
+            margin-bottom: 8px;
+        }
+
+        .step p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .step code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        /* AI section */
+        .ai-section {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+        }
+
+        .ai-section > p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .models-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .models-table th,
+        .models-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .models-table th {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .models-table td {
+            font-size: 0.9rem;
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .level-low { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+        .level-medium { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .level-high { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .level-ultra { background: rgba(240, 147, 251, 0.15); color: #f093fb; }
+
+        /* Disclaimer */
+        .disclaimer {
+            margin-top: 24px;
+            padding: 16px 20px;
+            background: rgba(251, 191, 36, 0.08);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Security */
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            padding: 40px 0;
+        }
+
+        .security-badge a {
+            transition: transform 0.2s;
+        }
+
+        .security-badge a:hover {
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--glass-border);
+            padding: 40px 0;
+            text-align: center;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--text);
+        }
+
+        .footer-copy {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.8rem;
+        }
+
+        /* Scroll animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero { padding: 60px 0 50px; }
+            .section { padding: 50px 0; }
+            .ai-section { padding: 24px; }
+            .features-grid { grid-template-columns: 1fr; }
+            .models-table { font-size: 0.8rem; }
+            .models-table th, .models-table td { padding: 8px 10px; }
+        }
+
+        /* Boosty button */
+        .btn-boosty {
+            background: linear-gradient(135deg, #f97316, #ef4444);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(249, 115, 22, 0.3);
+        }
+
+        .btn-boosty:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(249, 115, 22, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <div class="container">
+        <!-- Nav -->
+        <nav>
+            <a href="#" class="logo">
+                <img src="icon128.png" alt="NMO Helper">
+                NMO Helper
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Возможности</a></li>
+                <li><a href="#install">Установка</a></li>
+                <li><a href="#ai">AI-режим</a></li>
+                <li><a href="https://github.com/lKolabrodl/nmo-helper" target="_blank">GitHub</a></li>
+            </ul>
+        </nav>
+
+        <!-- Hero -->
+        <section class="hero">
+            <div class="hero-badge">v2.0.0 — AI-режим, авто-поиск</div>
+            <h1>Помощник для тестов НМО</h1>
+            <p>Расширение для браузера, которое поможет решить тесты (ИОМ'ы) на портале НМО. Авто-поиск ответов, AI-режим, работает из коробки.</p>
+            <div class="hero-buttons">
+                <a href="https://github.com/lKolabrodl/nmo-helper/archive/refs/heads/main.zip" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Скачать .zip
+                </a>
+                <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank" class="btn btn-secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+                    GitHub
+                </a>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section id="features" class="section">
+            <h2 class="section-title fade-in">Возможности</h2>
+            <p class="section-subtitle fade-in">Всё что нужно для прохождения тестов НМО</p>
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon green">&#x1F50D;</div>
+                    <h3>Авто-поиск ответов</h3>
+                    <p>Автоматически определяет тему теста и ищет ответы на rosmedicinfo.ru и 24forcare.com. Просто включите и проходите тест.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon purple">&#x1F916;</div>
+                    <h3>AI-режим</h3>
+                    <p>Решает тесты с помощью GPT, Gemini и Claude через ProxyAPI. Выбирайте модель под свой бюджет.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon blue">&#x1F4DD;</div>
+                    <h3>Ручной поиск</h3>
+                    <p>Ищите ответы вручную по названию теста. Полезно, чтобы заранее узнать, есть ли решение.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon orange">&#x26A1;</div>
+                    <h3>Кеширование</h3>
+                    <p>Ответы кешируются — при навигации назад/вперёд повторных запросов нет. Быстро и экономно.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon pink">&#x1F3AF;</div>
+                    <h3>Умное сопоставление</h3>
+                    <p>Нормализация тире, кириллицы/латиницы, нечёткий поиск — находит ответ даже при расхождениях в тексте.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon cyan">&#x1F5D6;&#xFE0F;</div>
+                    <h3>Удобная панель</h3>
+                    <p>Плавающая панель с перетаскиванием и сворачиванием. Позиция и настройки сохраняются между сессиями.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Install -->
+        <section id="install" class="section">
+            <h2 class="section-title fade-in">Установка за 3 шага</h2>
+            <p class="section-subtitle fade-in">Chrome, Edge, Brave, Opera, Яндекс Браузер</p>
+            <div class="steps">
+                <div class="step fade-in">
+                    <div class="step-number">1</div>
+                    <h3>Скачайте</h3>
+                    <p>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/archive/refs/heads/main.zip" style="color: var(--gradient-1);">.zip архив</a> и разархивируйте в любую папку</p>
+                </div>
+                <div class="step fade-in">
+                    <div class="step-number">2</div>
+                    <h3>Откройте расширения</h3>
+                    <p>Перейдите на <code>chrome://extensions/</code> и включите <strong>Режим разработчика</strong></p>
+                </div>
+                <div class="step fade-in">
+                    <div class="step-number">3</div>
+                    <h3>Загрузите</h3>
+                    <p>Нажмите <strong>«Загрузить распакованное расширение»</strong> и выберите скачанную папку</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Section -->
+        <section id="ai" class="section">
+            <div class="ai-section fade-in">
+                <h2>AI-режим</h2>
+                <p>Подключите нейросеть для решения тестов. Поддерживаются модели OpenAI, Google Gemini и Anthropic Claude через сервис <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> — российский прокси к AI-моделям с оплатой в рублях и без VPN.</p>
+
+                <table class="models-table">
+                    <thead>
+                        <tr>
+                            <th>Уровень</th>
+                            <th>Модели</th>
+                            <th>Описание</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="level-badge level-low">low</span></td>
+                            <td>gpt-4o-mini, gemini-2.0-flash, claude-haiku-4.5</td>
+                            <td>Быстрые и дешёвые</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-badge level-medium">medium</span></td>
+                            <td>gpt-4.1-mini, gemini-2.5-flash</td>
+                            <td>Баланс цена/качество</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-badge level-high">high</span></td>
+                            <td>o3-mini, o4-mini, claude-sonnet-4.6</td>
+                            <td>Высокая точность</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-badge level-ultra">ultra</span></td>
+                            <td>claude-opus-4.6, gemini-3.1-pro</td>
+                            <td>Максимальная точность</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="disclaimer">
+                    <strong>Важно:</strong> на практике AI-модели решают медицинские тесты НМО на оценку ~3. Рекомендуем использовать AI как вспомогательный инструмент, а основной упор делать на авто-поиск по сайтам с готовыми ответами.
+                </div>
+            </div>
+        </section>
+
+        <!-- Security -->
+        <section class="section">
+            <h2 class="section-title fade-in">Безопасность</h2>
+            <p class="section-subtitle fade-in">Расширение проверено и имеет открытый исходный код</p>
+            <div class="security-badge fade-in">
+                <a href="https://www.virustotal.com/gui/file/f88ca56932c00ededf4c29234c5f7ef0f3036439e714b294c5f0b68006064d85?nocache=1" target="_blank">
+                    <img src="https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=for-the-badge&logo=virustotal" alt="VirusTotal Clean">
+                </a>
+                <a href="https://github.com/lKolabrodl/nmo-helper/blob/main/LICENSE" target="_blank">
+                    <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License">
+                </a>
+            </div>
+        </section>
+
+        <!-- Support -->
+        <section class="section" style="text-align: center;">
+            <h2 class="section-title fade-in">Поддержать проект</h2>
+            <p class="section-subtitle fade-in">Если расширение оказалось полезным</p>
+            <div class="fade-in">
+                <a href="https://boosty.to/kolabrod/donate" target="_blank" class="btn btn-boosty">
+                    Поддержать на Boosty
+                </a>
+            </div>
+        </section>
+
+        <!-- Previous versions -->
+        <section class="section" style="text-align: center;">
+            <p class="fade-in" style="color: var(--text-muted); font-size: 0.9rem;">
+                Предыдущая версия: <a href="https://github.com/lKolabrodl/nmo-helper/tree/v1.4.2" target="_blank" style="color: var(--gradient-1);">v1.4.2</a> — без AI-режима и авто-поиска
+                (<a href="https://github.com/lKolabrodl/nmo-helper/archive/refs/tags/v1.4.2.zip" style="color: var(--gradient-1);">скачать .zip</a>)
+            </p>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-links">
+                <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank">GitHub</a>
+                <a href="https://github.com/lKolabrodl/nmo-helper/issues" target="_blank">Баг-репорты</a>
+                <a href="https://boosty.to/kolabrod/donate" target="_blank">Поддержать</a>
+            </div>
+            <p class="footer-copy">NMO Helper &copy; 2025. MIT License.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Scroll fade-in animation
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
