@@ -4,7 +4,51 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NMO Helper — помощник для тестов НМО</title>
-    <meta name="description" content="Расширение для браузера, которое поможет решить тесты (ИОМ'ы) на портале НМО. Авто-поиск ответов, AI-режим, работает из коробки.">
+    <meta name="description" content="Бесплатное расширение для браузера — умный помощник в прохождении тестов НМО. Авто-поиск ответов, AI-режим, работает из коробки. Open source.">
+    <meta name="keywords" content="НМО, тесты НМО, ИОМ, NMO Helper, расширение Chrome, помощник НМО, ответы НМО, авто-поиск ответов, AI тесты">
+    <meta name="author" content="lKolabrod">
+    <link rel="canonical" href="https://lkolabrodl.github.io/nmo-helper/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://lkolabrodl.github.io/nmo-helper/">
+    <meta property="og:title" content="NMO Helper — умный помощник для тестов НМО">
+    <meta property="og:description" content="Бесплатное расширение с открытым исходным кодом. Авто-поиск ответов, AI-режим, работает из коробки.">
+    <meta property="og:image" content="https://lkolabrodl.github.io/nmo-helper/og-image.png">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:site_name" content="NMO Helper">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="NMO Helper — умный помощник для тестов НМО">
+    <meta name="twitter:description" content="Бесплатное расширение с открытым исходным кодом. Авто-поиск ответов, AI-режим, работает из коробки.">
+    <meta name="twitter:image" content="https://lkolabrodl.github.io/nmo-helper/og-image.png">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "NMO Helper",
+        "description": "Бесплатное расширение для браузера — умный помощник в прохождении тестов НМО. Авто-поиск ответов, AI-режим.",
+        "url": "https://lkolabrodl.github.io/nmo-helper/",
+        "applicationCategory": "BrowserApplication",
+        "operatingSystem": "Chrome, Edge, Brave, Opera, Yandex Browser",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "RUB"
+        },
+        "softwareVersion": "2.0.0",
+        "license": "https://opensource.org/licenses/MIT",
+        "isAccessibleForFree": true,
+        "downloadUrl": "https://github.com/lKolabrodl/nmo-helper/archive/refs/heads/main.zip",
+        "codeRepository": "https://github.com/lKolabrodl/nmo-helper"
+    }
+    </script>
+
+    <link rel="icon" type="image/png" sizes="48x48" href="icon48.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="icon128.png">
     <style>
         *, *::before, *::after {
             margin: 0;
@@ -500,9 +544,9 @@
 
         <!-- Hero -->
         <section class="hero">
-            <div class="hero-badge">v2.0.0 — AI-режим, авто-поиск</div>
+            <div class="hero-badge">v2.0.0 — бесплатный и open source</div>
             <h1>Помощник для тестов НМО</h1>
-            <p>Расширение для браузера, которое поможет решить тесты (ИОМ'ы) на портале НМО. Авто-поиск ответов, AI-режим, работает из коробки.</p>
+            <p>Ваш умный помощник в прохождении тестов НМО. Бесплатное расширение с открытым исходным кодом — авто-поиск ответов, AI-режим, работает из коробки.</p>
             <div class="hero-buttons">
                 <a href="https://github.com/lKolabrodl/nmo-helper/archive/refs/heads/main.zip" class="btn btn-primary">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -523,7 +567,7 @@
                 <div class="feature-card fade-in">
                     <div class="feature-icon green">&#x1F50D;</div>
                     <h3>Авто-поиск ответов</h3>
-                    <p>Автоматически определяет тему теста и ищет ответы на rosmedicinfo.ru и 24forcare.com. Просто включите и проходите тест.</p>
+                    <p>Просто включите и проходите тест.</p>
                 </div>
                 <div class="feature-card fade-in">
                     <div class="feature-icon purple">&#x1F916;</div>
@@ -533,7 +577,7 @@
                 <div class="feature-card fade-in">
                     <div class="feature-icon blue">&#x1F4DD;</div>
                     <h3>Ручной поиск</h3>
-                    <p>Ищите ответы вручную по названию теста. Полезно, чтобы заранее узнать, есть ли решение.</p>
+                    <p>Ищите ответы вручную по названию теста. Полезно, чтобы заранее узнать, есть ли решение в открытом доступе.</p>
                 </div>
                 <div class="feature-card fade-in">
                     <div class="feature-icon orange">&#x26A1;</div>
@@ -574,6 +618,9 @@
                     <p>Нажмите <strong>«Загрузить распакованное расширение»</strong> и выберите скачанную папку</p>
                 </div>
             </div>
+            <p class="fade-in" style="text-align: center; margin-top: 24px; color: var(--text-muted); font-size: 0.9rem;">
+                Подробная инструкция с картинками — в <a href="https://github.com/lKolabrodl/nmo-helper#установка" target="_blank" style="color: var(--gradient-1);">README на GitHub</a>
+            </p>
         </section>
 
         <!-- AI Section -->
@@ -623,14 +670,28 @@
         <!-- Security -->
         <section class="section">
             <h2 class="section-title fade-in">Безопасность</h2>
-            <p class="section-subtitle fade-in">Расширение проверено и имеет открытый исходный код</p>
-            <div class="security-badge fade-in">
-                <a href="https://www.virustotal.com/gui/file/f88ca56932c00ededf4c29234c5f7ef0f3036439e714b294c5f0b68006064d85?nocache=1" target="_blank">
-                    <img src="https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=for-the-badge&logo=virustotal" alt="VirusTotal Clean">
-                </a>
-                <a href="https://github.com/lKolabrodl/nmo-helper/blob/main/LICENSE" target="_blank">
-                    <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="MIT License">
-                </a>
+            <p class="section-subtitle fade-in">Вашим данным ничего не угрожает</p>
+            <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                <div class="feature-card fade-in" style="text-align: center;">
+                    <div class="feature-icon green" style="margin: 0 auto 16px;">&#x1F512;</div>
+                    <h3>Без сбора данных</h3>
+                    <p>Никакая информация о вас не собирается и не отправляется</p>
+                </div>
+                <div class="feature-card fade-in" style="text-align: center;">
+                    <div class="feature-icon blue" style="margin: 0 auto 16px;">&#x1F4E6;</div>
+                    <h3>Open Source</h3>
+                    <p>Весь исходный код открыт и доступен для проверки</p>
+                </div>
+                <div class="feature-card fade-in" style="text-align: center;">
+                    <div class="feature-icon purple" style="margin: 0 auto 16px;">&#x1F6E1;&#xFE0F;</div>
+                    <h3>Проверено</h3>
+                    <p>Расширение прошло проверку <a href="https://www.virustotal.com/gui/file/f88ca56932c00ededf4c29234c5f7ef0f3036439e714b294c5f0b68006064d85?nocache=1" target="_blank" style="color: var(--green);">VirusTotal</a></p>
+                </div>
+                <div class="feature-card fade-in" style="text-align: center;">
+                    <div class="feature-icon orange" style="margin: 0 auto 16px;">&#x1F464;</div>
+                    <h3>Без регистрации</h3>
+                    <p>Не требует аккаунта, логина или каких-либо разрешений</p>
+                </div>
             </div>
         </section>
 

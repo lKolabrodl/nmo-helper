@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lkolabrodl.github.io/nmo-helper/sitemap.xml
