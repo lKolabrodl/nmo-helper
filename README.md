@@ -44,7 +44,7 @@
 
 ### Mozilla Firefox
 
-1. Скачай файл [`nmo-helper-firefox.xpi`](nmo-helper-firefox.xpi)
+1. Скачай файл [`nmo-helper-firefox.xpi`](firefox_nmo_helper.xpi)
 2. Открой Firefox и перетащи файл `.xpi` в окно браузера, или открой `about:addons` → нажми шестерёнку ⚙ → **«Установить дополнение из файла»**
 3. Подтверди установку
 
