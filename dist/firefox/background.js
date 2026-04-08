@@ -1,0 +1,1 @@
+chrome.runtime.onMessage.addListener((e,n,a)=>{if(e.action!=="fetch")return;const r={method:e.method||"GET"};return e.headers&&(r.headers=e.headers),e.body&&(r.body=e.body),fetch(e.url,r).then(t=>t.text().then(h=>({error:!1,status:t.status,text:h}))).catch(t=>({error:!0,message:t.message})).then(t=>a(t)),!0});
