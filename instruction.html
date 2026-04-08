@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инструкция — NMO Helper</title>
+    <meta name="description" content="Подробная инструкция по установке и использованию NMO Helper — расширения для браузера, помощника в прохождении тестов НМО.">
+    <link rel="canonical" href="https://nmo-helper.ru/instruction.html">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="NMO Helper">
+    <meta property="og:url" content="https://nmo-helper.ru/instruction.html">
+    <meta property="og:title" content="Инструкция — NMO Helper">
+    <meta property="og:description" content="Подробная инструкция по установке и использованию NMO Helper.">
+    <meta property="og:image" content="https://nmo-helper.ru/og-image.png">
+    <meta property="og:locale" content="ru_RU">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="icon48.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="icon128.png">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "Как установить и использовать NMO Helper",
+        "description": "Подробная инструкция по установке расширения NMO Helper для Chrome, Яндекс Браузера и Firefox, а также настройке AI-режима.",
+        "image": "https://nmo-helper.ru/og-image.png",
+        "step": [
+            {
+                "@type": "HowToStep",
+                "name": "Скачайте расширение",
+                "text": "Скачайте nmo-helper-main.zip для Chrome или nmo-helper-firefox.xpi для Firefox с GitHub.",
+                "url": "https://nmo-helper.ru/instruction.html#install"
+            },
+            {
+                "@type": "HowToStep",
+                "name": "Установите расширение",
+                "text": "Для Chrome: откройте chrome://extensions/, включите режим разработчика, загрузите распакованное расширение. Для Firefox: перетащите .xpi файл в окно браузера.",
+                "url": "https://nmo-helper.ru/instruction.html#install"
+            },
+            {
+                "@type": "HowToStep",
+                "name": "Откройте тест НМО",
+                "text": "Перейдите на страницу тестирования НМО — панель NMO Helper появится автоматически.",
+                "url": "https://nmo-helper.ru/instruction.html#usage"
+            },
+            {
+                "@type": "HowToStep",
+                "name": "Используйте авто-поиск или AI-режим",
+                "text": "Включите авто-поиск для автоматического поиска ответов на rosmedicinfo.ru и 24forcare.com, или настройте AI-режим через proxyapi.ru.",
+                "url": "https://nmo-helper.ru/instruction.html#autosearch"
+            }
+        ]
+    }
+    </script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gradient-1: #667eea;
+            --gradient-2: #764ba2;
+            --gradient-3: #f093fb;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #fff;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --accent: #fbbf24;
+            --green: #34d399;
+            --card-bg: rgba(255, 255, 255, 0.06);
+        }
+
+        html { scroll-behavior: smooth; overflow-x: hidden; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bg-glow::before, .bg-glow::after { content: ''; position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.3; animation: float 15s ease-in-out infinite; }
+        .bg-glow::before { width: 600px; height: 600px; background: var(--gradient-1); top: -200px; left: -100px; }
+        .bg-glow::after { width: 500px; height: 500px; background: var(--gradient-3); bottom: -150px; right: -100px; animation-delay: -7s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 20px) scale(0.95); }
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+        /* Nav */
+        nav { padding: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 700; text-decoration: none; color: var(--text); }
+        .logo img { width: 32px; height: 32px; border-radius: 8px; }
+        .nav-links { display: flex; gap: 24px; list-style: none; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+        .nav-links a:hover { color: var(--text); }
+
+        /* Hero */
+        .hero { text-align: center; padding: 60px 0 40px; }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; line-height: 1.2; margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, var(--gradient-3) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero p { font-size: 1.1rem; color: var(--text-muted); max-width: 600px; margin: 0 auto; line-height: 1.6; }
+
+        /* Sections */
+        .section { padding: 50px 0; }
+        .section-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 12px; }
+        .section-subtitle { color: var(--text-muted); margin-bottom: 32px; font-size: 1rem; line-height: 1.6; }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 32px; backdrop-filter: blur(10px); margin-bottom: 24px;
+        }
+        .card h3 { font-size: 1.2rem; margin-bottom: 12px; }
+        .card p, .card li { color: var(--text-muted); font-size: 0.95rem; line-height: 1.7; }
+        .card ul, .card ol { padding-left: 20px; margin: 12px 0; }
+        .card li { margin-bottom: 8px; }
+        .card code {
+            background: rgba(255, 255, 255, 0.1); padding: 2px 8px; border-radius: 6px; font-size: 0.85rem;
+        }
+
+        /* Steps inside card */
+        .step-list { counter-reset: step; list-style: none; padding-left: 0; }
+        .step-list li { counter-increment: step; position: relative; padding-left: 44px; margin-bottom: 16px; }
+        .step-list li::before {
+            content: counter(step);
+            position: absolute; left: 0; top: 0;
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; font-weight: 700; color: #fff;
+            text-align: center; line-height: 32px;
+        }
+
+        /* Media (screenshots, GIFs) */
+        .media-block {
+            margin: 20px 0; text-align: center;
+        }
+        .media-block img {
+            max-width: 100%; border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+        .media-caption {
+            margin-top: 8px; font-size: 0.8rem; color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Status table */
+        .status-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        .status-table th, .status-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+        .status-table th { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .status-table td { font-size: 0.9rem; }
+        .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+        .status-dot.yellow { background: #fbbf24; box-shadow: 0 0 6px rgba(251, 191, 36, 0.5); }
+        .status-dot.green { background: #34d399; box-shadow: 0 0 6px rgba(52, 211, 153, 0.5); }
+        .status-dot.orange { background: #f97316; box-shadow: 0 0 6px rgba(249, 115, 22, 0.5); }
+        .status-dot.red { background: #f87171; box-shadow: 0 0 6px rgba(248, 113, 113, 0.5); }
+
+        /* Models table */
+        .models-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+        .models-table th, .models-table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--glass-border); }
+        .models-table th { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .models-table td { font-size: 0.9rem; }
+        .level-badge { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+        .level-low { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+        .level-medium { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .level-high { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+        .level-ultra { background: rgba(240, 147, 251, 0.15); color: #f093fb; }
+
+        /* Disclaimer */
+        .disclaimer {
+            margin-top: 20px; padding: 16px 20px;
+            background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 12px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;
+        }
+
+        /* Info block */
+        .info-block {
+            margin-top: 16px; padding: 16px 20px;
+            background: rgba(102, 126, 234, 0.08); border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;
+        }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tab-btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 12px;
+            font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.3s ease; color: #fff;
+        }
+        .tab-btn.active { background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); }
+        .tab-btn.active-firefox { background: linear-gradient(135deg, #ff9500, #ff6a00); box-shadow: 0 4px 20px rgba(255, 149, 0, 0.4); }
+        .tab-btn:not(.active):not(.active-firefox) { background: var(--glass-bg); border: 1px solid var(--glass-border); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* TOC */
+        .toc {
+            background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 16px;
+            padding: 24px 32px; backdrop-filter: blur(10px); margin-bottom: 32px;
+        }
+        .toc h3 { font-size: 1rem; margin-bottom: 12px; color: var(--accent); }
+        .toc ol { padding-left: 20px; }
+        .toc li { margin-bottom: 6px; }
+        .toc a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .toc a:hover { color: var(--text); }
+
+        /* Btn */
+        .btn {
+            display: inline-flex; align-items: center; gap: 8px; padding: 14px 28px; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; text-decoration: none; transition: all 0.3s ease; cursor: pointer; border: none;
+        }
+        .btn-primary { background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); color: #fff; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6); }
+
+        /* Footer */
+        footer { border-top: 1px solid var(--glass-border); padding: 40px 0; text-align: center; }
+        .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--text); }
+        .footer-copy { color: rgba(255, 255, 255, 0.4); font-size: 0.8rem; }
+
+        /* Copyable inline */
+        .copyable-inline { cursor: pointer; position: relative; white-space: nowrap; }
+        .copyable-inline code { color: var(--accent); }
+        .copyable-inline .copy-icon { opacity: 0.5; vertical-align: -1px; margin-left: 3px; transition: opacity 0.2s; }
+        .copyable-inline:hover .copy-icon { opacity: 1; }
+        .copyable-inline:hover code { background: rgba(255, 255, 255, 0.2); }
+        .copy-toast {
+            position: absolute; top: -32px; left: 50%; transform: translateX(-50%);
+            background: #34d399; color: #fff; font-family: sans-serif; font-size: 0.7rem; font-weight: 600;
+            padding: 4px 10px; border-radius: 6px; white-space: nowrap; pointer-events: none;
+            animation: toastFade 1.5s ease forwards;
+        }
+        @keyframes toastFade { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+
+        /* Scroll animations */
+        .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        /* Scroll top */
+        .scroll-top {
+            position: fixed; bottom: 32px; right: 32px; width: 44px; height: 44px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); border: none; color: #fff;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); opacity: 0; visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s, transform 0.3s; z-index: 100;
+        }
+        .scroll-top.visible { opacity: 1; visibility: visible; }
+        .scroll-top:hover { transform: translateY(-2px); }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .container { padding: 0 16px; }
+            .nav-links { display: none; }
+            .hero { padding: 40px 0 24px; }
+            .hero h1 { font-size: 1.8rem; }
+            .section { padding: 16px 0; }
+            .section-title { font-size: 1.4rem; }
+            .section-subtitle { margin-bottom: 20px; }
+            .card { padding: 20px 16px; backdrop-filter: none; background: rgba(30, 27, 60, 0.8); }
+            .toc { padding: 16px 20px; backdrop-filter: none; background: rgba(30, 27, 60, 0.8); }
+            .models-table { font-size: 0.8rem; }
+            .models-table th, .models-table td { padding: 8px 10px; }
+            .status-table th, .status-table td { padding: 8px 10px; font-size: 0.8rem; }
+            .tabs { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <div class="container">
+        <nav>
+            <a href="/" class="logo">
+                <img src="icon128.png" alt="NMO Helper">
+                NMO Helper
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    На главную
+                </a></li>
+                <li><a href="#install">Установка</a></li>
+                <li><a href="#usage">Использование</a></li>
+                <li><a href="#ai">AI-режим</a></li>
+            </ul>
+        </nav>
+
+        <!-- Hero -->
+        <section class="hero">
+            <h1>Подробная инструкция</h1>
+            <p>Установка, настройка и использование NMO Helper — с картинками и пояснениями</p>
+        </section>
+
+        <!-- TOC -->
+        <div class="toc fade-in">
+            <h3>Содержание</h3>
+            <ol>
+                <li><a href="#install">Установка расширения</a></li>
+                <li><a href="#usage">Использование</a></li>
+                <li><a href="#autosearch">Авто-поиск ответов</a></li>
+                <li><a href="#manual">Ручной поиск</a></li>
+                <li><a href="#ai">AI-режим</a></li>
+                <li><a href="#statuses">Статусы панели</a></li>
+            </ol>
+        </div>
+
+        <!-- Installation -->
+        <section id="install" class="section">
+            <h2 class="section-title fade-in">Установка расширения</h2>
+            <p class="section-subtitle fade-in">Выберите ваш браузер и следуйте шагам</p>
+
+            <div class="tabs fade-in">
+                <button class="tab-btn active" onclick="showTab('chrome', this)">
+                    <img src="demo/chrome.svg" width="18" height="18" alt="Chrome">
+                    Chrome / Yandex
+                </button>
+                <button class="tab-btn" onclick="showTab('firefox', this)">
+                    <img src="demo/firefox.svg" width="18" height="18" alt="Firefox">
+                    Firefox
+                </button>
+            </div>
+
+            <!-- Chrome -->
+            <div id="tab-chrome" class="tab-content active">
+                <div class="card fade-in">
+                    <h3>Google Chrome, Edge, Brave, Opera, Яндекс Браузер</h3>
+                    <ol class="step-list">
+                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.1.0/nmo-helper-main.zip" style="color: var(--gradient-1);">nmo-helper-main.zip</a></li>
+                        <li>Разархивируйте содержимое в удобную папку</li>
+                        <li>Откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="chrome://extensions/"><code>chrome://extensions/</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> в адресной строке</li>
+                        <li>Включите переключатель <strong>«Режим разработчика»</strong> в правом верхнем углу</li>
+                        <li>Нажмите <strong>«Загрузить распакованное расширение»</strong></li>
+                        <li>Выберите папку <code>nmo-helper-plugin</code></li>
+                    </ol>
+                    <div class="media-block">
+                        <img src="demo/step_3.gif" alt="Установка в Chrome" loading="lazy">
+                        <p class="media-caption">Процесс установки в Chrome</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Firefox -->
+            <div id="tab-firefox" class="tab-content">
+                <div class="card fade-in">
+                    <h3>Mozilla Firefox</h3>
+                    <ol class="step-list">
+                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.1.0/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">nmo-helper-firefox.xpi</a></li>
+                        <li>Откройте Firefox и перетащите файл <code>.xpi</code> прямо в окно браузера, или откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="about:addons"><code>about:addons</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> &rarr; нажмите шестерёнку &#9881; &rarr; <strong>«Установить дополнение из файла»</strong></li>
+                        <li>Подтвердите установку, нажав <strong>«Добавить»</strong></li>
+                    </ol>
+                    <div class="media-block">
+                        <img src="demo/firefox_install.gif" alt="Установка в Firefox" loading="lazy">
+                        <p class="media-caption">Процесс установки в Firefox</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usage -->
+        <section id="usage" class="section">
+            <h2 class="section-title fade-in">Использование</h2>
+            <p class="section-subtitle fade-in">Откройте страницу тестирования НМО — в правом верхнем углу появится панель NMO Helper</p>
+
+            <div class="card fade-in">
+                <h3>Панель расширения</h3>
+                <p>После установки расширение активируется автоматически на страницах портала НМО. Плавающая панель появляется в углу экрана, её можно перетаскивать и сворачивать. Позиция и состояние сохраняются между сессиями.</p>
+                <div class="media-block">
+                    <img src="demo/login.png" alt="Панель NMO Helper" loading="lazy">
+                    <p class="media-caption">Панель NMO Helper на странице теста</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Auto search -->
+        <section id="autosearch" class="section">
+            <h2 class="section-title fade-in">Авто-поиск ответов</h2>
+
+            <div class="card fade-in">
+                <p>При включённой галочке <strong>«Авто-поиск rosmed &amp; 24forcare»</strong> плагин сам определяет тему теста, ищет ответы на обоих сайтах и подсвечивает правильные варианты. Никаких действий от вас не требуется — просто включите и проходите тест.</p>
+                <ul>
+                    <li><strong>Приоритет:</strong> сначала ищет на <strong>rosmedicinfo.ru</strong>, если не нашёл — на <strong>24forcare.com</strong></li>
+                    <li><strong>Отказоустойчивость:</strong> если один из сайтов недоступен — работает с другим</li>
+                    <li><strong>Кеширование:</strong> ответы кешируются — при навигации назад/вперёд повторных запросов нет</li>
+                </ul>
+                <div class="media-block">
+                    <img src="demo/auto-search.png" alt="Авто-поиск" loading="lazy" style="max-width: 400px;">
+                    <p class="media-caption">Автоматический поиск ответов</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Manual search -->
+        <section id="manual" class="section">
+            <h2 class="section-title fade-in">Ручной поиск</h2>
+
+            <div class="card fade-in">
+                <p>При отключённых галочках вы можете искать ответы вручную. Полезно, чтобы заранее узнать, есть ли решение, не заходя в сам тест.</p>
+                <ol class="step-list">
+                    <li>Воспользуйтесь поиском — введите название теста</li>
+                    <li>Выберите источник из результатов (<strong>rosmed</strong> / <strong>24forcare</strong>), или вставьте ссылку в поле URL</li>
+                    <li>Нажмите <strong>&#9654; Запуск</strong></li>
+                </ol>
+                <div class="media-block">
+                    <img src="demo/search.png" alt="Поиск теста" loading="lazy" style="max-width: 400px;">
+                    <p class="media-caption">Поиск теста по названию</p>
+                </div>
+                <div class="media-block">
+                    <img src="demo/step_7.gif" alt="Ручной поиск" loading="lazy">
+                    <p class="media-caption">Процесс ручного поиска ответов</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Mode -->
+        <section id="ai" class="section">
+            <h2 class="section-title fade-in">AI-режим</h2>
+            <p class="section-subtitle fade-in">Подключите нейросеть для решения тестов</p>
+
+            <div class="card fade-in">
+                <h3>Настройка</h3>
+                <p>AI-режим позволяет решать тесты с помощью нейросетей. Поддерживаются модели OpenAI (GPT), Google Gemini и Anthropic Claude через сервис <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> — российский прокси к AI-моделям с оплатой в рублях и без VPN.</p>
+                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 8px;">К сожалению, бесплатные API нейросетей (Google Gemini, OpenAI и др.) заблокированы для пользователей из России нашими западными друзьями, поэтому используется платный прокси-сервис.</p>
+
+                <div class="info-block" style="margin: 16px 0;">
+                    <strong>Важно:</strong> после регистрации на proxyapi.ru необходимо пополнить баланс на минимальную сумму. Без пополнения API-ключ не будет работать.<br>
+                    Если вы потеряете API-ключ — его можно удалить и создать новый в любой момент на <a href="https://console.proxyapi.ru/keys" target="_blank" style="color: var(--gradient-1);">console.proxyapi.ru/keys</a>.
+                </div>
+
+                <ol class="step-list">
+                    <li>Зарегистрируйтесь на <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> и <strong>пополните баланс</strong> (минимальная сумма)</li>
+                    <li>Получите API-ключ на <a href="https://console.proxyapi.ru/keys" target="_blank" style="color: var(--gradient-1);">console.proxyapi.ru/keys</a></li>
+                    <li>Включите галочку <strong>«Решать с помощью AI»</strong></li>
+                    <li>Вставьте ключ в поле <strong>«API-ключ ProxyAPI»</strong></li>
+                    <li>Выберите модель — рекомендованные отмечены звёздочкой &#9733;</li>
+                </ol>
+                <div class="media-block">
+                    <img src="demo/ai-key.gif" alt="Настройка AI" loading="lazy">
+                    <p class="media-caption">Настройка API-ключа и выбор модели</p>
+                </div>
+            </div>
+
+            <div class="card fade-in">
+                <h3>Как это работает</h3>
+                <ul>
+                    <li>Плагин парсит вопрос и варианты ответа со страницы теста</li>
+                    <li>Отправляет их в выбранную AI-модель вместе с темой теста</li>
+                    <li>AI возвращает номера правильных вариантов, плагин подсвечивает их</li>
+                    <li>Ответы кешируются — при навигации назад/вперёд повторных запросов нет</li>
+                </ul>
+            </div>
+
+            <div class="card fade-in">
+                <h3>Выбор модели</h3>
+                <table class="models-table">
+                    <thead>
+                        <tr><th>Уровень</th><th>Модели</th><th>Описание</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="level-badge level-low">low</span></td>
+                            <td>gpt-4o-mini, gemini-2.0-flash, claude-haiku-4.5</td>
+                            <td>Быстрые и дешёвые, но менее точные</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-badge level-medium">medium</span></td>
+                            <td>gpt-4.1-mini, gemini-2.5-flash</td>
+                            <td>Баланс цена/качество</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-badge level-high">high</span></td>
+                            <td>o3-mini, o4-mini, claude-sonnet-4.6</td>
+                            <td>Высокая точность</td>
+                        </tr>
+                        <tr>
+                            <td><span class="level-badge level-ultra">ultra</span></td>
+                            <td>claude-opus-4.6, gemini-3.1-pro</td>
+                            <td>Максимальная точность, дороже</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="info-block">
+                    <span style="color: #86efac;">&#9733;</span> — рекомендованные модели (выделены зелёным в списке) — оптимальный вариант по соотношению цена/качество.<br>
+                    <span style="color: #fca5a5;">$$$</span> — дорогие модели, расходуют много токенов. Следите за балансом!
+                </div>
+
+                <div class="disclaimer">
+                    <strong>Disclaimer:</strong> на практике AI-модели решают медицинские тесты НМО довольно плохо — в среднем на оценку 3. Вопросы основаны на специфических клинических рекомендациях РФ, которые AI-модели знают недостаточно хорошо. Рекомендуем использовать AI-режим как вспомогательный инструмент, а основной упор делать на <strong>авто-поиск</strong> по сайтам с готовыми ответами.
+                </div>
+            </div>
+        </section>
+
+        <!-- Statuses -->
+        <section id="statuses" class="section">
+            <h2 class="section-title fade-in">Статусы панели</h2>
+
+            <div class="card fade-in">
+                <table class="status-table">
+                    <thead>
+                        <tr><th>Статус</th><th>Значение</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><span class="status-dot yellow"></span>ищу тему...</td><td>Авто-режим ищет тему теста на странице</td></tr>
+                        <tr><td><span class="status-dot yellow"></span>ищу ответы...</td><td>Идёт поиск и загрузка ответов с сайтов</td></tr>
+                        <tr><td><span class="status-dot yellow"></span>загружаю ответы...</td><td>Идёт загрузка страницы с ответами</td></tr>
+                        <tr><td><span class="status-dot yellow"></span>думаю...</td><td>AI обрабатывает вопрос</td></tr>
+                        <tr><td><span class="status-dot green"></span>работает</td><td>Скрипт активен и мониторит вопросы</td></tr>
+                        <tr><td><span class="status-dot green"></span>найдено</td><td>Ответ найден и подсвечен</td></tr>
+                        <tr><td><span class="status-dot green"></span>AI (кеш)</td><td>Ответ взят из кеша без повторного запроса</td></tr>
+                        <tr><td><span class="status-dot orange"></span>ответ не найден</td><td>Вопрос отсутствует в базе ответов</td></tr>
+                        <tr><td><span class="status-dot orange"></span>ответ не совпал</td><td>Ответ найден, но не совпадает с вариантами</td></tr>
+                        <tr><td><span class="status-dot red"></span>ошибка сети</td><td>Не удалось загрузить страницу с ответами</td></tr>
+                        <tr><td><span class="status-dot red"></span>неверный API-ключ</td><td>API-ключ невалиден или истёк</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Back to main -->
+        <section class="section" style="text-align: center;">
+            <a href="/" class="btn btn-primary fade-in">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+                Вернуться на главную
+            </a>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="footer-links">
+                <a href="/">Главная</a>
+                <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank">GitHub</a>
+                <a href="https://github.com/lKolabrodl/nmo-helper/issues" target="_blank">Баг-репорты</a>
+                <a href="https://boosty.to/kolabrod/donate" target="_blank">Поддержать</a>
+            </div>
+            <p class="footer-copy">NMO Helper &copy; 2026. MIT License.</p>
+        </footer>
+    </div>
+
+    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
+
+    <script>
+        // Copy to clipboard
+        function copyUrl(el) {
+            const text = el.getAttribute('data-copy');
+            navigator.clipboard.writeText(text).then(() => {
+                const old = el.querySelector('.copy-toast');
+                if (old) old.remove();
+                el.insertAdjacentHTML('beforeend', '<span class="copy-toast">Скопировано ✓</span>');
+                setTimeout(() => {
+                    const toast = el.querySelector('.copy-toast');
+                    if (toast) toast.remove();
+                }, 1500);
+            });
+        }
+
+        // Tabs
+        function showTab(browser, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active', 'active-firefox');
+            });
+            document.getElementById('tab-' + browser).classList.add('active');
+            btn.classList.add(browser === 'firefox' ? 'active-firefox' : 'active');
+        }
+
+        // Scroll to top
+        const scrollBtn = document.getElementById('scrollTop');
+        window.addEventListener('scroll', () => {
+            scrollBtn.classList.toggle('visible', window.scrollY > 300);
+        });
+
+        // Scroll fade-in
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+    </script>
+</body>
+</html>
