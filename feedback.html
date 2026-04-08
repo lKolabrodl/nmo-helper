@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Обратная связь — NMO Helper</title>
+    <meta name="description" content="Сообщить об ошибке, предложить улучшение или задать вопрос по NMO Helper.">
+    <link rel="canonical" href="https://nmo-helper.ru/feedback">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="NMO Helper">
+    <meta property="og:url" content="https://nmo-helper.ru/feedback">
+    <meta property="og:title" content="Обратная связь — NMO Helper">
+    <meta property="og:description" content="Сообщить об ошибке, предложить улучшение или задать вопрос.">
+    <meta property="og:image" content="https://nmo-helper.ru/og-image.png">
+    <meta property="og:locale" content="ru_RU">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="icon48.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="icon128.png">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gradient-1: #667eea;
+            --gradient-2: #764ba2;
+            --gradient-3: #f093fb;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #fff;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --accent: #fbbf24;
+            --green: #34d399;
+            --card-bg: rgba(255, 255, 255, 0.06);
+        }
+
+        html { scroll-behavior: smooth; overflow-x: hidden; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bg-glow::before, .bg-glow::after { content: ''; position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.3; animation: float 15s ease-in-out infinite; }
+        .bg-glow::before { width: 600px; height: 600px; background: var(--gradient-1); top: -200px; left: -100px; }
+        .bg-glow::after { width: 500px; height: 500px; background: var(--gradient-3); bottom: -150px; right: -100px; animation-delay: -7s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 20px) scale(0.95); }
+        }
+
+        .container { max-width: 700px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+        /* Nav */
+        nav { padding: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 700; text-decoration: none; color: var(--text); }
+        .logo img { width: 32px; height: 32px; border-radius: 8px; }
+        .nav-links { display: flex; gap: 24px; list-style: none; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+        .nav-links a:hover { color: var(--text); }
+
+        /* Hero */
+        .hero { text-align: center; padding: 60px 0 40px; }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, var(--gradient-3) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero p { font-size: 1.1rem; color: var(--text-muted); max-width: 500px; margin: 0 auto; line-height: 1.6; }
+
+        /* Form */
+        .form-card {
+            background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 40px; backdrop-filter: blur(10px); margin-bottom: 40px;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text);
+        }
+        .form-group label span { color: var(--text-muted); font-weight: 400; }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.06); color: var(--text); font-size: 0.95rem;
+            font-family: inherit; transition: border-color 0.2s, background 0.2s; outline: none;
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--gradient-1); background: rgba(255, 255, 255, 0.1);
+        }
+        .form-input::placeholder, .form-textarea::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+        .form-select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='rgba(255,255,255,0.5)' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px; }
+        .form-select option { background: #302b63; color: #fff; }
+
+        .form-textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+
+        /* Type selector */
+        .type-selector { display: flex; gap: 10px; flex-wrap: wrap; }
+        .type-option { display: none; }
+        .type-label {
+            display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 12px;
+            border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.04);
+            cursor: pointer; font-size: 0.9rem; transition: all 0.2s; user-select: none;
+        }
+        .type-label:hover { background: rgba(255, 255, 255, 0.08); }
+        .type-option:checked + .type-label {
+            border-color: var(--gradient-1); background: rgba(102, 126, 234, 0.15);
+        }
+        .type-icon { font-size: 1.1rem; }
+
+        /* Submit */
+        .btn-submit {
+            display: inline-flex; align-items: center; gap: 8px; padding: 14px 32px; border-radius: 12px;
+            font-size: 1rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.3s ease;
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); color: #fff;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); width: 100%; justify-content: center;
+        }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* Success / Error */
+        .feedback-result {
+            text-align: center; padding: 40px; display: none;
+        }
+        .feedback-result.show { display: block; }
+        .result-icon { font-size: 3rem; margin-bottom: 16px; }
+        .result-title { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+        .result-text { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* Footer */
+        footer { border-top: 1px solid var(--glass-border); padding: 40px 0; text-align: center; }
+        .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--text); }
+        .footer-copy { color: rgba(255, 255, 255, 0.4); font-size: 0.8rem; }
+
+        /* Fade */
+        .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .container { padding: 0 16px; }
+            .nav-links { display: none; }
+            .hero { padding: 40px 0 24px; }
+            .hero h1 { font-size: 1.8rem; }
+            .form-card { padding: 24px 16px; backdrop-filter: none; background: rgba(30, 27, 60, 0.8); }
+            .type-selector { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <div class="container">
+        <nav>
+            <a href="/" class="logo">
+                <img src="icon128.png" alt="NMO Helper">
+                NMO Helper
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    На главную
+                </a></li>
+                <li><a href="/instruction">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Инструкция
+                </a></li>
+            </ul>
+        </nav>
+
+        <section class="hero">
+            <h1>Обратная связь</h1>
+            <p>Нашли ошибку, есть идея или вопрос? Напишите нам — мы читаем каждое сообщение</p>
+        </section>
+
+        <div class="form-card fade-in" id="formCard">
+            <form id="feedbackForm" onsubmit="submitForm(event)">
+                <div class="form-group">
+                    <label>Тип обращения</label>
+                    <div class="type-selector">
+                        <input type="radio" name="type" value="bug" id="type-bug" class="type-option" checked>
+                        <label for="type-bug" class="type-label"><span class="type-icon">&#128030;</span> Ошибка</label>
+
+                        <input type="radio" name="type" value="feature" id="type-feature" class="type-option">
+                        <label for="type-feature" class="type-label"><span class="type-icon">&#128161;</span> Предложение</label>
+
+                        <input type="radio" name="type" value="question" id="type-question" class="type-option">
+                        <label for="type-question" class="type-label"><span class="type-icon">&#10067;</span> Вопрос</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Имя <span>(необязательно)</span></label>
+                    <input type="text" class="form-input" name="name" placeholder="Как к вам обращаться" maxlength="100">
+                </div>
+
+                <div class="form-group">
+                    <label>Браузер</label>
+                    <select class="form-select" name="browser">
+                        <option value="Chrome">Google Chrome</option>
+                        <option value="Yandex">Яндекс Браузер</option>
+                        <option value="Edge">Microsoft Edge</option>
+                        <option value="Firefox">Mozilla Firefox</option>
+                        <option value="Opera">Opera</option>
+                        <option value="Brave">Brave</option>
+                        <option value="other">Другой</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Сообщение <span>*</span></label>
+                    <textarea class="form-textarea" name="message" placeholder="Опишите проблему, предложение или вопрос..." maxlength="2000" required></textarea>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    Отправить
+                </button>
+            </form>
+        </div>
+
+        <div class="feedback-result" id="resultSuccess">
+            <div class="result-icon">&#9989;</div>
+            <div class="result-title">Отправлено!</div>
+            <p class="result-text">Спасибо за обратную связь. Мы обязательно прочитаем ваше сообщение.</p>
+        </div>
+
+        <div class="feedback-result" id="resultError">
+            <div class="result-icon">&#10060;</div>
+            <div class="result-title">Ошибка</div>
+            <p class="result-text" id="errorText">Не удалось отправить сообщение. Попробуйте позже.</p>
+        </div>
+
+        <footer>
+            <div class="footer-links">
+                <a href="/">Главная</a>
+                <a href="/instruction">Инструкция</a>
+                <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank">GitHub</a>
+                <a href="https://boosty.to/kolabrod/donate" target="_blank">Поддержать</a>
+            </div>
+            <p class="footer-copy">NMO Helper &copy; 2026. MIT License.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Fade-in
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        async function submitForm(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const form = document.getElementById('feedbackForm');
+            btn.disabled = true;
+            btn.textContent = 'Отправляем...';
+
+            const data = {
+                type: form.querySelector('input[name="type"]:checked').value,
+                name: form.querySelector('input[name="name"]').value,
+                browser: form.querySelector('select[name="browser"]').value,
+                message: form.querySelector('textarea[name="message"]').value
+            };
+
+            try {
+                const res = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const json = await res.json();
+                if (json.ok) {
+                    document.getElementById('formCard').style.display = 'none';
+                    document.getElementById('resultSuccess').classList.add('show');
+                } else if (json.error === 'too_many_requests') {
+                    document.getElementById('errorText').textContent = 'Подождите минуту перед повторной отправкой.';
+                    document.getElementById('formCard').style.display = 'none';
+                    document.getElementById('resultError').classList.add('show');
+                } else {
+                    throw new Error();
+                }
+            } catch {
+                document.getElementById('formCard').style.display = 'none';
+                document.getElementById('resultError').classList.add('show');
+            }
+        }
+    </script>
+</body>
+</html>

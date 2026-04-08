@@ -1152,7 +1152,7 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="faq-answer"><div class="faq-answer-inner">
-                        С каждым годом нагрузка на врачей растёт — и рабочая, и бюрократическая. Тесты НМО нужно проходить в своё свободное время, которого и так почти нет. NMO Helper помогает пройти тесты быстрее — чтобы у вас осталось время отдохнуть и восстановить силы.
+                        Проект создан на альтруистических началах — просто чтобы помочь. С каждым годом нагрузка на врачей растёт: смены, дежурства, бумаги, отчёты — а тесты НМО нужно проходить в своё личное время, которого и так почти нет. Врачи — это люди, от которых зависят жизни и здоровье других людей, и отнимать у них последние часы отдыха бюрократическими тестами — как минимум несправедливо. NMO Helper помогает пройти тесты быстрее, чтобы у вас осталось время на себя и своих близких.
                     </div></div>
                 </div>
 
@@ -1162,7 +1162,7 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="faq-answer"><div class="faq-answer-inner">
-                        Да, полностью бесплатно. Без подписок, без скрытых платежей, без рекламы. Проект создан на альтруистических началах — просто чтобы помочь. Исходный код открыт и доступен каждому на GitHub.
+                        Да, полностью бесплатно. Без подписок, без скрытых платежей, без рекламы. Исходный код открыт и доступен каждому на GitHub. Единственное — для AI-режима нужен платный API-ключ от стороннего сервиса. К сожалению, зарубежные нейросети закрыли бесплатный доступ для пользователей из России, поэтому приходится использовать платный прокси.
                     </div></div>
                 </div>
 
@@ -1172,7 +1172,7 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="faq-answer"><div class="faq-answer-inner">
-                        Расширение не собирает данные, не требует регистрации и не отправляет аналитику. Но не верьте на слово — проверьте сами. Весь исходный код открыт на <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank" style="color: var(--gradient-1);">GitHub</a>, расширение прошло проверку <a href="https://www.virustotal.com/gui/file/f88ca56932c00ededf4c29234c5f7ef0f3036439e714b294c5f0b68006064d85?nocache=1" target="_blank" style="color: var(--green);">VirusTotal</a> и валидацию <a href="https://addons.mozilla.org/" target="_blank" style="color: #ff9500;">Firefox Add-ons</a>. Вы также можете скачать файлы и отправить их в любую бесплатную нейросеть (YandexGPT, GigaChat, DeepSeek, Qwen) с просьбой проверить код на безопасность — они подтвердят, что всё чисто.
+                        Расширение <strong>не собирает данные</strong>, <strong>не требует регистрации</strong>, <strong>не отправляет аналитику</strong> и <strong>не подсовывает реферальные ссылки</strong>. Но не верьте на слово — проверьте сами. Весь исходный код открыт на <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank" style="color: var(--gradient-1);">GitHub</a>, расширение прошло проверку <a href="https://www.virustotal.com/gui/file/f88ca56932c00ededf4c29234c5f7ef0f3036439e714b294c5f0b68006064d85?nocache=1" target="_blank" style="color: var(--green);">VirusTotal</a> и валидацию <a href="https://addons.mozilla.org/" target="_blank" style="color: #ff9500;">Firefox Add-ons</a>. Вы также можете скачать файлы и отправить их в любую бесплатную нейросеть (YandexGPT, GigaChat, DeepSeek, Qwen) с просьбой проверить код на безопасность — они подтвердят, что всё чисто.
                     </div></div>
                 </div>
 
@@ -1183,6 +1183,16 @@
                     </button>
                     <div class="faq-answer"><div class="faq-answer-inner">
                         Да, расширение работает во всех браузерах на основе Chromium — Google Chrome, Microsoft Edge, Brave, Opera, Яндекс Браузер и других. Также поддерживается <strong>Mozilla Firefox</strong> — для него доступен отдельный файл <code>.xpi</code>.
+                    </div></div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question" onclick="toggleFaq(this.parentElement)">
+                        Почему нет в магазине расширений Chrome / Firefox?
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </button>
+                    <div class="faq-answer"><div class="faq-answer-inner">
+                        Расширение использует парсинг сайтов с готовыми ответами — а это очень не нравится тем, кто продаёт эти ответы за деньги. Они могут в любой момент подать жалобу, и расширение удалят из магазина. Поэтому установка происходит вручную — так расширение никто не сможет отобрать. Это занимает пару минут, зато работает надёжно и без зависимости от третьих лиц.
                     </div></div>
                 </div>
 
@@ -1224,8 +1234,9 @@
         <!-- Footer -->
         <footer>
             <div class="footer-links">
+                <a href="/instruction">Инструкция</a>
+                <a href="/feedback">Обратная связь</a>
                 <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank">GitHub</a>
-                <a href="https://github.com/lKolabrodl/nmo-helper/issues" target="_blank">Баг-репорты</a>
                 <a href="https://boosty.to/kolabrod/donate" target="_blank">Поддержать</a>
             </div>
             <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px;">
