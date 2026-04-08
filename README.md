@@ -9,8 +9,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![VirusTotal](https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/f88ca56932c00ededf4c29234c5f7ef0f3036439e714b294c5f0b68006064d85?nocache=1)
 
-🌐 **Сайт:** [nmo-helper.ru](https://nmo-helper.ru)
-📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)
+🌐 **Сайт:** [nmo-helper.ru](https://nmo-helper.ru)<br>
+📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)<br>
 💬 **Обратная связь:** [nmo-helper.ru/feedback](https://nmo-helper.ru/feedback)
 
 ---
