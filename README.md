@@ -30,11 +30,8 @@
 
 ### Google Chrome (и другие Chromium-браузеры)
 
-1. Скачай или клонируй этот репозиторий
+1. Скачай [`nmo-helper-main.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v2.1.0/nmo-helper-main.zip)
 2. Разархивируйте содержимое
-
-![demo](demo/step_2.gif)
-
 3. Открой `chrome://extensions/` в адресной строке
 4. Включи переключатель **«Режим разработчика»** в правом верхнем углу
 5. Нажми **«Загрузить распакованное расширение»**
@@ -44,9 +41,11 @@
 
 ### Mozilla Firefox
 
-1. Скачай файл [`nmo-helper-firefox.xpi`](firefox_nmo_helper.xpi)
+1. Скачай файл [`nmo-helper-firefox.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v2.1.0/firefox_nmo_helper.xpi)
 2. Открой Firefox и перетащи файл `.xpi` в окно браузера, или открой `about:addons` → нажми шестерёнку ⚙ → **«Установить дополнение из файла»**
 3. Подтверди установку
+
+![demo](demo/firefox_install.gif)
 
 ## Использование
 
