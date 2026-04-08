@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Инструкция — NMO Helper</title>
     <meta name="description" content="Подробная инструкция по установке и использованию NMO Helper — расширения для браузера, помощника в прохождении тестов НМО.">
-    <link rel="canonical" href="https://nmo-helper.ru/instruction.html">
+    <link rel="canonical" href="https://nmo-helper.ru/instruction">
     <meta name="robots" content="index, follow">
 
     <meta property="og:type" content="article">
     <meta property="og:site_name" content="NMO Helper">
-    <meta property="og:url" content="https://nmo-helper.ru/instruction.html">
+    <meta property="og:url" content="https://nmo-helper.ru/instruction">
     <meta property="og:title" content="Инструкция — NMO Helper">
     <meta property="og:description" content="Подробная инструкция по установке и использованию NMO Helper.">
     <meta property="og:image" content="https://nmo-helper.ru/og-image.png">
@@ -31,25 +31,25 @@
                 "@type": "HowToStep",
                 "name": "Скачайте расширение",
                 "text": "Скачайте nmo-helper-main.zip для Chrome или nmo-helper-firefox.xpi для Firefox с GitHub.",
-                "url": "https://nmo-helper.ru/instruction.html#install"
+                "url": "https://nmo-helper.ru/instruction#install"
             },
             {
                 "@type": "HowToStep",
                 "name": "Установите расширение",
                 "text": "Для Chrome: откройте chrome://extensions/, включите режим разработчика, загрузите распакованное расширение. Для Firefox: перетащите .xpi файл в окно браузера.",
-                "url": "https://nmo-helper.ru/instruction.html#install"
+                "url": "https://nmo-helper.ru/instruction#install"
             },
             {
                 "@type": "HowToStep",
                 "name": "Откройте тест НМО",
                 "text": "Перейдите на страницу тестирования НМО — панель NMO Helper появится автоматически.",
-                "url": "https://nmo-helper.ru/instruction.html#usage"
+                "url": "https://nmo-helper.ru/instruction#usage"
             },
             {
                 "@type": "HowToStep",
                 "name": "Используйте авто-поиск или AI-режим",
                 "text": "Включите авто-поиск для автоматического поиска ответов на rosmedicinfo.ru и 24forcare.com, или настройте AI-режим через proxyapi.ru.",
-                "url": "https://nmo-helper.ru/instruction.html#autosearch"
+                "url": "https://nmo-helper.ru/instruction#autosearch"
             }
         ]
     }
@@ -91,7 +91,7 @@
             66% { transform: translate(-30px, 20px) scale(0.95); }
         }
 
-        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
 
         /* Nav */
         nav { padding: 20px 0; display: flex; justify-content: space-between; align-items: center; }
@@ -289,9 +289,18 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     На главную
                 </a></li>
-                <li><a href="#install">Установка</a></li>
-                <li><a href="#usage">Использование</a></li>
-                <li><a href="#ai">AI-режим</a></li>
+                <li><a href="#install">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Установка
+                </a></li>
+                <li><a href="#usage">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                    Использование
+                </a></li>
+                <li><a href="#ai">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>
+                    AI-режим
+                </a></li>
             </ul>
         </nav>
 
