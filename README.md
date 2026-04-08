@@ -1,4 +1,4 @@
-# NMO Helper Plugin v2.0.0
+# NMO Helper Plugin v2.1.0
 
 Расширение для браузера, которое поможет вам решить тесты (ИОМ'ы) на портале НМО — https://a.edu.rosminzdrav.ru
 </br>
@@ -24,8 +24,11 @@
 ## Требования
 
 - **Google Chrome** (или Chromium-based браузер: Edge, Brave, Opera, Яндекс Браузер)
+- **Mozilla Firefox**
 
 ## Установка
+
+### Google Chrome (и другие Chromium-браузеры)
 
 1. Скачай или клонируй этот репозиторий
 2. Разархивируйте содержимое
@@ -38,6 +41,12 @@
 6. Выбери папку `nmo-helper-plugin`
 
 ![demo](demo/step_3.gif)
+
+### Mozilla Firefox
+
+1. Скачай файл [`nmo-helper-firefox.xpi`](nmo-helper-firefox.xpi)
+2. Открой Firefox и перетащи файл `.xpi` в окно браузера, или открой `about:addons` → нажми шестерёнку ⚙ → **«Установить дополнение из файла»**
+3. Подтверди установку
 
 ## Использование
 
