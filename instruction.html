@@ -195,6 +195,7 @@
         .tab-btn {
             display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-radius: 12px;
             font-size: 0.95rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.3s ease; color: #fff;
+            min-width: 180px; justify-content: center; flex: 1;
         }
         .tab-btn.active { background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2)); box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4); }
         .tab-btn.active-firefox { background: linear-gradient(135deg, #ff9500, #ff6a00); box-shadow: 0 4px 20px rgba(255, 149, 0, 0.4); }
@@ -271,7 +272,8 @@
             .models-table { font-size: 0.8rem; }
             .models-table th, .models-table td { padding: 8px 10px; }
             .status-table th, .status-table td { padding: 8px 10px; font-size: 0.8rem; }
-            .tabs { justify-content: center; }
+            .tabs { display: flex; }
+            .tab-btn { min-width: 0; flex: 1; }
         }
     </style>
 </head>
