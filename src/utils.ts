@@ -97,6 +97,25 @@ export function fixAllTextNodes(div: HTMLElement): void {
 }
 
 /**
+ * Удаляет опасные теги и event-handler атрибуты из HTML через DOMParser.
+ * DOMParser не выполняет скрипты при парсинге (по спецификации),
+ * но мы дополнительно вычищаем опасные элементы и атрибуты.
+ */
+export function sanitizeHtml(html: string): string {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  doc.querySelectorAll('script,iframe,object,embed,form,svg,math,link,meta,base,template,style')
+    .forEach(el => el.remove());
+  doc.querySelectorAll('*').forEach(el => {
+    for (const attr of [...el.attributes]) {
+      if (attr.name.startsWith('on') || attr.value.trim().toLowerCase().startsWith('javascript:')) {
+        el.removeAttribute(attr.name);
+      }
+    }
+  });
+  return doc.body.innerHTML;
+}
+
+/**
  * Очищает HTML-строку от навигации, скриптов, меню и прочих лишних элементов.
  * Оставляет только контент с ответами (начиная с `<div class="row">`).
  */

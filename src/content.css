@@ -62,12 +62,90 @@
     letter-spacing: 1px;
 }
 
+/* --- Какашка-маскот --- */
+.nmo-poo {
+    display: flex;
+    align-items: center;
+    margin-right: 6px;
+    line-height: 0;
+    flex-shrink: 0;
+}
+
+.nmo-poo svg {
+    width: 35px !important;
+    height: 35px !important;
+    min-width: 35px !important;
+    min-height: 35px !important;
+    display: block !important;
+    overflow: visible !important;
+    transition: transform 0.3s ease;
+}
+
+/* Скрыть все лица по умолчанию */
+.nmo-poo-face { display: none; }
+
+/* Показ лиц по состоянию */
+.nmo-poo.sleep .nmo-poo-face-sleep { display: block; }
+.nmo-poo.happy .nmo-poo-face-happy { display: block; }
+.nmo-poo.sad .nmo-poo-face-sad { display: block; }
+
+/* Анимация: happy — покачивание */
+.nmo-poo.happy svg {
+    animation: nmo-poo-wiggle 1.5s ease-in-out infinite;
+}
+
+@keyframes nmo-poo-wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(6deg); }
+    75% { transform: rotate(-6deg); }
+}
+
+/* Анимация: sad — дрожание */
+.nmo-poo.sad svg {
+    animation: nmo-poo-tremble 0.4s ease-in-out infinite;
+}
+
+@keyframes nmo-poo-tremble {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-1.5px); }
+    75% { transform: translateX(1.5px); }
+}
+
+/* Анимация: sleep — дыхание */
+.nmo-poo.sleep svg {
+    animation: nmo-poo-breathe 2.5s ease-in-out infinite;
+}
+
+@keyframes nmo-poo-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+}
+
+/* Анимация: zzz плавающие буквы */
+.nmo-poo-zzz {
+    animation: nmo-zzz-float 2s ease-in-out infinite;
+    opacity: 0.8;
+}
+
+.nmo-poo-zzz-2 {
+    animation-delay: 0.4s;
+}
+
+.nmo-poo-zzz-3 {
+    animation-delay: 0.8s;
+}
+
+@keyframes nmo-zzz-float {
+    0%, 100% { opacity: 0.3; transform: translateY(0); }
+    50% { opacity: 1; transform: translateY(-2px); }
+}
+
 .nmo-toggle-btn {
     background: none;
     border: none;
     color: #aaa;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 24px;
     padding: 0;
     line-height: 1;
 }

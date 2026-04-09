@@ -1,5 +1,5 @@
 import type { SearchResult } from './types';
-import { fetchViaBackground, storageSet } from './utils';
+import { fetchViaBackground, storageSet, sanitizeHtml } from './utils';
 
 export function initSearch(): void {
   const searchStatus = (msg: string, cls = '') => {
@@ -29,7 +29,7 @@ export function initSearch(): void {
       const res = await fetchViaBackground('https://24forcare.com/search/?query=' + encodeURIComponent(query));
       if (res && !res.error && res.text) {
         const div = document.createElement('div');
-        div.innerHTML = res.text;
+        div.innerHTML = sanitizeHtml(res.text);
         const links = Array.from(div.querySelectorAll('a.item-name'));
         links.forEach(a => {
           const href = a.getAttribute('href') || '';
@@ -51,7 +51,7 @@ export function initSearch(): void {
       });
       if (res && !res.error && res.text) {
         const div = document.createElement('div');
-        div.innerHTML = res.text;
+        div.innerHTML = sanitizeHtml(res.text);
         const titles = Array.from(div.querySelectorAll('.short__title a'));
         titles.forEach(a => {
           const href = a.getAttribute('href') || '';
@@ -77,10 +77,14 @@ export function initSearch(): void {
     allResults.forEach(r => {
       const item = document.createElement('div');
       item.className = 'nmo-result-item';
-      item.innerHTML = `
-        <span class="nmo-result-src ${r.source === '24forcare' ? 'src-24' : 'src-ros'}">${r.source === '24forcare' ? '24fc' : 'rosmed'}</span>
-        <span class="nmo-result-title">${r.title}</span>
-      `;
+      const srcSpan = document.createElement('span');
+      srcSpan.className = 'nmo-result-src ' + (r.source === '24forcare' ? 'src-24' : 'src-ros');
+      srcSpan.textContent = r.source === '24forcare' ? '24fc' : 'rosmed';
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'nmo-result-title';
+      titleSpan.textContent = r.title;
+      item.appendChild(srcSpan);
+      item.appendChild(titleSpan);
       item.addEventListener('click', () => {
         (document.getElementById('nmo-url') as HTMLInputElement).value = r.url;
         storageSet('customUrl', r.url);

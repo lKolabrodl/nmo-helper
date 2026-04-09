@@ -1,5 +1,5 @@
 import type { ParserFunction, SearchUrls, AutoCacheEntry } from './types';
-import { fetchViaBackground, storageSet, cleanHtml, fixAllTextNodes } from './utils';
+import { fetchViaBackground, storageSet, cleanHtml, fixAllTextNodes, sanitizeHtml } from './utils';
 import { SOURCES } from './parsers';
 import { highlightAnswers } from './matching';
 import { POLL_INTERVAL } from './constants';
@@ -11,7 +11,7 @@ export async function loadParser(url: string, sourceKey: '24forcare' | 'rosmedic
     if (!res.text || res.text.length < 100) return null;
 
     const div = document.createElement('div');
-    div.innerHTML = cleanHtml(res.text);
+    div.innerHTML = sanitizeHtml(cleanHtml(res.text));
     fixAllTextNodes(div);
 
     return SOURCES[sourceKey].parseAnswers(div);
@@ -36,14 +36,14 @@ export async function searchBothSites(query: string): Promise<SearchUrls> {
 
   if (rosRes && !rosRes.error && rosRes.text) {
     const div = document.createElement('div');
-    div.innerHTML = rosRes.text;
+    div.innerHTML = sanitizeHtml(rosRes.text);
     const a = div.querySelector('.short__title a');
     if (a) result.rosmed = a.getAttribute('href') || null;
   }
 
   if (fcRes && !fcRes.error && fcRes.text) {
     const div = document.createElement('div');
-    div.innerHTML = fcRes.text;
+    div.innerHTML = sanitizeHtml(fcRes.text);
     const a = div.querySelector('a.item-name');
     if (a) {
       const href = a.getAttribute('href') || '';

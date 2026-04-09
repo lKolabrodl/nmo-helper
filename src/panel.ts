@@ -10,6 +10,40 @@ export function createPanel(state: ExtensionState): HTMLElement {
   if (savedCollapsed) panel.classList.add('collapsed');
   panel.innerHTML = `
     <div class="nmo-header">
+      <span class="nmo-poo" id="nmo-poo">
+        <svg viewBox="0 0 64 64" width="35" height="35" xmlns="http://www.w3.org/2000/svg">
+          <!-- body -->
+          <path d="M32 4c-3 0-5 2-5 4 0 1 .5 2.5 1 3-4 1-7 4-7 7 0 1 .3 2 .8 3C16 23 12 28 12 34c0 9 9 16 20 16s20-7 20-16c0-6-4-11-9.8-13 .5-1 .8-2 .8-3 0-3-3-6-7-7 .5-.5 1-2 1-3 0-2-2-4-5-4z" fill="#8B6914"/>
+          <path d="M32 6c-2 0-3.5 1.2-3.5 2.5 0 .8.4 1.8.8 2.2-3.5 1-6.3 3.5-6.3 6.3 0 .8.3 1.7.7 2.5C18.5 21.2 14 26 14 32c0 8 8.1 14.5 18 14.5S50 40 50 32c0-6-4.5-10.8-9.7-12.5.4-.8.7-1.7.7-2.5 0-2.8-2.8-5.3-6.3-6.3.4-.4.8-1.4.8-2.2C35.5 7.2 34 6 32 6z" fill="#A67C00"/>
+          <ellipse cx="32" cy="34" rx="16" ry="11" fill="#BF9B30" opacity="0.25"/>
+          <!-- happy face -->
+          <g class="nmo-poo-face nmo-poo-face-happy">
+            <circle cx="25" cy="30" r="2.5" fill="#1a1a2e"/><ellipse cx="25.8" cy="29.2" rx="0.8" ry="0.8" fill="#fff"/>
+            <circle cx="39" cy="30" r="2.5" fill="#1a1a2e"/><ellipse cx="39.8" cy="29.2" rx="0.8" ry="0.8" fill="#fff"/>
+            <ellipse cx="32" cy="37" rx="4" ry="2.5" fill="#1a1a2e"/>
+            <ellipse cx="32" cy="36" rx="3" ry="1.2" fill="#e94560"/>
+            <circle cx="21" cy="34" r="2.5" fill="#e94560" opacity="0.25"/>
+            <circle cx="43" cy="34" r="2.5" fill="#e94560" opacity="0.25"/>
+          </g>
+          <!-- sad face -->
+          <g class="nmo-poo-face nmo-poo-face-sad">
+            <line x1="22" y1="26" x2="28" y2="28" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+            <line x1="42" y1="26" x2="36" y2="28" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="25" cy="31" r="2.5" fill="#1a1a2e"/><ellipse cx="25.8" cy="30.2" rx="0.8" ry="0.8" fill="#fff"/>
+            <circle cx="39" cy="31" r="2.5" fill="#1a1a2e"/><ellipse cx="39.8" cy="30.2" rx="0.8" ry="0.8" fill="#fff"/>
+            <path d="M27 39 Q32 35 37 39" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+          </g>
+          <!-- sleep face -->
+          <g class="nmo-poo-face nmo-poo-face-sleep">
+            <path d="M22 30 Q25 28 28 30" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+            <path d="M36 30 Q39 28 42 30" fill="none" stroke="#1a1a2e" stroke-width="2" stroke-linecap="round"/>
+            <ellipse cx="32" cy="37" rx="2" ry="1.5" fill="#1a1a2e"/>
+            <text class="nmo-poo-zzz" x="44" y="22" fill="#f0c040" font-size="8" font-weight="bold" font-family="sans-serif">z</text>
+            <text class="nmo-poo-zzz nmo-poo-zzz-2" x="48" y="16" fill="#f0c040" font-size="10" font-weight="bold" font-family="sans-serif">z</text>
+            <text class="nmo-poo-zzz nmo-poo-zzz-3" x="53" y="9" fill="#f0c040" font-size="12" font-weight="bold" font-family="sans-serif">Z</text>
+          </g>
+        </svg>
+      </span>
       <span class="nmo-header-title">NMO Helper</span>
       <span class="nmo-header-status" id="nmo-header-status"></span>
       <button class="nmo-toggle-btn" id="nmo-collapse" title="Свернуть">${savedCollapsed ? '+' : '\u2014'}</button>
@@ -41,7 +75,7 @@ export function createPanel(state: ExtensionState): HTMLElement {
 
         <div class="nmo-field">
           <label>URL страницы с ответами</label>
-          <input type="text" id="nmo-url" placeholder="https://..." value="${savedUrl}" />
+          <input type="text" id="nmo-url" placeholder="https://..." value="${savedUrl.replace(/"/g, '&quot;')}" />
         </div>
         <div class="nmo-btn-row">
           <button class="nmo-btn nmo-btn-run" id="nmo-run">\u25B6 Запуск</button>
@@ -53,7 +87,7 @@ export function createPanel(state: ExtensionState): HTMLElement {
       <div class="nmo-ai-section" ${savedAiMode ? '' : 'style="display:none"'}>
         <div class="nmo-field">
           <label>API-ключ ProxyAPI</label>
-          <input type="password" id="nmo-api-key" placeholder="вставьте ключ..." value="${savedApiKey}" />
+          <input type="password" id="nmo-api-key" placeholder="вставьте ключ..." value="${savedApiKey.replace(/"/g, '&quot;')}" />
           <a class="nmo-key-hint" id="nmo-key-hint" href="https://console.proxyapi.ru/keys" target="_blank" ${savedApiKey ? 'style="display:none"' : ''}>Получить ключ API</a>
         </div>
         <div class="nmo-field">
@@ -206,7 +240,9 @@ export function initPanelBehavior(panel: HTMLElement): void {
   document.getElementById('nmo-url')!.addEventListener('change', (e: Event) => storageSet('customUrl', (e.target as HTMLInputElement).value.trim()));
 
   const headerStatus = document.getElementById('nmo-header-status')!;
-  const statusIds = ['nmo-ai-status', 'nmo-auto-status', 'nmo-status'];
+  const poo = document.getElementById('nmo-poo')!;
+  poo.className = 'nmo-poo sleep';
+
   setInterval(() => {
     let activeId = 'nmo-status';
     if (aiCheckbox.checked) activeId = 'nmo-ai-status';
@@ -214,7 +250,13 @@ export function initPanelBehavior(panel: HTMLElement): void {
     const el = document.getElementById(activeId);
     if (el) {
       headerStatus.textContent = el.textContent;
-      headerStatus.className = 'nmo-header-status ' + (el.className.replace('nmo-status', '').trim());
+      const statusCls = el.className.replace('nmo-status', '').trim();
+      headerStatus.className = 'nmo-header-status ' + statusCls;
+
+      let pooState = 'sleep';
+      if (statusCls === 'ok') pooState = 'happy';
+      else if (statusCls === 'err' || statusCls === 'warn') pooState = 'sad';
+      poo.className = 'nmo-poo ' + pooState;
     }
   }, POLL_INTERVAL);
 }

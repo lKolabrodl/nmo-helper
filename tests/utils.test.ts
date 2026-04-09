@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeDashes, normalizeText, fixMixedChars, cleanHtml } from '../src/utils';
+import { normalizeDashes, normalizeText, fixMixedChars, cleanHtml, sanitizeHtml } from '../src/utils';
 
 describe('normalizeDashes — нормализация тире и символов', () => {
   it('заменяет unicode-тире на дефис', () => {
@@ -54,6 +54,109 @@ describe('fixMixedChars — исправление смешанных симво
   it('заменяет латинскую «a» в кириллическом слове', () => {
     const result = fixMixedChars('\u043A\u043E\u0448\u043Aa'); // кошк + a(лат.)
     expect(result).toContain('\u0430'); // Латинская «a» → кириллическая «а»
+  });
+});
+
+describe('sanitizeHtml — удаление опасных тегов и атрибутов', () => {
+  it('удаляет теги script', () => {
+    const result = sanitizeHtml('<p>text</p><script>alert(1)</script>');
+    expect(result).not.toContain('script');
+    expect(result).toContain('text');
+  });
+
+  it('удаляет теги iframe', () => {
+    const result = sanitizeHtml('<p>ok</p><iframe src="evil.com"></iframe>');
+    expect(result).not.toContain('iframe');
+    expect(result).toContain('ok');
+  });
+
+  it('удаляет теги object, embed', () => {
+    const result = sanitizeHtml('<object data="x"></object><embed src="y"><p>safe</p>');
+    expect(result).not.toContain('object');
+    expect(result).not.toContain('embed');
+    expect(result).toContain('safe');
+  });
+
+  it('удаляет теги svg', () => {
+    const result = sanitizeHtml('<svg onload="alert(1)"><circle/></svg><p>ok</p>');
+    expect(result).not.toContain('svg');
+    expect(result).toContain('ok');
+  });
+
+  it('удаляет теги style', () => {
+    const result = sanitizeHtml('<style>@import url("evil")</style><p>ok</p>');
+    expect(result).not.toContain('style');
+    expect(result).not.toContain('@import');
+    expect(result).toContain('ok');
+  });
+
+  it('удаляет теги form', () => {
+    const result = sanitizeHtml('<form action="evil"><input></form><p>ok</p>');
+    expect(result).not.toContain('form');
+    expect(result).toContain('ok');
+  });
+
+  it('удаляет теги template', () => {
+    const result = sanitizeHtml('<template><img src=x onerror=alert(1)></template><p>ok</p>');
+    expect(result).not.toContain('template');
+    expect(result).toContain('ok');
+  });
+
+  it('удаляет on* атрибуты с элементов', () => {
+    const result = sanitizeHtml('<p onclick="alert(1)">click</p>');
+    expect(result).not.toContain('onclick');
+    expect(result).toContain('click');
+  });
+
+  it('удаляет onerror с img (сам img удалён по отсутствию в whitelist — нет, img не в списке удаляемых)', () => {
+    const result = sanitizeHtml('<img src="x" onerror="alert(1)">');
+    expect(result).not.toContain('onerror');
+  });
+
+  it('удаляет onmouseover атрибут', () => {
+    const result = sanitizeHtml('<div onmouseover="alert(1)">hover</div>');
+    expect(result).not.toContain('onmouseover');
+    expect(result).toContain('hover');
+  });
+
+  it('удаляет javascript: в href', () => {
+    const result = sanitizeHtml('<a href="javascript:alert(1)">link</a>');
+    expect(result).not.toContain('javascript:');
+  });
+
+  it('удаляет javascript: с пробелами и регистром', () => {
+    const result = sanitizeHtml('<a href="  JavaScript:alert(1)">link</a>');
+    expect(result).not.toContain('JavaScript');
+  });
+
+  it('сохраняет безопасный HTML', () => {
+    const html = '<h3>Вопрос</h3><p><strong>Ответ</strong></p><span style="background:#fbeeb8">подсветка</span>';
+    const result = sanitizeHtml(html);
+    expect(result).toContain('<h3>');
+    expect(result).toContain('<strong>');
+    expect(result).toContain('Ответ');
+    expect(result).toContain('подсветка');
+  });
+
+  it('сохраняет структуру для парсеров (h3 + p + strong)', () => {
+    const html = '<h3>Тема теста</h3><p><strong>правильный ответ</strong></p>';
+    const result = sanitizeHtml(html);
+    const div = new DOMParser().parseFromString(result, 'text/html').body;
+    const h3 = div.querySelector('h3');
+    expect(h3).not.toBeNull();
+    expect(h3!.textContent).toBe('Тема теста');
+    const strong = div.querySelector('strong');
+    expect(strong).not.toBeNull();
+    expect(strong!.textContent).toBe('правильный ответ');
+  });
+
+  it('обрабатывает пустую строку', () => {
+    expect(sanitizeHtml('')).toBe('');
+  });
+
+  it('обрабатывает строку без HTML', () => {
+    const result = sanitizeHtml('просто текст');
+    expect(result).toContain('просто текст');
   });
 });
 
