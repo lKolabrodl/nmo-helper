@@ -1,4 +1,4 @@
-# NMO Helper v2.1.1
+# NMO Helper v2.2.2
 
 > Умный помощник в прохождении тестов НМО на портале [edu.rosminzdrav.ru](https://a.edu.rosminzdrav.ru) — бесплатное расширение для браузера с открытым исходным кодом.
 
@@ -39,12 +39,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-main.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v2.1.1/nmo-helper-main.zip)
+1. Скачайте [`nmo-helper-main.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v2.2.2/nmo-helper-main.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-plugin`
+6. Выберите папку `dist/chrome`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
@@ -54,7 +54,7 @@
 
 ### Mozilla Firefox
 
-1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v2.1.1/firefox_nmo_helper.xpi)
+1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v2.2.2/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
 3. Подтвердите установку
 
@@ -149,24 +149,34 @@
 
 ```
 nmo-helper/
-├── src/                    # Исходники
+├── src/                        # Исходники (TypeScript)
+│   ├── types.ts                # Интерфейсы и типы
+│   ├── constants.ts            # Константы (цвета, URL, модели)
+│   ├── utils.ts                # Chrome API обёртки, нормализация текста
+│   ├── parsers.ts              # Парсеры ответов с сайтов
+│   ├── matching.ts             # Сопоставление и подсветка ответов
+│   ├── ai.ts                   # AI-режим (ProxyAPI)
+│   ├── search.ts               # Поиск тестов на сайтах
+│   ├── sites.ts                # Ручной режим
+│   ├── auto.ts                 # Авто-режим
+│   ├── panel.ts                # UI панели
+│   ├── content.ts              # Точка входа
+│   ├── background.ts           # Service worker (CORS proxy)
+│   ├── content.css             # Стили панели
 │   ├── manifest.chrome.json
 │   ├── manifest.firefox.json
-│   ├── content.js          # Точка входа
-│   ├── panel.js            # UI панели
-│   ├── auto.js             # Авто-поиск
-│   ├── ai.js               # AI-режим
-│   ├── search.js           # Ручной поиск
-│   ├── sites.js            # Загрузка с сайтов
-│   ├── parsers.js          # Парсеры ответов
-│   ├── utils.js            # Утилиты
-│   ├── background.js       # Service worker
-│   ├── content.css         # Стили панели
 │   └── icons/
+├── tests/                      # Тесты (vitest)
+│   ├── utils.test.ts
+│   ├── parsers.test.ts
+│   ├── matching.test.ts
+│   └── ai.test.ts
 ├── dist/
-│   ├── chrome/             # Сборка для Chrome
-│   └── firefox/            # Сборка для Firefox + .xpi
-├── build.js                # Скрипт сборки (esbuild)
+│   ├── chrome/                 # Сборка для Chrome (один бандл)
+│   └── firefox/                # Сборка для Firefox + .xpi
+├── build.js                    # Скрипт сборки (esbuild)
+├── tsconfig.json
+├── vitest.config.ts
 └── package.json
 ```
 
@@ -174,7 +184,8 @@ nmo-helper/
 
 ```bash
 npm install
-npm run build
+npm run build    # Собрать dist/chrome и dist/firefox
+npm test         # Запустить тесты
 ```
 
 ---
@@ -195,6 +206,7 @@ npm run build
 
 ## Предыдущие версии
 
+- [v2.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.1) — реструктуризация, esbuild сборка, обновлённый README
 - [v2.1.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.0) — поддержка Firefox, обновлённый лендинг
 - [v2.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.0.0) — AI-режим, авто-поиск, рефакторинг на модули
 - [v1.4.2](https://github.com/lKolabrodl/nmo-helper/tree/v1.4.2) — только поиск по сайтам, без AI

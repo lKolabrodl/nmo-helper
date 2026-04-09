@@ -1,11 +1,12 @@
 {
   "name": "nmo-helper",
-  "version": "2.1.1",
+  "version": "2.2.2",
   "description": "Расширение для браузера, которое поможет вам решить тесты (ИОМ'ы) на портале НМО — https://a.edu.rosminzdrav.ru\r </br>\r Прост в установке, работает из коробки.\r </br>\r Ответы берутся с сайтов `rosmedicinfo.ru` и `24forcare.com`, а также с помощью AI.\r </br>",
   "main": "ai.js",
   "scripts": {
     "build": "node build.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,10 @@
   },
   "homepage": "https://github.com/lKolabrodl/nmo-helper#readme",
   "devDependencies": {
-    "esbuild": "^0.28.0"
+    "@types/chrome": "^0.1.40",
+    "esbuild": "^0.28.0",
+    "jsdom": "^29.0.2",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.3"
   }
 }
