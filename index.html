@@ -764,8 +764,13 @@
         }
 
         /* Carousel */
-        .carousel {
+        .carousel-wrapper {
             position: relative;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .carousel {
             max-width: 320px;
             margin: 0 auto;
             overflow: hidden;
@@ -781,7 +786,7 @@
 
         .carousel-slide {
             width: 320px;
-            height: 280px;
+            height: 480px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
@@ -819,8 +824,8 @@
             background: rgba(0, 0, 0, 0.7);
         }
 
-        .carousel-btn.prev { left: 8px; }
-        .carousel-btn.next { right: 8px; }
+        .carousel-btn.prev { left: 0; }
+        .carousel-btn.next { right: 0; }
 
         .carousel-dots {
             display: flex;
@@ -960,12 +965,15 @@
             <h2 class="section-title fade-in">Как это выглядит</h2>
             <p class="section-subtitle fade-in">Компактная панель прямо на странице теста</p>
             <div class="fade-in">
-                <div class="carousel" id="carousel">
-                    <div class="carousel-track" id="carouselTrack">
-                        <div class="carousel-slide"><img src="screen1.png" alt="Авто-поиск"></div>
-                        <div class="carousel-slide"><img src="screen2.png" alt="Ручной поиск"></div>
-                        <div class="carousel-slide"><img src="screen3.png" alt="AI-режим"></div>
-                        <div class="carousel-slide"><img src="screen4.png" alt="Выбор модели"></div>
+                <div class="carousel-wrapper" id="carousel">
+                    <div class="carousel">
+                        <div class="carousel-track" id="carouselTrack">
+                            <div class="carousel-slide"><img src="screen1.png" alt="Выбор AI-модели"></div>
+                            <div class="carousel-slide"><img src="screen2.png" alt="AI-режим"></div>
+                            <div class="carousel-slide"><img src="screen3.png" alt="Ручной поиск"></div>
+                            <div class="carousel-slide"><img src="screen4.png" alt="Авто-поиск"></div>
+                            <div class="carousel-slide"><img src="screen5.png" alt="Компактный вид"></div>
+                        </div>
                     </div>
                     <button class="carousel-btn prev" onclick="moveCarousel(-1)">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
@@ -1269,7 +1277,7 @@
 
     <script>
         // Carousel
-        const captions = ['Компактный вид', 'Ручной поиск', 'AI-режим', 'Выбор AI-модели'];
+        const captions = ['Выбор AI-модели', 'AI-режим', 'Ручной поиск', 'Авто-поиск', 'Компактный вид'];
         let carouselIdx = 0;
         const track = document.getElementById('carouselTrack');
         const dotsContainer = document.getElementById('carouselDots');
@@ -1296,6 +1304,11 @@
             if (next >= captions.length) next = 0;
             goToSlide(next);
         }
+
+        // Auto-play carousel every 4 seconds
+        let autoPlay = setInterval(() => moveCarousel(1), 4000);
+        document.getElementById('carousel').addEventListener('mouseenter', () => clearInterval(autoPlay));
+        document.getElementById('carousel').addEventListener('mouseleave', () => { autoPlay = setInterval(() => moveCarousel(1), 4000); });
 
         // FAQ accordion — only one open at a time
         function copyUrl(el) {
