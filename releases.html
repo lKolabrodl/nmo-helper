@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Релизы — NMO Helper</title>
+    <meta name="description" content="История версий и релизов расширения NMO Helper. Скачайте последнюю или предыдущую версию.">
+    <link rel="canonical" href="https://nmo-helper.ru/releases">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="NMO Helper">
+    <meta property="og:url" content="https://nmo-helper.ru/releases">
+    <meta property="og:title" content="Релизы — NMO Helper">
+    <meta property="og:description" content="История версий и релизов расширения NMO Helper.">
+    <meta property="og:image" content="https://nmo-helper.ru/og-image.png">
+    <meta property="og:locale" content="ru_RU">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Релизы — NMO Helper">
+    <meta name="twitter:description" content="История версий и релизов расширения NMO Helper.">
+    <meta name="twitter:image" content="https://nmo-helper.ru/og-image.png">
+
+    <meta name="keywords" content="НМО, NMO Helper, релизы, версии, скачать, changelog, обновления">
+
+    <link rel="icon" type="image/png" sizes="48x48" href="icon48.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="icon128.png">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gradient-1: #667eea;
+            --gradient-2: #764ba2;
+            --gradient-3: #f093fb;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #fff;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --accent: #fbbf24;
+            --green: #34d399;
+            --card-bg: rgba(255, 255, 255, 0.06);
+        }
+
+        html { scroll-behavior: smooth; overflow-x: hidden; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bg-glow::before, .bg-glow::after { content: ''; position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.3; animation: float 15s ease-in-out infinite; }
+        .bg-glow::before { width: 600px; height: 600px; background: var(--gradient-1); top: -200px; left: -100px; }
+        .bg-glow::after { width: 500px; height: 500px; background: var(--gradient-3); bottom: -150px; right: -100px; animation-delay: -7s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 20px) scale(0.95); }
+        }
+
+        .container { max-width: 700px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+        /* Nav */
+        nav { padding: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 700; text-decoration: none; color: var(--text); }
+        .logo img { width: 32px; height: 32px; border-radius: 8px; }
+        .nav-links { display: flex; gap: 24px; list-style: none; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+        .nav-links a:hover { color: var(--text); }
+
+        /* Hero */
+        .hero { text-align: center; padding: 60px 0 40px; }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, var(--gradient-3) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero p { font-size: 1.1rem; color: var(--text-muted); max-width: 500px; margin: 0 auto; line-height: 1.6; }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 0;
+            color: var(--text-muted);
+        }
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--glass-border);
+            border-top-color: var(--gradient-1);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Error */
+        .error-msg {
+            text-align: center;
+            padding: 40px;
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+        }
+
+        /* Release card */
+        .release-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+            transition: border-color 0.3s;
+        }
+        .release-card:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+        }
+        .release-card.latest {
+            border-color: var(--gradient-1);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.15);
+        }
+
+        .release-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .release-version {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge.latest {
+            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+            color: #fff;
+        }
+        .badge.pre {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--accent);
+        }
+        .release-date {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-left: auto;
+        }
+
+        .release-body {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+        .release-body p { margin-bottom: 8px; }
+        .release-body ul { padding-left: 20px; margin-bottom: 8px; }
+        .release-body li { margin-bottom: 4px; }
+        .release-body h2, .release-body h3 {
+            color: var(--text);
+            font-size: 1rem;
+            margin: 12px 0 6px;
+        }
+        .release-body code {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .release-assets {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .asset-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            transition: all 0.2s;
+        }
+        .asset-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-1px);
+        }
+        .asset-size {
+            color: var(--text-muted);
+            font-weight: 400;
+            font-size: 0.75rem;
+        }
+
+        /* Footer */
+        footer { border-top: 1px solid var(--glass-border); padding: 40px 0; text-align: center; }
+        .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--text); }
+        .footer-copy { color: rgba(255, 255, 255, 0.4); font-size: 0.8rem; }
+
+        /* Fade-in */
+        .fade-in { opacity: 0; transform: translateY(20px); transition: all 0.6s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="container">
+        <nav>
+            <a href="/" class="logo">
+                <img src="icon48.png" alt="NMO Helper">
+                NMO Helper
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Главная</a>
+                </li>
+                <li><a href="/feedback">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Обратная связь</a>
+                </li>
+            </ul>
+        </nav>
+
+        <section class="hero">
+            <h1>История релизов</h1>
+            <p>Все версии расширения NMO Helper</p>
+        </section>
+
+        <div id="releases">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Загрузка релизов...</p>
+            </div>
+        </div>
+
+        <footer>
+            <div class="footer-links">
+                <a href="/">Главная</a>
+                <a href="/instruction">Инструкция</a>
+                <a href="/feedback">Обратная связь</a>
+                <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank">GitHub</a>
+                <a href="https://boosty.to/kolabrod/donate" target="_blank">Поддержать</a>
+            </div>
+            <p class="footer-copy">NMO Helper v2.2.2 &copy; 2026. <a href="/license" style="color:inherit;text-decoration:underline">MIT License</a>.</p>
+        </footer>
+    </div>
+
+    <script>
+        function formatDate(dateStr) {
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        function stripEmoji(text) {
+            return text.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE00}-\u{FE0F}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{200D}\u{20E3}\u{E0020}-\u{E007F}]/gu, '').replace(/ {2,}/g, ' ');
+        }
+
+        function parseMarkdown(text) {
+            if (!text) return '';
+            text = text.replace(/\r\n/g, '\n');
+            text = text.replace(/\n---[\s\S]*$/m, '');
+
+            // Promote standalone section titles (e.g. "Возможности") to ### headings
+            text = text.replace(/^(Возможности|Особенности|Изменения)$/gm, '### $1');
+
+            // Remove install sections (### Установка..., Установка\n..., numbered install steps)
+            text = text.replace(/^#{1,3}\s*Установка[^\n]*(?:\n(?!##).*)*$/gm, '');
+            text = text.replace(/^Установка\n(?:(?!##)[^\n]*\n?)*/gm, '');
+            text = text.replace(/^(?:Скачайте или клонируйте|Откройте chrome|Включите «Режим|Нажмите «Загрузить|Выберите папку)[^\n]*$/gm, '');
+            text = text.replace(/^\d+\.\s+(?:Скачайте|Перетащите файл)[^\n]*$/gm, '');
+            text = text.replace(/\n{3,}/g, '\n\n');
+
+            // Convert emoji-prefixed lines to list items
+            text = text.replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]\s*/gmu, '- ');
+
+            text = stripEmoji(text);
+
+            // If no ## headings, promote first line to h2
+            if (!text.match(/^##/m)) {
+                var firstLine = text.split('\n')[0].trim();
+                if (firstLine && !firstLine.startsWith('-')) {
+                    // Strip version prefix like "v2.0.0: " or "NMO Helper v1.4.2"
+                    firstLine = firstLine.replace(/^(NMO Helper\s+)?v[\d.]+[:\s]*/i, '').trim();
+                    if (firstLine) {
+                        text = '## ' + firstLine + text.substring(text.indexOf('\n'));
+                    } else {
+                        text = '## Описание' + text.substring(text.indexOf('\n'));
+                    }
+                }
+            }
+
+            var html = '';
+            var lines = text.split('\n');
+            var inList = false;
+
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (!line) {
+                    if (inList) { html += '</ul>'; inList = false; }
+                    continue;
+                }
+
+                // Headings
+                if (line.match(/^### (.+)/)) {
+                    if (inList) { html += '</ul>'; inList = false; }
+                    html += '<h3>' + formatInline(line.replace(/^### /, '')) + '</h3>';
+                } else if (line.match(/^## (.+)/)) {
+                    if (inList) { html += '</ul>'; inList = false; }
+                    html += '<h2>' + formatInline(line.replace(/^## /, '')) + '</h2>';
+                }
+                // List items
+                else if (line.match(/^[-*] (.+)/)) {
+                    if (!inList) { html += '<ul>'; inList = true; }
+                    html += '<li>' + formatInline(line.replace(/^[-*] /, '')) + '</li>';
+                }
+                // Regular text
+                else {
+                    if (inList) { html += '</ul>'; inList = false; }
+                    html += '<p>' + formatInline(line) + '</p>';
+                }
+            }
+            if (inList) html += '</ul>';
+            return html;
+        }
+
+        function formatInline(text) {
+            return text
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`(.+?)`/g, '<code>$1</code>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:var(--gradient-1)">$1</a>');
+        }
+
+        function getAssetIcon(name) {
+            if (name.endsWith('.zip')) return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+            if (name.endsWith('.xpi')) return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+            return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>';
+        }
+
+        function getAssetLabel(name) {
+            if (name.endsWith('.zip')) return 'Chrome';
+            if (name.endsWith('.xpi')) return 'Firefox';
+            return name;
+        }
+
+        async function loadReleases() {
+            const container = document.getElementById('releases');
+            const loading = document.getElementById('loading');
+
+            try {
+                const resp = await fetch('https://api.github.com/repos/lKolabrodl/nmo-helper/releases');
+                if (!resp.ok) throw new Error('HTTP ' + resp.status);
+                const releases = await resp.json();
+
+                loading.remove();
+
+                if (releases.length === 0) {
+                    container.innerHTML = '<div class="error-msg">Релизов пока нет.</div>';
+                    return;
+                }
+
+                releases.forEach(function(release, idx) {
+                    var card = document.createElement('div');
+                    card.className = 'release-card fade-in' + (idx === 0 ? ' latest' : '');
+
+                    var badges = '';
+                    if (idx === 0) badges += '<span class="badge latest">Последняя</span>';
+                    if (release.prerelease) badges += '<span class="badge pre">Pre-release</span>';
+
+                    var assets = '';
+                    if (release.assets && release.assets.length > 0) {
+                        assets = '<div class="release-assets">';
+                        release.assets.forEach(function(a) {
+                            assets += '<a href="' + a.browser_download_url + '" class="asset-btn">' +
+                                getAssetIcon(a.name) +
+                                getAssetLabel(a.name) +
+                                ' <span class="asset-size">(' + formatSize(a.size) + ')</span></a>';
+                        });
+                        assets += '</div>';
+                    }
+
+                    var installLink = '<p style="margin-top:16px"><strong><a href="/instruction" style="color:var(--gradient-1)">Установка &rarr;</a></strong></p>';
+
+                    card.innerHTML =
+                        '<div class="release-header">' +
+                            '<span class="release-version">' + release.tag_name + '</span>' +
+                            badges +
+                            '<span class="release-date">' + formatDate(release.published_at) + '</span>' +
+                        '</div>' +
+                        (release.body ? '<div class="release-body">' + parseMarkdown(release.body) + installLink + '</div>' : '') +
+                        assets;
+
+                    container.appendChild(card);
+                });
+
+                // Fade-in animation
+                var observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) entry.target.classList.add('visible');
+                    });
+                }, { threshold: 0.1 });
+                document.querySelectorAll('.fade-in').forEach(function(el) { observer.observe(el); });
+
+            } catch (err) {
+                loading.remove();
+                container.innerHTML = '<div class="error-msg">Не удалось загрузить релизы. Попробуйте позже или посмотрите на <a href="https://github.com/lKolabrodl/nmo-helper/releases" target="_blank" style="color:var(--gradient-1)">GitHub</a>.</div>';
+            }
+        }
+
+        loadReleases();
+    </script>
+</body>
+</html>

@@ -15,4 +15,14 @@
         <lastmod>2026-04-08</lastmod>
         <priority>0.5</priority>
     </url>
+    <url>
+        <loc>https://nmo-helper.ru/license</loc>
+        <lastmod>2026-04-09</lastmod>
+        <priority>0.3</priority>
+    </url>
+    <url>
+        <loc>https://nmo-helper.ru/releases</loc>
+        <lastmod>2026-04-09</lastmod>
+        <priority>0.6</priority>
+    </url>
 </urlset>
