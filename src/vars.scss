@@ -1,0 +1,51 @@
+// ─── Цвета ───────────────────────────────────────
+$bg-panel:      #141420;
+$bg-card:       #1c1c2e;
+$bg-input:      #12121f;
+$bg-header:     #181830;
+
+$accent:        #4ecca3;
+$accent-hover:  #3db890;
+$error:         #e94560;
+$warn:          #f0a040;
+$loading:       #f0c040;
+
+$text:          #e8eaf0;
+$text-muted:    #8892a4;
+$text-dim:      #555e6e;
+
+$border:        rgba(255, 255, 255, 0.08);
+$border-hover:  rgba(255, 255, 255, 0.16);
+$border-focus:  $accent;
+
+// ─── Размеры ─────────────────────────────────────
+$panel-width:   280px;
+$radius:        10px;
+$radius-sm:     6px;
+$gap:           8px;
+$padding:       12px;
+
+// ─── Шрифты ──────────────────────────────────────
+$font-ui:       'Inter', -apple-system, 'Segoe UI', sans-serif;
+$font-mono:     'JetBrains Mono', monospace;
+$font-size:     12px;
+$font-size-sm:  10px;
+$font-size-xs:  9px;
+
+// ─── Тени ────────────────────────────────────────
+$shadow-panel:  0 8px 32px rgba(0, 0, 0, 0.5);
+$shadow-btn:    0 4px 12px rgba(78, 204, 163, 0.3);
+
+// ─── Tier цвета (модели AI) ──────────────────────
+$tier-low-bg:      #2d6a4f;
+$tier-low-text:    #95d5b2;
+$tier-medium-bg:   #5a4a1e;
+$tier-medium-text: #f0c040;
+$tier-high-bg:     #5a2d1e;
+$tier-high-text:   #f08040;
+$tier-ultra-bg:    #4a1e5a;
+$tier-ultra-text:  #d090f0;
+
+// ─── Source бейджи ───────────────────────────────
+$src-24fc:    #2d6a9f;
+$src-rosmed:  #9f2d6a;

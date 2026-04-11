@@ -1,29 +1,26 @@
-import type { ExtensionState } from './types';
+import './content.scss';
+import type { IExtensionState } from './types';
 import { storageGet } from './utils';
-import { createPanel, initPanelBehavior } from './panel';
-import { initSearch } from './search';
-import { initSitesMode } from './sites';
-import { initAiMode } from './ai';
-import { initAutoMode } from './auto';
+import { createPanel, initPanelBehavior } from './Panel';
 
 (async function () {
-  'use strict';
+	'use strict';
 
-  const state: ExtensionState = {
-    savedUrl: await storageGet('customUrl', ''),
-    savedCollapsed: await storageGet('panelCollapsed', false),
-    savedLeft: await storageGet('panelLeft', null),
-    savedTop: await storageGet('panelTop', null),
-    savedAiMode: await storageGet('aiMode', false),
-    savedAutoMode: await storageGet('autoMode', true),
-    savedApiKey: await storageGet('apiKey', ''),
-    savedModel: await storageGet('aiModel', 'gpt-4o-mini'),
-  };
+	const state: IExtensionState = {
+		savedUrl: await storageGet('customUrl', ''),
+		savedCollapsed: await storageGet('panelCollapsed', true),
+		savedLeft: await storageGet('panelLeft', null),
+		savedTop: await storageGet('panelTop', null),
+		savedMode: await storageGet('mode', 'auto'),
+		savedApiKey: await storageGet('apiKey', ''),
+		savedModel: await storageGet('aiModel', 'gpt-4o-mini'),
+		savedCustomAiUrl: await storageGet('customAiUrl', ''),
+		savedCustomAiToken: await storageGet('customAiToken', ''),
+		savedCustomAiModel: await storageGet('customAiModel', ''),
+	};
 
-  const panel = createPanel(state);
-  initPanelBehavior(panel);
-  initSearch();
-  initSitesMode();
-  initAiMode();
-  initAutoMode();
+	const panel = createPanel(state);
+
+	// Drag needs DOM to be rendered first
+	requestAnimationFrame(() => initPanelBehavior(panel));
 })();

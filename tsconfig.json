@@ -12,8 +12,9 @@
     "declaration": false,
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["chrome"]
+    "types": ["chrome"],
+    "jsx": "react-jsx"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist", "tests"]
 }

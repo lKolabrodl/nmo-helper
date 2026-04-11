@@ -1,25 +1,36 @@
 {
   "manifest_version": 3,
   "name": "NMO Helper",
-  "version": "2.3.0",
+  "version": "3.0.0",
   "description": "Автоподсветка правильных ответов на тестах НМО",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
   "permissions": [
     "storage"
   ],
   "host_permissions": [
-    "https://24forcare.com/*",
-    "https://rosmedicinfo.ru/*",
-    "https://api.proxyapi.ru/*",
-    "https://openai.api.proxyapi.ru/*"
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["dev-reload.json"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": [

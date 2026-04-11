@@ -1,0 +1,82 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+body {
+	width: 300px;
+	background: #141420;
+	color: #e8eaf0;
+	font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+	font-size: 13px;
+}
+
+.popup-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 12px 14px;
+	background: #181830;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.popup-title {
+	font-weight: 600;
+	font-size: 14px;
+	color: #e8eaf0;
+}
+
+.popup-version {
+	font-size: 11px;
+	color: #555e6e;
+	margin-left: auto;
+}
+
+.popup-body {
+	display: flex;
+	align-items: center;
+	padding: 14px;
+	gap: 12px;
+}
+
+.popup-links {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 1;
+}
+
+.popup-link {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	background: rgba(255, 255, 255, 0.04);
+	border: 1px solid rgba(255, 255, 255, 0.06);
+	border-radius: 6px;
+	color: #e8eaf0;
+	text-decoration: none;
+	font-size: 12px;
+	transition: all 0.15s;
+}
+
+.popup-link:hover {
+	background: rgba(78, 204, 163, 0.08);
+	border-color: rgba(78, 204, 163, 0.2);
+	color: #4ecca3;
+}
+
+.popup-link-icon {
+	font-size: 14px;
+	width: 18px;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+.popup-mascot {
+	flex-shrink: 0;
+	width: 88px;
+	height: 88px;
+	border-radius: 10px;
+}

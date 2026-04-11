@@ -4,47 +4,51 @@
  */
 
 /** Сохранённое состояние панели расширения из chrome.storage */
-export interface ExtensionState {
+export interface IExtensionState {
   /** URL страницы с ответами */
-  savedUrl: string;
+  readonly savedUrl: string;
   /** Панель свёрнута */
-  savedCollapsed: boolean;
+  readonly savedCollapsed: boolean;
   /** Позиция панели X (px) */
-  savedLeft: number | null;
+  readonly savedLeft: number | null;
   /** Позиция панели Y (px) */
-  savedTop: number | null;
-  /** AI-режим включён */
-  savedAiMode: boolean;
-  /** Авто-поиск включён */
-  savedAutoMode: boolean;
+  readonly savedTop: number | null;
+  /** Активный режим */
+  readonly savedMode: string;
   /** API-ключ ProxyAPI */
-  savedApiKey: string;
+  readonly savedApiKey: string;
   /** Выбранная AI-модель */
-  savedModel: string;
+  readonly savedModel: string;
+  /** Кастомный AI endpoint URL */
+  readonly savedCustomAiUrl: string;
+  /** Токен для кастомного AI endpoint */
+  readonly savedCustomAiToken: string;
+  /** Модель для кастомного AI endpoint */
+  readonly savedCustomAiModel: string;
 }
 
 /** Ответ от background service worker после fetch-запроса */
-export interface FetchResponse {
+export interface IFetchResponse {
   /** true если произошла сетевая ошибка */
-  error: boolean;
+  readonly error: boolean;
   /** HTTP-статус ответа */
-  status: number;
+  readonly status: number;
   /** Тело ответа (HTML или JSON) */
-  text: string;
+  readonly text: string;
   /** Текст ошибки (при error: true) */
-  message?: string;
+  readonly message?: string;
 }
 
 /** Описание AI-модели для выбора в панели */
-export interface AiModel {
+export interface IAiModel {
   /** Идентификатор модели для API */
-  id: string;
+  readonly id: string;
   /** Отображаемое название */
-  name: string;
+  readonly name: string;
   /** Уровень: low — дешёвые, ultra — максимальная точность */
-  tier: 'low' | 'medium' | 'high' | 'ultra';
+  readonly tier: 'low' | 'medium' | 'high' | 'ultra';
   /** Метка: rec — рекомендованная, pricey — дорогая */
-  tag?: 'rec' | 'pricey';
+  readonly tag?: 'rec' | 'pricey';
 }
 
 /**
@@ -54,29 +58,34 @@ export interface AiModel {
 export type ParserFunction = (questionText: string) => string[] | null;
 
 /** Конфигурация источника ответов (сайт с готовыми ответами) */
-export interface SourceConfig {
+export interface ISourceConfig {
   /** Создаёт парсер из DOM-контейнера загруженной страницы */
-  parseAnswers: (div: HTMLElement) => ParserFunction;
+  readonly parseAnswers: (div: HTMLElement) => ParserFunction;
 }
 
 /** Ключ источника ответов */
 export type SourceKey = '24forcare' | 'rosmedicinfo';
 
 /** Результат поиска теста на сайте */
-export interface SearchResult {
-  source: SourceKey;
-  title: string;
-  url: string;
+export interface ISearchResult {
+  readonly source: SourceKey;
+  readonly title: string;
+  readonly url: string;
 }
 
-/** URL найденных страниц с ответами на обоих сайтах */
-export interface SearchUrls {
-  rosmed: string | null;
-  forcare: string | null;
-}
+/** Варианты статуса панели */
+export const Status = {
+  IDLE: 'idle',
+  OK: 'ok',
+  ERR: 'err',
+  WARN: 'warn',
+  LOADING: 'loading',
+} as const;
 
-/** Запись кеша авто-режима: ответы + источник */
-export interface AutoCacheEntry {
-  answers: string[];
-  source: string;
+export type StatusType = typeof Status[keyof typeof Status];
+
+/** Информация о статусе для отображения в панели */
+export interface IStatusInfo {
+  readonly title: string;
+  readonly status: StatusType;
 }

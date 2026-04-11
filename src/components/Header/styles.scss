@@ -1,0 +1,76 @@
+@use '../../vars' as *;
+
+.nmo-header {
+  display: flex;
+  align-items: center;
+  gap: $gap;
+  padding: 10px $padding;
+  background: $bg-header;
+  border-radius: $radius $radius 0 0;
+  cursor: move;
+  user-select: none;
+}
+
+#nmo-panel.collapsed .nmo-header {
+  border-radius: $radius;
+}
+
+.nmo-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $text-dim;
+  flex-shrink: 0;
+  transition: background 0.3s;
+
+  &.ok      { background: $accent; }
+  &.err     { background: $error; }
+  &.warn    { background: $warn; }
+  &.loading { background: $loading; animation: nmo-pulse 1.2s ease-in-out infinite; }
+}
+
+@keyframes nmo-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+.nmo-header-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: $text;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+
+.nmo-header-status {
+  display: none;
+  font-size: $font-size-sm;
+  color: $text-muted;
+  flex: 1;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &.ok      { color: $accent; }
+  &.err     { color: $error; }
+  &.warn    { color: $warn; }
+  &.loading { color: $loading; }
+}
+
+#nmo-panel.collapsed .nmo-header-status {
+  display: block;
+}
+
+.nmo-toggle-btn {
+  background: none;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.2s;
+
+  &:hover { color: $text; }
+}

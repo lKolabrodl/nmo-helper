@@ -1,0 +1,138 @@
+@use 'vars' as *;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+
+// --- Panel container ---
+#nmo-panel {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 99999;
+  width: $panel-width;
+  background: $bg-panel;
+  border: 1px solid $border;
+  border-radius: $radius;
+  box-shadow: $shadow-panel;
+  font-family: $font-ui;
+  font-size: $font-size;
+  color: $text;
+
+  &.collapsed .nmo-body { display: none; }
+}
+
+// --- Body ---
+.nmo-body {
+  padding: $padding;
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+// --- Shared fields ---
+.nmo-field {
+  label {
+    display: block;
+    margin-bottom: 3px;
+    color: $text-muted;
+    font-size: $font-size-sm;
+    font-weight: 500;
+  }
+
+  input, select {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    background: $bg-input;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
+    color: $text;
+    font-family: $font-mono;
+    font-size: $font-size;
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus { border-color: $border-focus; }
+    &::placeholder { color: $text-dim; }
+  }
+}
+
+// --- Buttons ---
+.nmo-btn {
+  padding: 8px;
+  border: none;
+  border-radius: $radius-sm;
+  font-family: $font-ui;
+  font-size: $font-size;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nmo-btn-row {
+  display: flex;
+  gap: $gap;
+
+  .nmo-btn { flex: 1; }
+}
+
+.nmo-btn-primary {
+  background: $accent;
+  color: #fff;
+
+  &:hover {
+    background: $accent-hover;
+    box-shadow: $shadow-btn;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+.nmo-btn-ghost {
+  background: transparent;
+  border: 1px solid $border-hover;
+  color: $text-muted;
+
+  &:hover {
+    border-color: $text-muted;
+    color: $text;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.nmo-btn-stop {
+  background: rgba(255, 255, 255, 0.06);
+  color: $text-muted;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $text;
+  }
+}
+
+// --- Status ---
+.nmo-status {
+  text-align: center;
+  font-size: 11px;
+  color: $text-dim;
+
+  &:empty { display: none; }
+
+  &.ok      { color: $accent; }
+  &.err     { color: $error; }
+  &.warn    { color: $warn; }
+  &.loading { color: $loading; }
+}
+
+// --- Sections ---
+.nmo-section {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}

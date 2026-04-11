@@ -1,9 +1,11 @@
 const esbuild = require('esbuild');
+const { sassPlugin } = require('esbuild-sass-plugin');
 const fs = require('fs');
 const path = require('path');
 
 const SRC = path.join(__dirname, 'src');
 const DIST = path.join(__dirname, 'dist');
+const WATCH = process.argv.includes('--watch');
 
 const BROWSERS = [
   { name: 'chrome', manifest: 'manifest.chrome.json' },
@@ -32,34 +34,72 @@ async function build() {
     const outDir = path.join(DIST, browser.name);
     fs.mkdirSync(outDir, { recursive: true });
 
-    // Bundle content scripts into one file
-    await esbuild.build({
-      entryPoints: [path.join(SRC, 'content.ts')],
-      outfile: path.join(outDir, 'content.js'),
+    const commonOptions = {
       bundle: true,
-      minify: true,
+      minify: !WATCH,
       format: 'iife',
       target: 'es2020',
       charset: 'utf8',
-    });
+      define: { __DEV__: WATCH ? 'true' : 'false' },
+      jsx: 'automatic',
+      jsxImportSource: 'react',
+    };
 
-    // Bundle background script
-    await esbuild.build({
-      entryPoints: [path.join(SRC, 'background.ts')],
-      outfile: path.join(outDir, 'background.js'),
-      bundle: true,
-      minify: true,
-      format: 'iife',
-      target: 'es2020',
-      charset: 'utf8',
-    });
+    if (WATCH) {
+      const rebuildPlugin = {
+        name: 'rebuild-log',
+        setup(build) {
+          build.onEnd((result) => {
+            const time = new Date().toLocaleTimeString();
+            if (result.errors.length > 0) {
+              console.log(`[${time}] Build failed with ${result.errors.length} error(s)`);
+            } else {
+              console.log(`[${time}] Rebuilt ${browser.name} successfully`);
+              fs.writeFileSync(
+                path.join(outDir, 'dev-reload.json'),
+                JSON.stringify({ timestamp: Date.now() })
+              );
+            }
+          });
+        },
+      };
 
-    // Minify CSS
-    await esbuild.build({
-      entryPoints: [path.join(SRC, 'content.css')],
-      outfile: path.join(outDir, 'content.css'),
-      minify: true,
-    });
+      const contentCtx = await esbuild.context({
+        ...commonOptions,
+        entryPoints: [path.join(SRC, 'content.ts')],
+        outfile: path.join(outDir, 'content.js'),
+        plugins: [sassPlugin(), rebuildPlugin],
+      });
+
+      const backgroundCtx = await esbuild.context({
+        ...commonOptions,
+        entryPoints: [path.join(SRC, 'background.ts')],
+        outfile: path.join(outDir, 'background.js'),
+        plugins: [rebuildPlugin],
+      });
+
+      await Promise.all([
+        contentCtx.watch(),
+        backgroundCtx.watch(),
+      ]);
+
+      console.log(`[WATCH] ${browser.name} -> dist/${browser.name}/`);
+    } else {
+      await esbuild.build({
+        ...commonOptions,
+        entryPoints: [path.join(SRC, 'content.ts')],
+        outfile: path.join(outDir, 'content.js'),
+        plugins: [sassPlugin()],
+      });
+
+      await esbuild.build({
+        ...commonOptions,
+        entryPoints: [path.join(SRC, 'background.ts')],
+        outfile: path.join(outDir, 'background.js'),
+      });
+
+      console.log(`[OK] ${browser.name} -> dist/${browser.name}/`);
+    }
 
     // Copy manifest
     fs.copyFileSync(
@@ -70,6 +110,10 @@ async function build() {
     // Copy icons
     copyDir(path.join(SRC, 'icons'), path.join(outDir, 'icons'));
 
+    // Copy popup
+    fs.copyFileSync(path.join(SRC, 'popup.html'), path.join(outDir, 'popup.html'));
+    fs.copyFileSync(path.join(SRC, 'popup.css'), path.join(outDir, 'popup.css'));
+
     // Copy .xpi for Firefox
     if (browser.name === 'firefox') {
       fs.copyFileSync(
@@ -77,11 +121,14 @@ async function build() {
         path.join(outDir, 'firefox_nmo_helper.xpi')
       );
     }
-
-    console.log(`[OK] ${browser.name} -> dist/${browser.name}/`);
   }
 
-  console.log('Build complete!');
+  if (WATCH) {
+    console.log('\nWatching for changes... (Ctrl+C to stop)');
+    console.log('Reload the extension in chrome://extensions after each change.');
+  } else {
+    console.log('Build complete!');
+  }
 }
 
 build().catch((err) => {

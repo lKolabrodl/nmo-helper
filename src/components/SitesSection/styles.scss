@@ -1,0 +1,71 @@
+@use '../../vars' as *;
+
+.nmo-search-results {
+  max-height: 130px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+  }
+}
+
+.nmo-result-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid $border;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: $font-size-sm;
+  line-height: 1.3;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba(78, 204, 163, 0.08);
+    border-color: rgba(78, 204, 163, 0.2);
+  }
+}
+
+.nmo-result-src {
+  flex-shrink: 0;
+  font-size: $font-size-xs;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  text-transform: uppercase;
+
+  &.src-24  { background: $src-24fc; color: #fff; }
+  &.src-ros { background: $src-rosmed; color: #fff; }
+}
+
+.nmo-result-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.nmo-separator {
+  border: none;
+  border-top: 1px solid $border;
+  margin: 2px 0;
+}
+
+.nmo-field input.input-error {
+  border-color: $error;
+  animation: nmo-shake 0.4s ease;
+}
+
+@keyframes nmo-shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  75%      { transform: translateX(4px); }
+}

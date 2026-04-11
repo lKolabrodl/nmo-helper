@@ -1,8 +1,8 @@
-# NMO Helper v2.3.0
+# NMO Helper v3.0.0
 
 > Умный помощник в прохождении тестов НМО на портале [edu.rosminzdrav.ru](https://a.edu.rosminzdrav.ru) — бесплатное расширение для браузера с открытым исходным кодом.
 
-Авто-поиск ответов на `rosmedicinfo.ru` и `24forcare.com`, AI-режим (GPT, Gemini, Claude), работает из коробки.
+Авто-поиск ответов на `rosmedicinfo.ru` и `24forcare.com`, AI-режим (GPT, Gemini, Claude, DeepSeek), работает из коробки.
 
 [![Downloads](https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper/releases)
 [![Stars](https://img.shields.io/github/stars/lKolabrodl/nmo-helper?style=flat-square&color=fbbf24&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper)
@@ -20,7 +20,7 @@
 | | Функция | Описание |
 |---|---|---|
 | 🔍 | **Авто-поиск** | Автоматически находит тему теста и ищет ответы на двух сайтах |
-| 🤖 | **AI-режим** | Решает тесты с помощью GPT, Gemini, Claude через ProxyAPI |
+| 🤖 | **AI-режим** | Решает тесты с помощью GPT, Gemini, Claude, DeepSeek через ProxyAPI или свой endpoint |
 | 🔎 | **Ручной поиск** | Поиск ответов по названию теста на `rosmedicinfo.ru` и `24forcare.com` |
 | ✨ | **Автоподсветка** | Правильные ответы подсвечиваются при переходе между вопросами |
 | 💾 | **Кеширование** | Ответы кешируются — при навигации назад/вперёд повторных запросов нет |
@@ -39,7 +39,7 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-main.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/nmo-helper-main.zip)
+1. Скачайте [`nmo-helper-main.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/nmo-helper-main.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
@@ -49,19 +49,19 @@
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
 
-![Установка Chrome](demo/step_3.gif)
+![Установка Chrome](demo/setup_1.gif)
 </details>
 
 ### Mozilla Firefox
 
-1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/firefox_nmo_helper.xpi)
+1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
 3. Подтвердите установку
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
 
-![Установка Firefox](demo/firefox_install.gif)
+![Установка Firefox](demo/setup_2.gif)
 </details>
 
 > **Почему нет в магазине расширений?** Расширение использует парсинг сайтов с готовыми ответами — владельцы этих сайтов могут подать жалобу, и расширение удалят. Ручная установка занимает пару минут, зато работает надёжно.
@@ -72,51 +72,42 @@
 
 После установки откройте страницу тестирования НМО — в правом верхнем углу появится панель **NMO Helper**.
 
-![Панель](demo/login.png)
+![Установка Firefox](demo/setup_3.png)
 
-### Авто-поиск
+### Режимы работы
 
-Включите галочку **«Авто-поиск rosmed & 24forcare»** — плагин сам определяет тему теста, ищет ответы и подсвечивает правильные варианты. Никаких действий от вас не требуется.
+Переключение между режимами через таб-бар в панели: **Авто** / **Сайты** / **AI**.
+
+### Авто
+
+Панель сама определяет тему теста, ищет ответы и подсвечивает правильные варианты. Никаких действий не требуется.
 
 - Сначала ищет на **rosmedicinfo.ru**, если не нашёл — на **24forcare.com**
 - Если один сайт недоступен — работает с другим
 - Ответы кешируются при навигации
 
-### Ручной поиск
+### Сайты
 
 1. Введите название теста в поиск
 2. Выберите источник (**rosmed** / **24forcare**) или вставьте ссылку
-3. Нажмите **▶ Запуск**
+3. Нажмите **Запуск**
 
-<details>
-<summary>📹 Показать GIF-инструкцию</summary>
+### AI
 
-![Ручной поиск](demo/step_7.gif)
-</details>
+Подключите нейросеть для решения тестов. Два варианта:
 
----
-
-## AI-режим
-
-Подключите нейросеть для решения тестов. Поддерживаются модели OpenAI (GPT), Google Gemini и Anthropic Claude через [proxyapi.ru](https://proxyapi.ru) — российский прокси с оплатой в рублях и без VPN.
-
-> К сожалению, зарубежные нейросети закрыли бесплатный доступ для пользователей из России, поэтому приходится использовать платный прокси.
-
-### Настройка
-
-1. Зарегистрируйтесь на [proxyapi.ru](https://proxyapi.ru) и **пополните баланс** (минимальная сумма)
+**ProxyAPI** (по умолчанию) — российский прокси с оплатой в рублях и без VPN:
+1. Зарегистрируйтесь на [proxyapi.ru](https://proxyapi.ru) и пополните баланс
 2. Получите API-ключ на [console.proxyapi.ru/keys](https://console.proxyapi.ru/keys)
-3. Включите галочку **«Решать с помощью AI»**
-4. Вставьте ключ в поле **«API-ключ ProxyAPI»**
-5. Выберите модель
+3. Вставьте ключ и выберите модель
+4. Нажмите **Запуск AI**
 
-<details>
-<summary>📹 Показать GIF-инструкцию</summary>
+**Свой endpoint** — переключите свитч «Свой endpoint» и укажите:
+- API Endpoint (OpenAI-совместимый, например `https://api.deepseek.com/v1/chat/completions`)
+- API Token
+- Название модели
 
-![Настройка AI](demo/ai-key.gif)
-</details>
-
-### Модели
+### Модели (ProxyAPI)
 
 | Уровень | Модели | Описание |
 |---------|--------|----------|
@@ -129,63 +120,53 @@
 
 ---
 
-## Статусы панели
-
-| Статус | Цвет | Значение |
-|---|---|---|
-| ищу тему... | 🟡 | Авто-режим ищет тему теста |
-| ищу ответы... | 🟡 | Поиск и загрузка ответов |
-| думаю... | 🟡 | AI обрабатывает вопрос |
-| работает | 🟢 | Скрипт активен |
-| найдено | 🟢 | Ответ найден и подсвечен |
-| AI (кеш) | 🟢 | Ответ из кеша |
-| ответ не найден | 🟠 | Вопрос отсутствует в базе |
-| ошибка сети | 🔴 | Не удалось загрузить ответы |
-| неверный API-ключ | 🔴 | API-ключ невалиден |
-
----
-
 ## Структура проекта
 
 ```
-nmo-helper/
-├── src/                        # Исходники (TypeScript)
-│   ├── types.ts                # Интерфейсы и типы
-│   ├── constants.ts            # Константы (цвета, URL, модели)
-│   ├── utils.ts                # Chrome API обёртки, нормализация текста
-│   ├── parsers.ts              # Парсеры ответов с сайтов
-│   ├── matching.ts             # Сопоставление и подсветка ответов
-│   ├── ai.ts                   # AI-режим (ProxyAPI)
-│   ├── search.ts               # Поиск тестов на сайтах
-│   ├── sites.ts                # Ручной режим
-│   ├── auto.ts                 # Авто-режим
-│   ├── panel.ts                # UI панели
-│   ├── content.ts              # Точка входа
-│   ├── background.ts           # Service worker (CORS proxy)
-│   ├── content.css             # Стили панели
-│   ├── manifest.chrome.json
-│   ├── manifest.firefox.json
-│   └── icons/
-├── tests/                      # Тесты (vitest)
-│   ├── utils.test.ts
-│   ├── parsers.test.ts
-│   ├── matching.test.ts
-│   └── ai.test.ts
-├── dist/
-│   ├── chrome/                 # Сборка для Chrome (один бандл)
-│   └── firefox/                # Сборка для Firefox + .xpi
-├── build.js                    # Скрипт сборки (esbuild)
-├── tsconfig.json
-├── vitest.config.ts
-└── package.json
+src/
+├── content.ts                  # Точка входа (content-script)
+├── content.scss                # Общие стили панели
+├── vars.scss                   # SCSS-переменные (цвета, размеры, шрифты)
+├── App.tsx                     # Корневой React-компонент
+├── Panel.tsx                   # Создание панели + drag
+├── background.ts               # Service worker (CORS proxy)
+├── types.ts                    # Типы и интерфейсы
+├── popup.html / popup.css      # Popup при клике на иконку
+│
+├── components/
+│   ├── Header/                 # Хедер с индикатором статуса
+│   ├── TabBar/                 # Таб-бар (Авто / Сайты / AI)
+│   ├── AutoSection/            # Авто-режим
+│   ├── SitesSection/           # Ручной режим
+│   ├── AiSection/              # AI-режим (ProxyAPI + свой endpoint)
+│   ├── ModelDropdown/          # Выбор AI-модели
+│   └── Loader/                 # Headless-компоненты (загрузка, подсветка)
+│
+├── contexts/
+│   ├── PanelUiContext.tsx       # UI-состояние (режим, свёрнутость)
+│   ├── PanelStatusContext.tsx   # Статус per-mode
+│   └── QuestionFinderContext.tsx # Отслеживание вопроса на странице
+│
+└── utils/
+    ├── ai-logic.ts             # AI-запросы (ProxyAPI / custom endpoint)
+    ├── answer-cache.ts         # Глобальный кеш ответов
+    ├── constants.ts            # Константы (селекторы, статусы, модели)
+    ├── dom.ts                  # DOM-запросы с fallback-цепочками
+    ├── fetch.ts                # Fetch через background (CORS bypass)
+    ├── html.ts                 # HTML-санитизация и парсинг
+    ├── matching.ts             # Сопоставление и подсветка ответов
+    ├── parsers.ts              # Парсеры сайтов (extractors + findInPairs)
+    ├── storage.ts              # Обёртки chrome.storage
+    └── text.ts                 # Нормализация текста, similarity
 ```
 
 ### Сборка
 
 ```bash
 npm install
-npm run build    # Собрать dist/chrome и dist/firefox
-npm test         # Запустить тесты
+npm run build       # Собрать dist/chrome и dist/firefox
+npm run build:watch # Сборка в watch-режиме
+npm test            # Запустить тесты (107 тестов)
 ```
 
 ---
@@ -206,10 +187,11 @@ npm test         # Запустить тесты
 
 ## Предыдущие версии
 
+- [v2.3.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.3.0) — новые AI-модели, обновлённый парсинг
 - [v2.2.2](https://github.com/lKolabrodl/nmo-helper/tree/v2.2.2) — миграция на TypeScript, тесты, JSDoc
-- [v2.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.1) — реструктуризация, esbuild сборка, обновлённый README
-- [v2.1.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.0) — поддержка Firefox, обновлённый лендинг
-- [v2.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.0.0) — AI-режим, авто-поиск, рефакторинг на модули
+- [v2.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.1) — реструктуризация, esbuild сборка
+- [v2.1.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.0) — поддержка Firefox
+- [v2.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.0.0) — AI-режим, авто-поиск
 - [v1.4.2](https://github.com/lKolabrodl/nmo-helper/tree/v1.4.2) — только поиск по сайтам, без AI
 
 ## Лицензия
