@@ -23,8 +23,8 @@
 
     <meta name="keywords" content="НМО, NMO Helper, инструкция, установка расширения, Chrome, Firefox, тесты НМО">
 
-    <link rel="icon" type="image/png" sizes="48x48" href="icon48.png">
-    <link rel="icon" type="image/png" sizes="128x128" href="icon128.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="cat.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="cat.png">
 
     <script type="application/ld+json">
     {
@@ -140,7 +140,7 @@
         .step-list li { counter-increment: step; position: relative; padding-left: 44px; margin-bottom: 16px; }
         .step-list li::before {
             content: counter(step);
-            position: absolute; left: 0; top: 0;
+            position: absolute; left: 0; top: 50%; transform: translateY(-50%);
             width: 32px; height: 32px; border-radius: 50%;
             background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
             display: flex; align-items: center; justify-content: center;
@@ -171,6 +171,7 @@
         .status-dot.green { background: #34d399; box-shadow: 0 0 6px rgba(52, 211, 153, 0.5); }
         .status-dot.orange { background: #f97316; box-shadow: 0 0 6px rgba(249, 115, 22, 0.5); }
         .status-dot.red { background: #f87171; box-shadow: 0 0 6px rgba(248, 113, 113, 0.5); }
+        .status-dot.gray { background: #9ca3af; box-shadow: 0 0 6px rgba(156, 163, 175, 0.5); }
 
         /* Models table */
         .models-table { width: 100%; border-collapse: collapse; margin-top: 16px; }
@@ -182,6 +183,31 @@
         .level-medium { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
         .level-high { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
         .level-ultra { background: rgba(240, 147, 251, 0.15); color: #f093fb; }
+
+        /* AI Tabs */
+        .ai-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .ai-tab {
+            padding: 8px 20px; border-radius: 10px; border: 1px solid var(--glass-border);
+            background: transparent; color: var(--text-muted); cursor: pointer;
+            font-size: 0.9rem; transition: all .3s ease;
+        }
+        .ai-tab.active { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-color: rgba(139, 92, 246, 0.3); }
+        .ai-tab:hover:not(.active) { background: rgba(255,255,255,0.05); }
+        .ai-tab-content { display: none; }
+        .ai-tab-content.active { display: block; }
+        .endpoint-fields { list-style: none; padding: 0; margin: 16px 0; }
+        .endpoint-fields li {
+            padding: 14px 18px; border: 1px solid var(--glass-border); border-radius: 12px;
+            margin-bottom: 10px; background: rgba(255,255,255,0.03);
+        }
+        .endpoint-fields li strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 0.95rem; }
+        .endpoint-fields li span { color: var(--text-muted); font-size: 0.85rem; }
+        .endpoint-fields code { background: rgba(139,92,246,0.12); padding: 2px 7px; border-radius: 5px; font-size: min(0.82rem, 2.8vw); color: #c4b5fd; white-space: nowrap; }
+        .endpoint-examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+        .endpoint-examples span {
+            padding: 5px 14px; border-radius: 8px; font-size: 0.82rem;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted);
+        }
 
         /* Disclaimer */
         .disclaimer {
@@ -290,7 +316,7 @@
     <div class="container">
         <nav>
             <a href="/" class="logo">
-                <img src="icon128.png" alt="NMO Helper">
+                <img src="cat.png" alt="NMO Helper">
                 NMO Helper
             </a>
             <ul class="nav-links">
@@ -354,7 +380,7 @@
                 <div class="card fade-in">
                     <h3>Google Chrome, Edge, Brave, Opera, Яндекс Браузер</h3>
                     <ol class="step-list">
-                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/nmo-helper-main.zip" style="color: var(--gradient-1);">nmo-helper-main.zip</a></li>
+                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/nmo-helper-main.zip" style="color: var(--gradient-1);">nmo-helper-main.zip</a></li>
                         <li>Разархивируйте содержимое в удобную папку</li>
                         <li>Откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="chrome://extensions/"><code>chrome://extensions/</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> в адресной строке</li>
                         <li>Включите переключатель <strong>«Режим разработчика»</strong> в правом верхнем углу</li>
@@ -373,7 +399,7 @@
                 <div class="card fade-in">
                     <h3>Mozilla Firefox</h3>
                     <ol class="step-list">
-                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">nmo-helper-firefox.xpi</a></li>
+                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">nmo-helper-firefox.xpi</a></li>
                         <li>Откройте Firefox и перетащите файл <code>.xpi</code> прямо в окно браузера, или откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="about:addons"><code>about:addons</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> &rarr; нажмите шестерёнку &#9881; &rarr; <strong>«Установить дополнение из файла»</strong></li>
                         <li>Подтвердите установку, нажав <strong>«Добавить»</strong></li>
                     </ol>
@@ -415,6 +441,10 @@
                     <img src="demo/auto-search.png" alt="Авто-поиск" loading="lazy" style="max-width: 400px;">
                     <p class="media-caption">Автоматический поиск ответов</p>
                 </div>
+                <div class="media-block">
+                    <img src="demo/auto_search_watch.gif" alt="Авто-поиск в действии" loading="lazy">
+                    <p class="media-caption">Авто-поиск в действии</p>
+                </div>
             </div>
         </section>
 
@@ -434,8 +464,8 @@
                     <p class="media-caption">Поиск теста по названию</p>
                 </div>
                 <div class="media-block">
-                    <img src="demo/step_7.gif" alt="Ручной поиск" loading="lazy">
-                    <p class="media-caption">Процесс ручного поиска ответов</p>
+                    <img src="demo/search_watch.gif" alt="Ручной поиск в действии" loading="lazy">
+                    <p class="media-caption">Ручной поиск в действии</p>
                 </div>
             </div>
         </section>
@@ -447,24 +477,77 @@
 
             <div class="card fade-in">
                 <h3>Настройка</h3>
-                <p>AI-режим позволяет решать тесты с помощью нейросетей. Поддерживаются модели OpenAI (GPT), Google Gemini и Anthropic Claude через сервис <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> — российский прокси к AI-моделям с оплатой в рублях и без VPN.</p>
-                <p style="font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 8px;">К сожалению, бесплатные API нейросетей (Google Gemini, OpenAI и др.) заблокированы для пользователей из России нашими западными друзьями, поэтому используется платный прокси-сервис.</p>
 
-                <div class="info-block" style="margin: 16px 0;">
-                    <strong>Важно:</strong> после регистрации на proxyapi.ru необходимо пополнить баланс на минимальную сумму. Без пополнения API-ключ не будет работать.<br>
-                    Если вы потеряете API-ключ — его можно удалить и создать новый в любой момент на <a href="https://console.proxyapi.ru/keys" target="_blank" style="color: var(--gradient-1);">console.proxyapi.ru/keys</a>.
+                <div class="ai-tabs">
+                    <button class="ai-tab active" onclick="switchAiTab('proxyapi', this)">ProxyAPI.ru</button>
+                    <button class="ai-tab" onclick="switchAiTab('endpoint', this)">Свой endpoint</button>
                 </div>
 
-                <ol class="step-list">
-                    <li>Зарегистрируйтесь на <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> и <strong>пополните баланс</strong> (минимальная сумма)</li>
-                    <li>Получите API-ключ на <a href="https://console.proxyapi.ru/keys" target="_blank" style="color: var(--gradient-1);">console.proxyapi.ru/keys</a></li>
-                    <li>Включите галочку <strong>«Решать с помощью AI»</strong></li>
-                    <li>Вставьте ключ в поле <strong>«API-ключ ProxyAPI»</strong></li>
-                    <li>Выберите модель — рекомендованные отмечены звёздочкой &#9733;</li>
-                </ol>
-                <div class="media-block">
-                    <img src="demo/ai-key.gif" alt="Настройка AI" loading="lazy">
-                    <p class="media-caption">Настройка API-ключа и выбор модели</p>
+                <div class="ai-tab-content active" id="tab-proxyapi">
+                    <p>AI-режим позволяет решать тесты с помощью нейросетей. Поддерживаются модели OpenAI (GPT), Google Gemini и Anthropic Claude через сервис <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> — российский прокси к AI-моделям с оплатой в рублях и без VPN.</p>
+                    <p style="font-size: 0.8rem; color: rgba(255,255,255,0.4); margin-top: 8px;">К сожалению, бесплатные API нейросетей (Google Gemini, OpenAI и др.) заблокированы для пользователей из России нашими западными друзьями, поэтому используется платный прокси-сервис.</p>
+
+                    <div class="info-block" style="margin: 16px 0;">
+                        <strong>Важно:</strong> после регистрации на proxyapi.ru необходимо пополнить баланс на минимальную сумму. Без пополнения API-ключ не будет работать.<br>
+                        Если вы потеряете API-ключ — его можно удалить и создать новый в любой момент на <a href="https://console.proxyapi.ru/keys" target="_blank" style="color: var(--gradient-1);">console.proxyapi.ru/keys</a>.
+                    </div>
+
+                    <ol class="step-list">
+                        <li>Зарегистрируйтесь на <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> и <strong>пополните баланс</strong> (минимальная сумма)</li>
+                        <li>Получите API-ключ на <a href="https://console.proxyapi.ru/keys" target="_blank" style="color: var(--gradient-1);">console.proxyapi.ru/keys</a></li>
+                        <li>Включите галочку <strong>«Решать с помощью AI»</strong></li>
+                        <li>Вставьте ключ в поле <strong>«API-ключ ProxyAPI»</strong></li>
+                        <li>Выберите модель — рекомендованные отмечены звёздочкой &#9733;</li>
+                    </ol>
+                    <div class="media-block">
+                        <img src="photo_3.png" alt="AI-режим (ProxyAPI)" loading="lazy" style="max-width: 400px;">
+                        <p class="media-caption">Настройка API-ключа и выбор модели</p>
+                    </div>
+                    <div class="media-block">
+                        <img src="demo/ai_proxy_watch.gif" alt="AI ProxyAPI в действии" loading="lazy">
+                        <p class="media-caption">AI-режим через ProxyAPI в действии</p>
+                    </div>
+                </div>
+
+                <div class="ai-tab-content" id="tab-endpoint">
+                    <p>Вы можете подключить любой OpenAI-совместимый API вместо ProxyAPI. Включите свитч <strong>«Свой endpoint»</strong> в панели расширения и укажите параметры:</p>
+
+                    <ul class="endpoint-fields">
+                        <li>
+                            <strong>API Endpoint</strong>
+                            <span>OpenAI-совместимый URL, например <code>https://api.deepseek.com/v1/chat/completions</code></span>
+                        </li>
+                        <li>
+                            <strong>API Token</strong>
+                            <span>Ваш ключ авторизации от выбранного сервиса</span>
+                        </li>
+                        <li>
+                            <strong>Название модели</strong>
+                            <span>Имя модели для запроса, например <code>deepseek-chat</code> или <code>llama-3.3-70b</code></span>
+                        </li>
+                    </ul>
+
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px;">Совместимые сервисы:</p>
+                    <div class="endpoint-examples">
+                        <span>DeepSeek</span>
+                        <span>OpenRouter</span>
+                        <span>Ollama (localhost)</span>
+                        <span>Together AI</span>
+                        <span>Any OpenAI-compatible API</span>
+                    </div>
+
+                    <div class="media-block" style="margin-top: 20px;">
+                        <img src="photo_2.png" alt="Свой endpoint" loading="lazy" style="max-width: 400px;">
+                        <p class="media-caption">Настройка своего endpoint</p>
+                    </div>
+                    <div class="media-block">
+                        <img src="demo/ai_endpoint_watch.gif" alt="Свой endpoint в действии" loading="lazy">
+                        <p class="media-caption">AI-режим через свой endpoint в действии</p>
+                    </div>
+
+                    <div class="info-block" style="margin-top: 20px;">
+                        <strong>Совет:</strong> формат запроса совместим с OpenAI Chat Completions API. Подойдёт любой сервис, поддерживающий этот формат, включая локальные модели через Ollama.
+                    </div>
                 </div>
             </div>
 
@@ -478,7 +561,7 @@
                 </ul>
             </div>
 
-            <div class="card fade-in">
+            <div class="card fade-in" id="models-card">
                 <h3>Выбор модели</h3>
                 <table class="models-table">
                     <thead>
@@ -529,13 +612,13 @@
                 <ol class="step-list">
                     <li>Откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="chrome://extensions/"><code>chrome://extensions/</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span></li>
                     <li>Найдите NMO Helper и нажмите <strong>«Удалить»</strong></li>
-                    <li>Скачайте новую версию <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/nmo-helper-main.zip" style="color: var(--gradient-1);">nmo-helper-main.zip</a> и разархивируйте</li>
+                    <li>Скачайте новую версию <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/nmo-helper-main.zip" style="color: var(--gradient-1);">nmo-helper-main.zip</a> и разархивируйте</li>
                     <li>Нажмите <strong>«Загрузить распакованное расширение»</strong> и выберите новую папку</li>
                 </ol>
 
                 <h3 style="margin-top: 20px;">Firefox</h3>
                 <ol class="step-list">
-                    <li>Скачайте новый файл <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">firefox_nmo_helper.xpi</a></li>
+                    <li>Скачайте новый файл <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">firefox_nmo_helper.xpi</a></li>
                     <li>Перетащите его в окно Firefox — расширение обновится автоматически</li>
                 </ol>
             </div>
@@ -551,17 +634,21 @@
                         <tr><th>Статус</th><th>Значение</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><span class="status-dot yellow"></span>ищу тему...</td><td>Авто-режим ищет тему теста на странице</td></tr>
-                        <tr><td><span class="status-dot yellow"></span>ищу ответы...</td><td>Идёт поиск и загрузка ответов с сайтов</td></tr>
+                        <tr><td><span class="status-dot yellow"></span>ищу на обоих сайтах...</td><td>Авто-режим ищет ответы на rosmed и 24forcare</td></tr>
+                        <tr><td><span class="status-dot yellow"></span>ищу ответы...</td><td>Идёт поиск ответов по запросу</td></tr>
                         <tr><td><span class="status-dot yellow"></span>загружаю ответы...</td><td>Идёт загрузка страницы с ответами</td></tr>
                         <tr><td><span class="status-dot yellow"></span>думаю...</td><td>AI обрабатывает вопрос</td></tr>
+                        <tr><td><span class="status-dot yellow"></span>проверяю ключ...</td><td>Проверка валидности API-ключа</td></tr>
                         <tr><td><span class="status-dot green"></span>работает</td><td>Скрипт активен и мониторит вопросы</td></tr>
-                        <tr><td><span class="status-dot green"></span>найдено</td><td>Ответ найден и подсвечен</td></tr>
-                        <tr><td><span class="status-dot green"></span>AI (кеш)</td><td>Ответ взят из кеша без повторного запроса</td></tr>
+                        <tr><td><span class="status-dot gray"></span>остановлен</td><td>Скрипт остановлен</td></tr>
                         <tr><td><span class="status-dot orange"></span>ответ не найден</td><td>Вопрос отсутствует в базе ответов</td></tr>
-                        <tr><td><span class="status-dot orange"></span>ответ не совпал</td><td>Ответ найден, но не совпадает с вариантами</td></tr>
-                        <tr><td><span class="status-dot red"></span>ошибка сети</td><td>Не удалось загрузить страницу с ответами</td></tr>
-                        <tr><td><span class="status-dot red"></span>неверный API-ключ</td><td>API-ключ невалиден или истёк</td></tr>
+                        <tr><td><span class="status-dot orange"></span>ответ не совпал с вариантами</td><td>Ответ найден, но не совпадает с вариантами на странице</td></tr>
+                        <tr><td><span class="status-dot orange"></span>ответы не найдены на сайтах</td><td>Ни один из источников не содержит ответов</td></tr>
+                        <tr><td><span class="status-dot orange"></span>AI не определил ответ</td><td>AI не смог выбрать правильный вариант</td></tr>
+                        <tr><td><span class="status-dot red"></span>не удалось загрузить ответы</td><td>Ошибка сети при загрузке страницы с ответами</td></tr>
+                        <tr><td><span class="status-dot red"></span>введите API-ключ</td><td>API-ключ не указан</td></tr>
+                        <tr><td><span class="status-dot red"></span>введите название теста</td><td>Не заполнено поле поиска</td></tr>
+                        <tr><td><span class="status-dot red"></span>вставь URL с ответами</td><td>Не указан URL страницы с ответами</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -584,7 +671,7 @@
                 <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank">GitHub</a>
                 <a href="https://boosty.to/kolabrod/donate" target="_blank">Поддержать</a>
             </div>
-            <p class="footer-copy">NMO Helper v2.3.0 &copy; 2026. <a href="/license" style="color:inherit;text-decoration:underline">MIT License</a>.</p>
+            <p class="footer-copy">NMO Helper v3.0.0 &copy; 2026. <a href="/license" style="color:inherit;text-decoration:underline">MIT License</a>.</p>
         </footer>
     </div>
 
@@ -593,6 +680,16 @@
     </button>
 
     <script>
+        // AI tabs
+        function switchAiTab(id, btn) {
+            document.querySelectorAll('.ai-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.ai-tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            btn.classList.add('active');
+            var mc = document.getElementById('models-card');
+            if (mc) mc.style.display = id === 'endpoint' ? 'none' : '';
+        }
+
         // Copy to clipboard
         function copyUrl(el) {
             const text = el.getAttribute('data-copy');

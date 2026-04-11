@@ -43,13 +43,13 @@
         "softwareVersion": "2.1.0",
         "license": "https://opensource.org/licenses/MIT",
         "isAccessibleForFree": true,
-        "downloadUrl": "https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/nmo-helper-main.zip",
+        "downloadUrl": "https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/nmo-helper-main.zip",
         "codeRepository": "https://github.com/lKolabrodl/nmo-helper"
     }
     </script>
 
-    <link rel="icon" type="image/png" sizes="48x48" href="icon48.png">
-    <link rel="icon" type="image/png" sizes="128x128" href="icon128.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="cat.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="cat.png">
     <style>
         *, *::before, *::after {
             margin: 0;
@@ -614,6 +614,31 @@
             line-height: 1.5;
         }
 
+        /* AI Tabs */
+        .ai-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+        .ai-tab {
+            padding: 8px 20px; border-radius: 10px; border: 1px solid var(--glass-border);
+            background: transparent; color: var(--text-muted); cursor: pointer;
+            font-size: 0.9rem; transition: all .3s ease;
+        }
+        .ai-tab.active { background: rgba(139, 92, 246, 0.15); color: #a78bfa; border-color: rgba(139, 92, 246, 0.3); }
+        .ai-tab:hover:not(.active) { background: rgba(255,255,255,0.05); }
+        .ai-tab-content { display: none; }
+        .ai-tab-content.active { display: block; }
+        .endpoint-fields { list-style: none; padding: 0; margin: 16px 0; }
+        .endpoint-fields li {
+            padding: 14px 18px; border: 1px solid var(--glass-border); border-radius: 12px;
+            margin-bottom: 10px; background: rgba(255,255,255,0.03);
+        }
+        .endpoint-fields li strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 0.95rem; }
+        .endpoint-fields li span { color: var(--text-muted); font-size: 0.85rem; }
+        .endpoint-fields code { background: rgba(139,92,246,0.12); padding: 2px 7px; border-radius: 5px; font-size: min(0.82rem, 2.8vw); color: #c4b5fd; white-space: nowrap; }
+        .endpoint-examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+        .endpoint-examples span {
+            padding: 5px 14px; border-radius: 8px; font-size: 0.82rem;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: var(--text-muted);
+        }
+
         /* Security */
         .security-badge {
             display: flex;
@@ -913,7 +938,7 @@
         <!-- Nav -->
         <nav>
             <a href="#" class="logo">
-                <img src="icon128.png" alt="NMO Helper">
+                <img src="cat.png" alt="NMO Helper">
                 NMO Helper
             </a>
             <ul class="nav-links">
@@ -941,16 +966,16 @@
                 <div class="particle"></div>
                 <div class="particle"></div>
             </div>
-            <img src="icon128.png" alt="" class="hero-icon">
-            <p style="font-size: 0.65rem; color: rgba(255,255,255,0.25); margin-bottom: 16px; letter-spacing: 0.05em;">v2.3.0</p>
+            <img src="cat.png" alt="" class="hero-icon">
+            <p style="font-size: 0.65rem; color: rgba(255,255,255,0.25); margin-bottom: 16px; letter-spacing: 0.05em;">v3.0.0</p>
             <h1>Помощник для тестов НМО</h1>
             <p>Ваш умный помощник в прохождении тестов НМО на портале <a href="https://a.edu.rosminzdrav.ru" target="_blank" style="color: var(--text-muted); border-bottom: 1px dashed rgba(255,255,255,0.3);">edu.rosminzdrav.ru</a>. Бесплатное расширение с открытым исходным кодом — авто-поиск ответов, AI-режим, работает из коробки.</p>
             <div class="hero-buttons">
-                <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/nmo-helper-main.zip" class="btn btn-primary">
+                <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/nmo-helper-main.zip" class="btn btn-primary">
                     <img src="demo/chrome.svg" width="20" height="20" alt="Chrome">
                     Chrome (.zip)
                 </a>
-                <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/firefox_nmo_helper.xpi" class="btn btn-primary" style="background: linear-gradient(135deg, #ff9500, #ff6a00);">
+                <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/firefox_nmo_helper.xpi" class="btn btn-primary" style="background: linear-gradient(135deg, #ff9500, #ff6a00);">
                     <img src="demo/firefox.svg" width="20" height="20" alt="Firefox">
                     Firefox (.xpi)
                 </a>
@@ -969,11 +994,11 @@
                 <div class="carousel-wrapper" id="carousel">
                     <div class="carousel">
                         <div class="carousel-track" id="carouselTrack">
-                            <div class="carousel-slide"><img src="screen1.png" alt="Выбор AI-модели"></div>
-                            <div class="carousel-slide"><img src="screen2.png" alt="AI-режим"></div>
-                            <div class="carousel-slide"><img src="screen3.png" alt="Ручной поиск"></div>
-                            <div class="carousel-slide"><img src="screen4.png" alt="Авто-поиск"></div>
-                            <div class="carousel-slide"><img src="screen5.png" alt="Компактный вид"></div>
+                            <div class="carousel-slide"><img src="photo_1.png" alt="Выбор AI-модели"></div>
+                            <div class="carousel-slide"><img src="photo_2.png" alt="Свой endpoint"></div>
+                            <div class="carousel-slide"><img src="photo_3.png" alt="AI-режим (ProxyAPI)"></div>
+                            <div class="carousel-slide"><img src="photo_4.png" alt="Ручной поиск"></div>
+                            <div class="carousel-slide"><img src="photo_5.png" alt="Авто-поиск"></div>
                         </div>
                     </div>
                     <button class="carousel-btn prev" onclick="moveCarousel(-1)">
@@ -1016,7 +1041,7 @@
                 <div class="feature-card fade-in">
                     <div class="feature-icon pink">&#x1F3AF;</div>
                     <h3>Умное сопоставление</h3>
-                    <p>Нормализация тире, кириллицы/латиницы, нечёткий поиск — находит ответ даже при расхождениях в тексте.</p>
+                    <p>Двухслойные парсеры и алгоритм Сёренсена — Дайса. Нормализация, нечёткий поиск — находит ответ даже при расхождениях в тексте.</p>
                 </div>
                 <div class="feature-card fade-in">
                     <div class="feature-icon cyan">&#x1F5D6;&#xFE0F;</div>
@@ -1042,7 +1067,7 @@
                 <div class="step fade-in">
                     <div class="step-number">1</div>
                     <h3>Скачайте</h3>
-                    <p>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/nmo-helper-main.zip" style="color: var(--gradient-1);">.zip архив</a> и разархивируйте в любую папку</p>
+                    <p>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/nmo-helper-main.zip" style="color: var(--gradient-1);">.zip архив</a> и разархивируйте в любую папку</p>
                 </div>
                 <div class="step fade-in">
                     <div class="step-number">2</div>
@@ -1061,7 +1086,7 @@
                 <div class="step fade-in">
                     <div class="step-number">1</div>
                     <h3>Скачайте</h3>
-                    <p>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v2.3.0/firefox_nmo_helper.xpi" style="color: #ff9500;">файл .xpi</a> — это установочный пакет расширения для Firefox</p>
+                    <p>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/firefox_nmo_helper.xpi" style="color: #ff9500;">файл .xpi</a> — это установочный пакет расширения для Firefox</p>
                 </div>
                 <div class="step fade-in">
                     <div class="step-number">2</div>
@@ -1087,43 +1112,90 @@
         <section id="ai" class="section">
             <div class="ai-section fade-in">
                 <h2>AI-режим</h2>
-                <p>Подключите нейросеть для решения тестов. Поддерживаются модели OpenAI, Google Gemini и Anthropic Claude через сервис <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> — российский прокси к AI-моделям с оплатой в рублях и без VPN.</p>
 
-                <table class="models-table">
-                    <thead>
-                        <tr>
-                            <th>Уровень</th>
-                            <th>Модели</th>
-                            <th>Описание</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="level-badge level-low">low</span></td>
-                            <td>gpt-4o-mini, gemini-2.0-flash, claude-haiku-4.5</td>
-                            <td>Быстрые и дешёвые</td>
-                        </tr>
-                        <tr>
-                            <td><span class="level-badge level-medium">medium</span></td>
-                            <td>gpt-4.1-mini, gemini-2.5-flash</td>
-                            <td>Баланс цена/качество</td>
-                        </tr>
-                        <tr>
-                            <td><span class="level-badge level-high">high</span></td>
-                            <td>o3-mini, o4-mini, claude-sonnet-4.6</td>
-                            <td>Высокая точность</td>
-                        </tr>
-                        <tr>
-                            <td><span class="level-badge level-ultra">ultra</span></td>
-                            <td>claude-opus-4.6, gemini-3.1-pro</td>
-                            <td>Максимальная точность</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="disclaimer">
-                    <strong>Важно:</strong> на практике AI-модели решают медицинские тесты НМО на оценку ~3. Рекомендуем использовать AI как вспомогательный инструмент, а основной упор делать на авто-поиск по сайтам с готовыми ответами.
+                <div class="ai-tabs">
+                    <button class="ai-tab active" onclick="switchAiTab('proxyapi', this)">ProxyAPI.ru</button>
+                    <button class="ai-tab" onclick="switchAiTab('endpoint', this)">Свой endpoint</button>
                 </div>
+
+                <div class="ai-tab-content active" id="tab-proxyapi">
+                    <p>Подключите нейросеть для решения тестов. Поддерживаются модели OpenAI, Google Gemini и Anthropic Claude через сервис <a href="https://proxyapi.ru" target="_blank" style="color: var(--gradient-1);">proxyapi.ru</a> — российский прокси к AI-моделям с оплатой в рублях и без VPN.</p>
+
+                    <table class="models-table">
+                        <thead>
+                            <tr>
+                                <th>Уровень</th>
+                                <th>Модели</th>
+                                <th>Описание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="level-badge level-low">low</span></td>
+                                <td>gpt-4o-mini, gemini-2.0-flash, claude-haiku-4.5</td>
+                                <td>Быстрые и дешёвые</td>
+                            </tr>
+                            <tr>
+                                <td><span class="level-badge level-medium">medium</span></td>
+                                <td>gpt-4.1-mini, gemini-2.5-flash</td>
+                                <td>Баланс цена/качество</td>
+                            </tr>
+                            <tr>
+                                <td><span class="level-badge level-high">high</span></td>
+                                <td>o3-mini, o4-mini, claude-sonnet-4.6</td>
+                                <td>Высокая точность</td>
+                            </tr>
+                            <tr>
+                                <td><span class="level-badge level-ultra">ultra</span></td>
+                                <td>claude-opus-4.6, gemini-3.1-pro</td>
+                                <td>Максимальная точность</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="disclaimer">
+                        <strong>Важно:</strong> на практике AI-модели решают медицинские тесты НМО на оценку ~3. Рекомендуем использовать AI как вспомогательный инструмент, а основной упор делать на авто-поиск по сайтам с готовыми ответами.
+                    </div>
+                </div>
+
+                <div class="ai-tab-content" id="tab-endpoint">
+                    <p>Включите свитч <strong>«Свой endpoint»</strong> в панели расширения и укажите параметры подключения:</p>
+
+                    <ul class="endpoint-fields">
+                        <li>
+                            <strong>API Endpoint</strong>
+                            <span>OpenAI-совместимый URL, например <code>https://api.deepseek.com/v1/chat/completions</code></span>
+                        </li>
+                        <li>
+                            <strong>API Token</strong>
+                            <span>Ваш ключ авторизации от выбранного сервиса</span>
+                        </li>
+                        <li>
+                            <strong>Название модели</strong>
+                            <span>Имя модели для запроса, например <code>deepseek-chat</code> или <code>llama-3.3-70b</code></span>
+                        </li>
+                    </ul>
+
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px;">Совместимые сервисы:</p>
+                    <div class="endpoint-examples">
+                        <span>DeepSeek</span>
+                        <span>OpenRouter</span>
+                        <span>Ollama (localhost)</span>
+                        <span>Together AI</span>
+                        <span>Any OpenAI-compatible API</span>
+                    </div>
+
+                    <div class="disclaimer" style="margin-top: 20px;">
+                        <strong>Совет:</strong> формат запроса совместим с OpenAI Chat Completions API. Подойдёт любой сервис, поддерживающий этот формат, включая локальные модели через Ollama.
+                    </div>
+                </div>
+            </div>
+
+            <div class="fade-in" style="text-align: center; margin-top: 24px;">
+                <a href="/instruction#ai" class="btn btn-secondary" style="font-size: 0.9rem; padding: 10px 24px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Подробная инструкция с картинками
+                </a>
             </div>
         </section>
 
@@ -1217,7 +1289,7 @@
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </button>
                     <div class="faq-answer"><div class="faq-answer-inner">
-                        Т.к. расширение не размещено в магазине, автоматического обновления нет. Следите за новыми версиями на этом сайте или на <a href="https://github.com/lKolabrodl/nmo-helper/releases" target="_blank" style="color: var(--gradient-1);">GitHub</a>. Для обновления просто удалите старую версию расширения и установите новую заново. Подробнее — в <a href="/instruction#update" style="color: var(--gradient-1);">инструкции</a>. Текущая версия: <strong>v2.3.0</strong>.
+                        Т.к. расширение не размещено в магазине, автоматического обновления нет. Следите за новыми версиями на этом сайте или на <a href="https://github.com/lKolabrodl/nmo-helper/releases" target="_blank" style="color: var(--gradient-1);">GitHub</a>. Для обновления просто удалите старую версию расширения и установите новую заново. Подробнее — в <a href="/instruction#update" style="color: var(--gradient-1);">инструкции</a>. Текущая версия: <strong>v3.0.0</strong>.
                     </div></div>
                 </div>
 
@@ -1265,7 +1337,7 @@
                 <img src="https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea" alt="Downloads">
                 <img src="https://img.shields.io/github/stars/lKolabrodl/nmo-helper?style=flat-square&label=stars&color=fbbf24" alt="Stars">
             </div>
-            <p class="footer-copy">NMO Helper v2.3.0 &copy; 2026. <a href="/license" style="color:inherit;text-decoration:underline">MIT License</a>.</p>
+            <p class="footer-copy">NMO Helper v3.0.0 &copy; 2026. <a href="/license" style="color:inherit;text-decoration:underline">MIT License</a>.</p>
         </footer>
     </div>
 
@@ -1275,7 +1347,7 @@
 
     <script>
         // Carousel
-        const captions = ['Выбор AI-модели', 'AI-режим', 'Ручной поиск', 'Авто-поиск', 'Компактный вид'];
+        const captions = ['Выбор AI-модели', 'Свой endpoint', 'AI-режим (ProxyAPI)', 'Ручной поиск', 'Авто-поиск'];
         let carouselIdx = 0;
         const track = document.getElementById('carouselTrack');
         const dotsContainer = document.getElementById('carouselDots');
@@ -1338,6 +1410,13 @@
                 tabChrome.className = 'btn btn-secondary';
                 tabChrome.style.cssText = 'font-size: 0.9rem; padding: 8px 24px; background: transparent; border: 1px solid var(--glass-border);';
             }
+        }
+
+        function switchAiTab(id, btn) {
+            document.querySelectorAll('.ai-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.ai-tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            btn.classList.add('active');
         }
 
         function toggleFaq(item) {
