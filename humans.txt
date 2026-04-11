@@ -1,0 +1,10 @@
+/* TEAM */
+Developer: lKolabrod
+GitHub: https://github.com/lKolabrodl
+Site: https://nmo-helper.ru
+
+/* SITE */
+Last update: 2026/04/12
+Language: Russian
+Standards: HTML5, CSS3
+Software: VS Code, Claude Code

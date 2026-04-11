@@ -1,0 +1,14 @@
+{
+  "name": "NMO Helper",
+  "short_name": "NMO Helper",
+  "description": "Помощник для тестов НМО — авто-поиск ответов, AI-режим, работает из коробки",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0c29",
+  "theme_color": "#302b63",
+  "icons": [
+    { "src": "favicon-48.png", "sizes": "48x48", "type": "image/png" },
+    { "src": "favicon-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
