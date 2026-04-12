@@ -80,3 +80,56 @@ body {
 	height: 88px;
 	border-radius: 10px;
 }
+
+.popup-export {
+	padding: 10px 14px 14px;
+	border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.popup-export-title {
+	font-size: 10px;
+	color: #555e6e;
+	font-weight: 500;
+	margin-bottom: 8px;
+}
+
+.popup-export-buttons {
+	display: flex;
+	gap: 8px;
+}
+
+.popup-btn {
+	flex: 1;
+	padding: 7px 0;
+	border: 1px solid rgba(255, 255, 255, 0.12);
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.04);
+	color: #e8eaf0;
+	font-family: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.15s;
+}
+
+.popup-btn:hover {
+	background: rgba(78, 204, 163, 0.1);
+	border-color: rgba(78, 204, 163, 0.3);
+	color: #4ecca3;
+}
+
+.popup-btn:active {
+	background: rgba(78, 204, 163, 0.18);
+}
+
+.export-status {
+	margin-top: 6px;
+	font-size: 11px;
+	color: #4ecca3;
+	text-align: center;
+	min-height: 16px;
+}
+
+.export-status.error {
+	color: #e94560;
+}

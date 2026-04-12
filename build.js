@@ -113,6 +113,7 @@ async function build() {
     // Copy popup
     fs.copyFileSync(path.join(SRC, 'popup.html'), path.join(outDir, 'popup.html'));
     fs.copyFileSync(path.join(SRC, 'popup.css'), path.join(outDir, 'popup.css'));
+    fs.copyFileSync(path.join(SRC, 'popup.js'), path.join(outDir, 'popup.js'));
 
     // Copy .xpi for Firefox
     if (browser.name === 'firefox') {

@@ -118,7 +118,7 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 							<span className={`nmo-result-src ${r.source === '24forcare' ? 'src-24' : 'src-ros'}`}>
 								{r.source === '24forcare' ? '24fc' : 'rosmed'}
 							</span>
-							<span className="nmo-result-title">{r.title}</span>
+							<span className="nmo-result-title" title={r.title}>{r.title}</span>
 						</div>
 					))}
 				</div>

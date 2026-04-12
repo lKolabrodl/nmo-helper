@@ -11,6 +11,9 @@ export const HIGHLIGHT_COLOR = '#4ecca3';
 /** Порог нечёткого совпадения (Dice coefficient) для поиска вопросов на сайтах-источниках */
 export const SIMILARITY_THRESHOLD = 0.85;
 
+/** Максимальное количество тем в кеше ответов (LRU — старые вытесняются) */
+export const CACHE_MAX_TOPICS = 10;
+
 /**
  * DOM-селекторы страницы НМО.
  * Каждый ключ — массив CSS-селекторов в порядке приоритета (fallback-цепочка).
