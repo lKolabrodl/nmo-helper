@@ -130,6 +130,14 @@
   &.loading { color: $loading; }
 }
 
+// --- Error boundary ---
+.nmo-error-boundary {
+  padding: 8px;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $error;
+}
+
 // --- Sections ---
 .nmo-section {
   display: flex;
