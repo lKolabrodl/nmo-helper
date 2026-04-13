@@ -1,5 +1,68 @@
 /** Popup: кнопки экспорта кеша ответов */
 
+const phrases = [
+	'Привет, я кот',
+	'Большую роль сыграл в твоей судьбе',
+	'Я толстый кот',
+	'И должен знать всю правду обо мне',
+	'Я расскажу тебе секрет один',
+	'Ты мой слуга, а я твой господин',
+	'И хозяин твой, а ты мой раб навечно',
+	'Ведь я твой кот, а ты мой человек',
+	'Мяу, мяу, мяу, мяу, мяу',
+	'Мяу, Мяу, Мяу, мяу, мяу',
+	'Мяу, Мяу, Мяу, Мяу, Мяу',
+	'Мяу, мяу, ааа, ааа, ааа',
+	'Играй со мной',
+	'И может погладить разрешу',
+	'Корми меня',
+	'И может на тебя я погляжу',
+	'На свет родился, чтоб повелевать',
+	'Тебе со мной покоя не видать',
+	'И всё что захочу, могу я натворить',
+	'Ты будешь всё равно меня любить',
+	'Мяу, мяу, мяу, мяу, мяу',
+	'Мяу, Мяу, Мяу, мяу, мяу',
+	'Мяу, Мяу, Мяу, Мяу, Мяу',
+	'Мяу, мяу, ааа, ааа, ааа',
+	'Прости меня',
+	'Лови меня',
+	'Найди меня',
+	'Люби меня',
+	'Ведь я твой кот',
+	'Я здесь король',
+	'Я властелин',
+	'И твой герой',
+	'Прости меня',
+	'Лови меня',
+	'Найди меня',
+	'Люби меня',
+	'Ведь я твой кот',
+	'Я здесь король',
+	'Я властелин',
+	'И твой герой',
+	'Привет, я кот',
+];
+let phraseIndex = 0;
+let singInterval = null;
+
+document.querySelector('.popup-mascot').addEventListener('click', () => {
+	const bubble = document.getElementById('speech-bubble');
+	if (singInterval) {
+		clearInterval(singInterval);
+		singInterval = null;
+		bubble.classList.remove('visible');
+		phraseIndex = 0;
+		return;
+	}
+	bubble.textContent = phrases[0];
+	bubble.classList.add('visible');
+	singInterval = setInterval(() => {
+		phraseIndex = (phraseIndex + 1) % phrases.length;
+		bubble.textContent = phrases[phraseIndex];
+	}, 2500);
+});
+
 function download(filename, content, type) {
 	const blob = new Blob([content], { type });
 	const url = URL.createObjectURL(blob);
