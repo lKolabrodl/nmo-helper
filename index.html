@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- Speed up Yandex.Metrika connection -->
+    <link rel="preconnect" href="https://mc.yandex.ru" crossorigin>
+    <link rel="dns-prefetch" href="https://mc.yandex.ru">
+
     <!-- Yandex.Metrika counter -->
     <script type="text/javascript">
         (function(m,e,t,r,i,k,a){
@@ -98,6 +102,10 @@
     <link rel="icon" type="image/png" sizes="128x128" href="favicon-128.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
+
+    <!-- Preload LCP image (WebP for modern browsers, PNG fallback) -->
+    <link rel="preload" as="image" href="cat.webp" type="image/webp" fetchpriority="high">
+
     <style>
         *, *::before, *::after {
             margin: 0;
@@ -997,6 +1005,7 @@
             </ul>
         </nav>
 
+        <main>
         <!-- Hero -->
         <section class="hero" style="position: relative;">
             <div class="hero-rings">
@@ -1014,7 +1023,10 @@
                 <div class="particle"></div>
                 <div class="particle"></div>
             </div>
-            <img src="cat.png" alt="NMO Helper — расширение для тестов НМО" class="hero-icon">
+            <picture>
+                <source srcset="cat.webp" type="image/webp">
+                <img src="cat.png" alt="NMO Helper — расширение для тестов НМО" class="hero-icon" fetchpriority="high" decoding="async">
+            </picture>
             <p style="font-size: 0.65rem; color: rgba(255,255,255,0.25); margin-bottom: 16px; letter-spacing: 0.05em;">v3.0.0</p>
             <h1>Помощник для тестов НМО</h1>
             <p>Ваш умный помощник в прохождении тестов НМО на портале <a href="https://a.edu.rosminzdrav.ru" target="_blank" style="color: var(--text-muted); border-bottom: 1px dashed rgba(255,255,255,0.3);">edu.rosminzdrav.ru</a>. Бесплатное расширение с открытым исходным кодом — авто-поиск ответов, AI-режим, работает из коробки.</p>
@@ -1042,18 +1054,18 @@
                 <div class="carousel-wrapper" id="carousel">
                     <div class="carousel">
                         <div class="carousel-track" id="carouselTrack">
-                            <div class="carousel-slide"><img src="photo_1.png" alt="Выбор AI-модели"></div>
-                            <div class="carousel-slide"><img src="photo_2.png" alt="Свой endpoint" loading="lazy"></div>
-                            <div class="carousel-slide"><img src="photo_3.png" alt="AI-режим (ProxyAPI)" loading="lazy"></div>
-                            <div class="carousel-slide"><img src="photo_4.png" alt="Ручной поиск" loading="lazy"></div>
-                            <div class="carousel-slide"><img src="photo_5.png" alt="Авто-поиск" loading="lazy"></div>
+                            <div class="carousel-slide"><picture><source srcset="photo_1.webp" type="image/webp"><img src="photo_1.png" alt="Выбор AI-модели" loading="lazy" decoding="async"></picture></div>
+                            <div class="carousel-slide"><picture><source srcset="photo_2.webp" type="image/webp"><img src="photo_2.png" alt="Свой endpoint" loading="lazy" decoding="async"></picture></div>
+                            <div class="carousel-slide"><picture><source srcset="photo_3.webp" type="image/webp"><img src="photo_3.png" alt="AI-режим (ProxyAPI)" loading="lazy" decoding="async"></picture></div>
+                            <div class="carousel-slide"><picture><source srcset="photo_4.webp" type="image/webp"><img src="photo_4.png" alt="Ручной поиск" loading="lazy" decoding="async"></picture></div>
+                            <div class="carousel-slide"><picture><source srcset="photo_5.webp" type="image/webp"><img src="photo_5.png" alt="Авто-поиск" loading="lazy" decoding="async"></picture></div>
                         </div>
                     </div>
-                    <button class="carousel-btn prev" onclick="moveCarousel(-1)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    <button class="carousel-btn prev" onclick="moveCarousel(-1)" aria-label="Предыдущий слайд">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
-                    <button class="carousel-btn next" onclick="moveCarousel(1)">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    <button class="carousel-btn next" onclick="moveCarousel(1)" aria-label="Следующий слайд">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                 </div>
                 <div class="carousel-dots" id="carouselDots"></div>
@@ -1371,6 +1383,7 @@
                 <a href="/releases" style="color: var(--gradient-1);">Все релизы и предыдущие версии &rarr;</a>
             </p>
         </section>
+        </main>
 
         <!-- Footer -->
         <footer>
@@ -1390,8 +1403,8 @@
         </footer>
     </div>
 
-    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+    <button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Наверх страницы">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="18 15 12 9 6 15"/></svg>
     </button>
 
     <script>
