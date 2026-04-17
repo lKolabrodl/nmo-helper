@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Yandex.Metrika counter -->
+    <script type="text/javascript">
+        (function(m,e,t,r,i,k,a){
+            m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+        })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=108622260', 'ym');
+
+        ym(108622260, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
+    </script>
+    <noscript><div><img src="https://mc.yandex.ru/watch/108622260" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+    <!-- /Yandex.Metrika counter -->
+
+    <title>Политика приватности — NMO Helper | Защита данных пользователей</title>
+    <meta name="description" content="Политика приватности NMO Helper. Мы не собираем персональные данные. Все настройки и кеш ответов хранятся локально в браузере. Открытый исходный код, MIT лицензия.">
+    <link rel="canonical" href="https://nmo-helper.ru/privacy">
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="NMO Helper">
+    <meta property="og:url" content="https://nmo-helper.ru/privacy">
+    <meta property="og:title" content="Политика приватности — NMO Helper">
+    <meta property="og:description" content="Как NMO Helper обращается с данными пользователей. Без сбора, без трекинга, без рекламы.">
+    <meta property="og:image" content="https://nmo-helper.ru/og-image.png">
+    <meta property="og:locale" content="ru_RU">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Политика приватности — NMO Helper">
+    <meta name="twitter:description" content="Как NMO Helper обращается с данными пользователей.">
+    <meta name="twitter:image" content="https://nmo-helper.ru/og-image.png">
+
+    <meta name="keywords" content="NMO Helper, политика приватности, privacy policy, защита данных, обработка персональных данных, НМО">
+
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="favicon-128.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.json">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --gradient-1: #667eea;
+            --gradient-2: #764ba2;
+            --gradient-3: #f093fb;
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #fff;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --accent: #fbbf24;
+            --green: #34d399;
+            --card-bg: rgba(255, 255, 255, 0.06);
+        }
+
+        html { scroll-behavior: smooth; overflow-x: hidden; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 40%, #24243e 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-glow { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bg-glow::before, .bg-glow::after { content: ''; position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.3; animation: float 15s ease-in-out infinite; }
+        .bg-glow::before { width: 600px; height: 600px; background: var(--gradient-1); top: -200px; left: -100px; }
+        .bg-glow::after { width: 500px; height: 500px; background: var(--gradient-3); bottom: -150px; right: -100px; animation-delay: -7s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 20px) scale(0.95); }
+        }
+
+        .container { max-width: 780px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+        /* Nav */
+        nav { padding: 20px 0; display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: 700; text-decoration: none; color: var(--text); }
+        .logo img { width: 32px; height: 32px; border-radius: 8px; }
+        .nav-links { display: flex; gap: 24px; list-style: none; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+        .nav-links a:hover { color: var(--text); }
+
+        /* Hero */
+        .hero { text-align: center; padding: 60px 0 40px; }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 2.8rem); font-weight: 800; line-height: 1.2; margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, var(--gradient-3) 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero p { font-size: 1.1rem; color: var(--text-muted); max-width: 560px; margin: 0 auto; line-height: 1.6; }
+
+        .privacy-card {
+            background: var(--card-bg); border: 1px solid var(--glass-border); border-radius: 20px;
+            padding: 40px; backdrop-filter: blur(10px); margin-bottom: 24px;
+        }
+        .privacy-card h2 { font-size: 1.2rem; margin-bottom: 12px; color: var(--text); }
+        .privacy-card h2:not(:first-child) { margin-top: 28px; }
+        .privacy-card p, .privacy-card li { color: var(--text-muted); line-height: 1.7; font-size: 0.95rem; }
+        .privacy-card p + p { margin-top: 10px; }
+        .privacy-card ul { margin: 10px 0 0 20px; }
+        .privacy-card li { margin-bottom: 6px; }
+        .privacy-card a { color: var(--accent); text-decoration: none; }
+        .privacy-card a:hover { text-decoration: underline; }
+        .privacy-card code { background: rgba(255,255,255,0.07); padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; font-family: 'SF Mono', 'Fira Code', monospace; }
+
+        .badge-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; margin-bottom: 8px; }
+        .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .badge.green { background: rgba(52, 211, 153, 0.15); color: var(--green); }
+        .badge.blue { background: rgba(102, 126, 234, 0.15); color: var(--gradient-1); }
+        .badge.yellow { background: rgba(251, 191, 36, 0.15); color: var(--accent); }
+
+        .summary-block { padding-bottom: 24px; border-bottom: 1px solid var(--glass-border); margin-bottom: 28px; }
+        .meta-date { color: rgba(255,255,255,0.4); font-size: 0.85rem; margin-top: 8px; }
+
+        /* Footer */
+        footer { border-top: 1px solid var(--glass-border); padding: 40px 0; text-align: center; }
+        .footer-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--text); }
+        .footer-copy { color: rgba(255, 255, 255, 0.4); font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="container">
+        <nav>
+            <a href="/" class="logo">
+                <img src="cat-nav.png" alt="NMO Helper">
+                NMO Helper
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Главная</a>
+                </li>
+                <li><a href="/feedback">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Обратная связь</a>
+                </li>
+            </ul>
+        </nav>
+
+        <section class="hero">
+            <h1>Политика приватности</h1>
+            <p>Коротко: мы не собираем персональные данные, не ведём трекинг и не показываем рекламу. Всё хранится локально в вашем браузере.</p>
+        </section>
+
+        <div class="privacy-card">
+            <div class="summary-block">
+                <h2>Коротко о главном</h2>
+                <div class="badge-row">
+                    <span class="badge green">&#10003; Не собираем персональные данные</span>
+                    <span class="badge green">&#10003; Хранение локально в браузере</span>
+                    <span class="badge green">&#10003; Open source, MIT</span>
+                    <span class="badge yellow">&#9888; AI-режим: запросы напрямую к провайдерам</span>
+                </div>
+                <p class="meta-date">Последнее обновление: 17 апреля 2026</p>
+            </div>
+
+            <h2>1. Какие данные обрабатывает расширение</h2>
+            <p>NMO Helper работает полностью локально в вашем браузере и не передаёт данные на серверы разработчика. Расширение сохраняет:</p>
+            <ul>
+                <li>Настройки пользователя (выбранные режимы работы, параметры AI)</li>
+                <li>Кеш найденных ответов для ускорения повторных тестов</li>
+            </ul>
+            <p>Всё это хранится локально через API <code>chrome.storage</code>. Разработчик не имеет доступа к этим данным. Вы можете в любой момент очистить их, удалив расширение или очистив хранилище в настройках браузера.</p>
+
+            <h2>2. К каким внешним сервисам обращается расширение</h2>
+            <p>Запросы отправляются напрямую из вашего браузера, минуя серверы разработчика:</p>
+            <ul>
+                <li><strong>База ответов</strong> — публичные сайты <a href="https://rosmedicinfo.ru" target="_blank" rel="noopener">rosmedicinfo.ru</a> и <a href="https://24forcare.com" target="_blank" rel="noopener">24forcare.com</a></li>
+                <li><strong>AI-режим (опционально)</strong> — OpenAI, Anthropic, Google, DeepSeek через ваш собственный API-ключ или российский шлюз <a href="https://proxyapi.ru" target="_blank" rel="noopener">proxyapi.ru</a></li>
+            </ul>
+            <p>AI-режим включается пользователем вручную. Содержимое тестовых вопросов отправляется в выбранный AI-сервис для получения ответа. Ключ API хранится только в локальном хранилище браузера пользователя.</p>
+
+            <h2>3. Аналитика на сайте nmo-helper.ru</h2>
+            <p>На сайте <strong>nmo-helper.ru</strong> установлен счётчик <strong>Яндекс.Метрики</strong> для анализа посещаемости. Метрика собирает обезличенные данные: страницу, откуда пришёл пользователь, устройство, браузер, время на странице. IP-адреса обезличиваются. Эти данные используются только для улучшения сайта.</p>
+            <p>В самом расширении NMO Helper никакой аналитики, телеметрии или счётчиков нет.</p>
+
+            <h2>4. Cookies</h2>
+            <p>Сайт nmo-helper.ru использует только технические cookies Яндекс.Метрики для корректной работы аналитики. Рекламные и маркетинговые cookies не используются.</p>
+
+            <h2>5. Передача данных третьим лицам</h2>
+            <p>Разработчик не передаёт и не продаёт никакие данные третьим лицам. Данные, которые отправляются во внешние сервисы (базы ответов, AI-провайдеры), регулируются политиками приватности этих сервисов — подключение к ним происходит напрямую из браузера пользователя.</p>
+
+            <h2>6. Права пользователя</h2>
+            <p>Вы можете в любой момент:</p>
+            <ul>
+                <li>Удалить расширение — это удалит все связанные с ним локальные данные</li>
+                <li>Очистить кеш ответов через настройки расширения</li>
+                <li>Отключить AI-режим в настройках</li>
+                <li>Заблокировать Яндекс.Метрику на сайте через настройки браузера или расширения-блокировщика</li>
+            </ul>
+
+            <h2>7. Исходный код и прозрачность</h2>
+            <p>NMO Helper — полностью open source проект под лицензией MIT. Вы можете проверить, как работает расширение, изучив исходный код на <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank" rel="noopener">GitHub</a>. Сборка проходит проверку <strong>VirusTotal</strong> и публикуется в официальных магазинах расширений (Firefox Add-ons, Opera Add-ons).</p>
+
+            <h2>8. Контакты</h2>
+            <p>Вопросы и предложения по обработке данных — через форму <a href="/feedback">обратной связи</a> или через <a href="https://github.com/lKolabrodl/nmo-helper/issues" target="_blank" rel="noopener">issues на GitHub</a>.</p>
+
+            <h2>9. Изменения в политике</h2>
+            <p>При существенных изменениях этого документа дата в начале страницы будет обновлена. Рекомендуем периодически проверять её.</p>
+        </div>
+
+        <footer>
+            <div class="footer-links">
+                <a href="/">Главная</a>
+                <a href="/instruction">Инструкция</a>
+                <a href="/releases">Релизы</a>
+                <a href="/feedback">Обратная связь</a>
+                <a href="/license">Лицензия</a>
+                <a href="https://github.com/lKolabrodl/nmo-helper" target="_blank">GitHub</a>
+            </div>
+            <p class="footer-copy">NMO Helper &copy; 2026. MIT License.</p>
+        </footer>
+    </div>
+</body>
+</html>
