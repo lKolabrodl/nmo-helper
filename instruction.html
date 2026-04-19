@@ -416,8 +416,21 @@
             <div id="tab-firefox" class="tab-content">
                 <div class="card fade-in">
                     <h3>Mozilla Firefox</h3>
+                    <p style="color: var(--green); font-size: 0.9rem; margin-bottom: 12px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align: -2px; margin-right: 4px;" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                        Проверено и подписано Mozilla
+                    </p>
+
+                    <h4 style="margin-top: 16px; margin-bottom: 10px;">Способ 1. Firefox Add-ons (рекомендуется)</h4>
                     <ol class="step-list">
-                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">nmo-helper-firefox.xpi</a></li>
+                        <li>Откройте страницу расширения на <a href="https://addons.mozilla.org/ru/firefox/addon/nmo-helper/" target="_blank" rel="noopener" style="color: var(--gradient-1);">addons.mozilla.org/firefox/addon/nmo-helper</a></li>
+                        <li>Нажмите <strong>«Добавить в Firefox»</strong></li>
+                        <li>Подтвердите установку. Расширение будет обновляться автоматически.</li>
+                    </ol>
+
+                    <h4 style="margin-top: 20px; margin-bottom: 10px;">Способ 2. Прямая установка .xpi</h4>
+                    <ol class="step-list">
+                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">nmo-helper-firefox.xpi</a> из релиза на GitHub</li>
                         <li>Откройте Firefox и перетащите файл <code>.xpi</code> прямо в окно браузера, или откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="about:addons"><code>about:addons</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> &rarr; нажмите шестерёнку &#9881; &rarr; <strong>«Установить дополнение из файла»</strong></li>
                         <li>Подтвердите установку, нажав <strong>«Добавить»</strong></li>
                     </ol>
@@ -624,7 +637,10 @@
             <h2 class="section-title fade-in">Обновление расширения</h2>
 
             <div class="card fade-in">
-                <p>Т.к. расширение не размещено в магазине, автоматического обновления нет. Следите за новыми версиями на этом сайте или на <a href="https://github.com/lKolabrodl/nmo-helper/releases" target="_blank" style="color: var(--gradient-1);">GitHub</a>.</p>
+                <p>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="3" style="vertical-align: -2px; margin-right: 4px;" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    В <strong>Firefox Add-ons</strong> обновление автоматическое — ничего делать не нужно. Для остальных браузеров и для прямой установки <code>.xpi</code> — см. ниже. Следите за новыми версиями на этом сайте или на <a href="https://github.com/lKolabrodl/nmo-helper/releases" target="_blank" style="color: var(--gradient-1);">GitHub</a>.
+                </p>
 
                 <h3 style="margin-top: 20px;">Chrome / Yandex / Edge</h3>
                 <ol class="step-list">
@@ -635,6 +651,8 @@
                 </ol>
 
                 <h3 style="margin-top: 20px;">Firefox</h3>
+                <p style="margin-bottom: 8px;">Если установили через <a href="https://addons.mozilla.org/ru/firefox/addon/nmo-helper/" target="_blank" rel="noopener" style="color: var(--gradient-1);">Firefox Add-ons</a> — обновление происходит автоматически в фоне.</p>
+                <p style="margin-bottom: 8px;">Если устанавливали прямую ссылку на <code>.xpi</code>:</p>
                 <ol class="step-list">
                     <li>Скачайте новый файл <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">firefox_nmo_helper.xpi</a></li>
                     <li>Перетащите его в окно Firefox — расширение обновится автоматически</li>
