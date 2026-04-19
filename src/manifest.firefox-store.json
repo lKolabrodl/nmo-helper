@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "NMO Helper",
+  "name": "NMO-Helper",
   "version": "3.0.1",
   "description": "Автоподсветка правильных ответов на тестах НМО",
   "icons": {
@@ -38,7 +38,7 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "nmo-helper@extension",
+      "id": "nmo-helper-amo@extension",
       "strict_min_version": "109.0",
       "data_collection_permissions": {
         "required": ["none"],
