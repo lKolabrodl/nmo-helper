@@ -1,9 +1,10 @@
-# NMO Helper v3.0.0
+# NMO Helper v3.0.1
 
 > Умный помощник в прохождении тестов НМО на портале [edu.rosminzdrav.ru](https://a.edu.rosminzdrav.ru) — бесплатное расширение для браузера с открытым исходным кодом.
 
 Авто-поиск ответов на `rosmedicinfo.ru` и `24forcare.com`, AI-режим (GPT, Gemini, Claude, DeepSeek), работает из коробки.
 
+[![Firefox Add-ons](https://img.shields.io/amo/v/nmo-helper?style=flat-square&label=Firefox%20Add-ons&color=ff9500&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/)
 [![Downloads](https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper/releases)
 [![Stars](https://img.shields.io/github/stars/lKolabrodl/nmo-helper?style=flat-square&color=fbbf24&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/lKolabrodl/nmo-helper/blob/main/LICENSE)
@@ -39,12 +40,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-main.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/nmo-helper-main.zip)
+1. Скачайте [`nmo-helper-chrome-3.0.1.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.1/nmo-helper-chrome-3.0.1.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-main`
+6. Выберите папку `nmo-helper-chrome-3.0.1`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
@@ -53,6 +54,12 @@
 </details>
 
 ### Mozilla Firefox
+
+**Способ 1 (рекомендуется) — из Firefox Add-ons:**
+
+Откройте страницу расширения в [Firefox Add-ons](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/) и нажмите **«Добавить в Firefox»**. Расширение проверено и подписано Mozilla, обновляется автоматически.
+
+**Способ 2 — прямая установка `.xpi`:**
 
 1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.0/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
@@ -64,7 +71,7 @@
 ![Установка Firefox](demo/setup_2.gif)
 </details>
 
-> **Почему нет в магазине расширений?** Расширение использует парсинг сайтов с готовыми ответами — владельцы этих сайтов могут подать жалобу, и расширение удалят. Ручная установка занимает пару минут, зато работает надёжно.
+> **Почему в Chrome нет магазинной версии?** Расширение использует парсинг сайтов с готовыми ответами — политика Chrome Web Store это запрещает, и расширение быстро удалят. Ручная установка через `chrome://extensions` занимает пару минут и работает надёжно.
 
 ---
 
@@ -177,7 +184,8 @@ npm test            # Запустить тесты (107 тестов)
 
 - Исходный код открыт на GitHub
 - Проверено через [VirusTotal](https://www.virustotal.com/gui/file/9da2c493686713029dd7339ad49647343599f0399c38108e73e81abb421b2a4f?nocache=1)
-- Валидировано [Firefox Add-ons](https://addons.mozilla.org/)
+- Подписано и опубликовано в [Firefox Add-ons](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/)
+- Политика конфиденциальности: [nmo-helper.ru/privacy](https://nmo-helper.ru/privacy)
 
 ## Поддержать проект
 
@@ -187,6 +195,7 @@ npm test            # Запустить тесты (107 тестов)
 
 ## Предыдущие версии
 
+- [v3.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v3.0.0) — публичный релиз на React, приватный `.xpi` (`NMO Helper`)
 - [v2.3.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.3.0) — новые AI-модели, обновлённый парсинг
 - [v2.2.2](https://github.com/lKolabrodl/nmo-helper/tree/v2.2.2) — миграция на TypeScript, тесты, JSDoc
 - [v2.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.1) — реструктуризация, esbuild сборка
