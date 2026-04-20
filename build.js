@@ -9,7 +9,8 @@ const WATCH = process.argv.includes('--watch');
 
 const BROWSERS = [
   { name: 'chrome', manifest: 'manifest.chrome.json' },
-  { name: 'firefox', manifest: 'manifest.firefox.json' },
+  { name: 'firefox', manifest: 'manifest.firefox.json' },             // приватный .xpi (NMO Helper, id=nmo-helper@extension)
+  { name: 'firefox-store', manifest: 'manifest.firefox-store.json' }, // для Firefox Add-ons (NMO-Helper, id=nmo-helper-amo@extension)
 ];
 
 function copyDir(src, dest) {
