@@ -1,4 +1,4 @@
-# NMO Helper v3.0.1
+# NMO Helper v3.1.0
 
 > Умный помощник в прохождении тестов НМО на портале [edu.rosminzdrav.ru](https://a.edu.rosminzdrav.ru) — бесплатное расширение для браузера с открытым исходным кодом.
 
@@ -40,12 +40,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-chrome-3.0.1.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v3.0.1/nmo-helper-chrome-3.0.1.zip)
+1. Скачайте [`nmo-helper-chrome-3.1.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v3.1.0/nmo-helper-chrome-3.1.0.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-chrome-3.0.1`
+6. Выберите папку `nmo-helper-chrome-3.1.0`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
