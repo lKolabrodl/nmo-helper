@@ -1,9 +1,9 @@
 /**
  * Парсеры ответов с сайтов 24forcare.com и rosmedicinfo.ru.
  *
- * Архитектура двухслойная:
- * 1. **Extractors** — извлекают пары «вопрос → ответы» из DOM (per-layout).
- * 2. **findInPairs** — общий поиск по извлечённым парам (нормализация + similarity).
+ * Этот файл — публичный фасад. Вся логика разбора разметки живёт в
+ * {@link ./parsers.cases} — каждый вариант вёрстки оформлен отдельной
+ * case-функцией. Здесь только склейка и поиск по QA-парам.
  *
  * @module parsers
  */
@@ -11,13 +11,14 @@
 import type { ParserFunction, ISourceConfig, SourceKey } from '../types';
 import { normalizeDashes, similarity } from './text';
 import { SIMILARITY_THRESHOLD } from './constants';
-
-// ─── Типы ────────────────────────────────────────────────────────────
-
-interface QaPair {
-	readonly question: string;
-	readonly answers: string[];
-}
+import {
+	extract24forcare,
+	extractRosmedH3Highlighted,
+	extractRosmedH3BrPlus,
+	extractRosmedNumberedPInlineBr,
+	extractRosmedNumberedPPerParagraph,
+	type QaPair,
+} from './parsers.cases';
 
 // ─── Общий поиск ─────────────────────────────────────────────────────
 
@@ -54,106 +55,6 @@ function findInPairs(pairs: QaPair[], questionText: string): string[] | null {
 	return bestAnswers.length ? bestAnswers : null;
 }
 
-// ─── Extractors ──────────────────────────────────────────────────────
-
-/** Очищает текст ответа от мусора: завершающие символы, нумерация */
-function cleanAnswer(text: string): string {
-	return text.replace(/[;+.]+$/, '').replace(/^\d+\)\s*/, '').trim();
-}
-
-/**
- * Extractor для 24forcare.com.
- * Структура: вопрос в `<h3>`, правильные ответы в `<strong>` внутри следующего `<p>`.
- */
-function extract24forcare(div: HTMLElement): QaPair[] {
-	const pairs: QaPair[] = [];
-
-	for (const h3 of Array.from(div.querySelectorAll('h3'))) {
-		const question = (h3.textContent || '').trim();
-		if (!question) continue;
-
-		const p = h3.nextElementSibling;
-		if (!p || p.tagName !== 'P') continue;
-
-		const answers = Array.from(p.querySelectorAll('strong'))
-			.map(el => cleanAnswer((el as HTMLElement).innerText || ''))
-			.filter(Boolean);
-
-		if (answers.length) pairs.push({ question, answers });
-	}
-
-	return pairs;
-}
-
-/**
- * Extractor для rosmedicinfo.ru, layout 1.
- * Структура: вопрос в `<h3>`, ответы — `<span>` с жёлтым фоном (#fbeeb8) в следующем `<p>`.
- */
-function extractRosmedLayout1(div: HTMLElement): QaPair[] {
-	const pairs: QaPair[] = [];
-
-	for (const h3 of Array.from(div.querySelectorAll('h3'))) {
-		const question = (h3.textContent || '').trim();
-		if (!question) continue;
-
-		const p = h3.nextElementSibling;
-		if (!p || p.tagName !== 'P') continue;
-
-		const highlighted = Array.from(p.querySelectorAll('span')).filter(span => {
-			const bg = span.getAttribute('style') || '';
-			return bg.includes('fbeeb8') || bg.includes('background');
-		});
-
-		const answers = highlighted
-			.map(el => cleanAnswer((el as HTMLElement).innerText || ''))
-			.filter(Boolean);
-
-		if (answers.length) pairs.push({ question, answers });
-	}
-
-	return pairs;
-}
-
-/**
- * Extractor для rosmedicinfo.ru, layout 2.
- * Структура: вопрос в `<b>` с нумерацией (1. 2. ...) внутри `<p.MsoNormal>`,
- * ответы — строки с '+' в следующем `<p.MsoNormal>`.
- */
-function extractRosmedLayout2(div: HTMLElement): QaPair[] {
-	const pairs: QaPair[] = [];
-	const allP = Array.from(div.querySelectorAll('p.MsoNormal'));
-
-	for (let i = 0; i < allP.length; i++) {
-		const p = allP[i];
-
-		const firstBold = p.querySelector('b');
-		const rawText = firstBold
-			? ((firstBold as HTMLElement).innerText || '').trim()
-			: ((p as HTMLElement).innerText || '').trim();
-		if (!/^\d+\./.test(rawText)) continue;
-
-		const question = rawText.replace(/^\d+\.\s*/, '').trim();
-		const nextP = allP[i + 1];
-		if (!nextP) continue;
-
-		const lines = nextP.innerHTML.split(/<br\s*\/?>/i);
-		const answers: string[] = [];
-
-		for (const line of lines) {
-			if (!line.includes('+')) continue;
-			const tmp = document.createElement('span');
-			tmp.innerHTML = line;
-			const text = (tmp.innerText || tmp.textContent || '').trim();
-			const cleaned = cleanAnswer(text.replace(/\+$/, ''));
-			if (cleaned) answers.push(cleaned);
-		}
-
-		if (answers.length) pairs.push({ question, answers });
-	}
-
-	return pairs;
-}
-
 // ─── Публичные парсеры ───────────────────────────────────────────────
 
 /**
@@ -167,10 +68,17 @@ export function parseFrom24forcare(div: HTMLElement): ParserFunction {
 
 /**
  * Парсер ответов с rosmedicinfo.ru.
- * Объединяет оба layout, возвращает функцию поиска по тексту вопроса.
+ * Прогоняет все 4 case-extractor'а, объединяет результаты.
+ * Дубликаты (одна и та же пара из разных case'ов) допустимы — findInPairs
+ * всё равно выберет лучшее совпадение по score.
  */
 export function parseFromRosmedicinfo(div: HTMLElement): ParserFunction {
-	const pairs = [...extractRosmedLayout1(div), ...extractRosmedLayout2(div)];
+	const pairs = [
+		...extractRosmedH3Highlighted(div),
+		...extractRosmedH3BrPlus(div),
+		...extractRosmedNumberedPInlineBr(div),
+		...extractRosmedNumberedPPerParagraph(div),
+	];
 	return (questionText) => findInPairs(pairs, questionText);
 }
 

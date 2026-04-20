@@ -29,7 +29,7 @@ function makePayload(overrides: Partial<IBugReportPayload> = {}): IBugReportPayl
 		question: 'Какой диагноз?',
 		questionHtml: '<p>Какой диагноз?</p>',
 		variants: ['A', 'B', 'C'],
-		extVersion: '3.1.0',
+		extVersion: '3.1.1',
 		userAgent: 'Test/1.0',
 		...overrides,
 	};

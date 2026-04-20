@@ -71,29 +71,28 @@ function reproduceBug(c: IBugCase): IReproduceResult {
 }
 
 describe('Баг-репорты (регрессии)', () => {
-	/*
-	 * Шаблон. Снять .skip, заполнить данные из баг-репорта, указать expected
-	 * после починки парсера.
-	 *
-	 * Тема: <topic из bug-report.json>
-	 * URL:  <activeUrl>
-	 * Источник: 24forcare | rosmedicinfo
-	 */
-	it.skip('[YYYY-MM-DD] <краткое описание бага>', () => {
-		const { answers, correctIndexes } = reproduceBug({
-			source: '24forcare',
-			answersHtml: `
-				<h3>Какой диагноз?</h3>
-				<p><strong>Вариант 1</strong>; <strong>Вариант 2</strong></p>
-			`,
-			questionText: 'Какой диагноз?',
-			variants: ['Вариант 1', 'Вариант 2', 'Вариант 3'],
-		});
+
+	it('Механизм действия комбинированных форм препаратов ингибиторов карбоангидразы + β-адреноблокаторы', () => {
+		const questionText = 'Механизм действия комбинированных форм препаратов ингибиторов карбоангидразы + β-адреноблокаторы';
+		const variants = [
+			'улучшение увеосклерального оттока',
+			'улучшение трабекулярного оттока',
+			'улучшение кровообращения сетчатки',
+			'улучшение оттока у эписклеральных венах',
+			'уменьшение продукции внутриглазной жидкости'
+		];
+		const source = 'rosmedicinfo';
+		const answersHtml = `
+		<p style="margin-top:0cm;margin-right:0cm;margin-bottom:10pt;margin-left:0cm;line-height:115%;font-size:15px;font-family:Calibri, sans-serif;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;"><b>22. Механизм действия комбинированных форм препаратов ингибиторов карбоангидразы + β-адреноблокаторы</b></span></span></p>
+		<p style="margin-top:0cm;margin-right:0cm;margin-bottom:10pt;margin-left:0cm;line-height:115%;font-size:15px;font-family:Calibri, sans-serif;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;">1) улучшение кровообращения сетчатки;<br>2) улучшение оттока у эписклеральных венах;<br>3) улучшение трабекулярного оттока;<br>4) улучшение увеосклерального оттока;<br><b>5) уменьшение продукции внутриглазной жидкости.+</b></span></span></p>
+		`;
+
+		const {answers, correctIndexes} = reproduceBug({source, answersHtml, questionText, variants});
 
 		// До фикса — может быть null (парсер не нашёл вопрос) или пустой
 		expect(answers).not.toBeNull();
 		// После фикса парсера — точные индексы правильных вариантов
-		expect(correctIndexes).toEqual([0, 1]);
+		expect(correctIndexes).toEqual([4]);
 	});
 
 

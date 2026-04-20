@@ -1,6 +1,6 @@
 {
   "name": "nmo-helper",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Расширение для браузера, которое поможет вам решить тесты (ИОМ'ы) на портале НМО — https://a.edu.rosminzdrav.ru\r </br>\r Прост в установке, работает из коробки.\r </br>\r Ответы берутся с сайтов `rosmedicinfo.ru` и `24forcare.com`, а также с помощью AI.\r </br>",
   "main": "ai.js",
   "scripts": {

@@ -3,3 +3,5 @@ node_modules
 .claude
 *.zip
 drafts
+BUILD.md
+CLAUDE.md
