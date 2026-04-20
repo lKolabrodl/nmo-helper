@@ -116,13 +116,9 @@ async function build() {
     fs.copyFileSync(path.join(SRC, 'popup.css'), path.join(outDir, 'popup.css'));
     fs.copyFileSync(path.join(SRC, 'popup.js'), path.join(outDir, 'popup.js'));
 
-    // Copy .xpi for Firefox (лежит в корне репо — подписанный билд вне сборки)
-    if (browser.name === 'firefox') {
-      fs.copyFileSync(
-        path.join(__dirname, 'firefox_nmo_helper.xpi'),
-        path.join(outDir, 'firefox_nmo_helper.xpi')
-      );
-    }
+    // Подписанный .xpi (firefox_nmo_helper.xpi) лежит в корне репо и
+    // распространяется как отдельный артефакт релиза. В dist/ не копируем —
+    // иначе при упаковке firefox-зипа он попадает внутрь и раздувает его.
   }
 
   if (WATCH) {
