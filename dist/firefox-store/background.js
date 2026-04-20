@@ -1,0 +1,1 @@
+"use strict";(()=>{chrome.runtime.onMessage.addListener((e,a,r)=>e.action!=="fetch"?!1:(fetch(e.url,{method:e.method||"GET",headers:e.headers||void 0,body:e.body||void 0}).then(async t=>{let n=await t.text();r({error:!1,status:t.status,text:n})}).catch(t=>{r({error:!0,message:t.message})}),!0));})();

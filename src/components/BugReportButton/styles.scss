@@ -1,0 +1,124 @@
+@use '../../vars' as *;
+
+.nmo-bug-trigger {
+  margin-top: 2px;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px dashed rgba(240, 160, 64, 0.4);
+  border-radius: $radius-sm;
+  color: $warn;
+  font-family: $font-ui;
+  font-size: $font-size-sm;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba(240, 160, 64, 0.08);
+    border-color: $warn;
+    border-style: solid;
+  }
+}
+
+.nmo-bug-status {
+  margin-top: 2px;
+  padding: 5px 8px;
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  font-family: $font-ui;
+  font-size: $font-size-sm;
+  color: $text-muted;
+  text-align: center;
+  cursor: default;
+
+  &:disabled { cursor: default; }
+}
+
+.nmo-bug-status-success { color: $accent; }
+.nmo-bug-status-warning { color: $warn; }
+.nmo-bug-status-error   { color: $error; }
+
+.nmo-bug-error {
+  margin-top: 2px;
+  padding: 5px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: $font-size-sm;
+  color: $error;
+}
+
+.nmo-bug-link {
+  background: transparent;
+  border: none;
+  color: $accent;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover { text-decoration: underline; }
+}
+
+.nmo-bug-preview {
+  margin-top: 4px;
+  padding: 8px;
+  background: rgba(240, 160, 64, 0.06);
+  border: 1px solid rgba(240, 160, 64, 0.25);
+  border-radius: $radius-sm;
+}
+
+.nmo-bug-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nmo-bug-preview-title {
+  font-size: $font-size-sm;
+  font-weight: 600;
+  color: $warn;
+}
+
+.nmo-bug-preview-data {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 8px;
+  font-size: $font-size-sm;
+
+  dt {
+    color: $text-muted;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  dd {
+    margin: 0;
+    color: $text;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    max-height: 60px;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar { width: 3px; }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+    }
+  }
+}
+
+.nmo-bug-mono {
+  font-family: $font-mono;
+  font-size: $font-size-xs;
+  color: $text-muted !important;
+}
+
+.nmo-bug-preview-note {
+  font-size: $font-size-xs;
+  color: $text-dim;
+  line-height: 1.4;
+}

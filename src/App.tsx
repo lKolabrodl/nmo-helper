@@ -2,6 +2,7 @@ import type { IExtensionState } from './types';
 import { PanelUiProvider, usePanelUi } from './contexts/PanelUiContext';
 import { PanelStatusProvider } from './contexts/PanelStatusContext';
 import { QuestionFinderProvider } from './contexts/QuestionFinderContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import TabBar from './components/TabBar';
 import AutoSection from './components/AutoSection';
@@ -15,9 +16,11 @@ const PanelBody = ({ initialState }: { initialState: IExtensionState }) => {
 	return (
 		<div className="nmo-body">
 			<TabBar />
-			{mode === 'auto' && <AutoSection />}
-			{mode === 'sites' && <SitesSection initialUrl={initialState.savedUrl} />}
-			{(mode === 'ai' || mode === 'ai-pro') && <AiSection />}
+			<ErrorBoundary>
+				{mode === 'auto' && <AutoSection />}
+				{mode === 'sites' && <SitesSection initialUrl={initialState.savedUrl} />}
+				{(mode === 'ai' || mode === 'ai-pro') && <AiSection />}
+			</ErrorBoundary>
 		</div>
 	);
 };
@@ -29,8 +32,10 @@ const App = ({ initialState }: { initialState: IExtensionState }) => (
 	>
 		<PanelStatusProvider>
 			<QuestionFinderProvider>
-				<Header />
-				<AnswerHighlighter />
+				<ErrorBoundary>
+					<Header />
+					<AnswerHighlighter />
+				</ErrorBoundary>
 				<PanelBody initialState={initialState} />
 			</QuestionFinderProvider>
 		</PanelStatusProvider>

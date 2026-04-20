@@ -11,6 +11,9 @@ export const HIGHLIGHT_COLOR = '#4ecca3';
 /** Порог нечёткого совпадения (Dice coefficient) для поиска вопросов на сайтах-источниках */
 export const SIMILARITY_THRESHOLD = 0.85;
 
+/** Максимальное количество тем в кеше ответов (LRU — старые вытесняются) */
+export const CACHE_MAX_TOPICS = 10;
+
 /**
  * DOM-селекторы страницы НМО.
  * Каждый ключ — массив CSS-селекторов в порядке приоритета (fallback-цепочка).
@@ -61,6 +64,12 @@ export const StatusTitle = {
 
 /** Единый OpenAI-совместимый endpoint ProxyAPI для всех провайдеров */
 export const AI_URL = 'https://openai.api.proxyapi.ru/v1/chat/completions';
+
+/** Эндпоинт серверного приёма баг-репортов (проксируется nginx'ом в Python-бот) */
+export const BUG_REPORT_ENDPOINT = 'https://nmo-helper.ru/api/bug-report';
+
+/** Ключ chrome.storage.local для клиентского состояния баг-репортов (дедуп/кулдаун/дневной лимит) */
+export const BUG_REPORT_STORAGE_KEY = 'bugReports';
 
 /**
  * Список доступных AI-моделей.

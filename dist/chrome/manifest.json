@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "NMO-Helper",
+  "name": "NMO Helper",
   "version": "3.0.1",
   "description": "Автоподсветка правильных ответов на тестах НМО",
   "icons": {
