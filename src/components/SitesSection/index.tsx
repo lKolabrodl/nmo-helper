@@ -8,6 +8,7 @@ import { findCorrectIndexes } from '../../utils/matching';
 import { detectSource } from '../../utils/parsers';
 import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
+import BugReportButton from '../BugReportButton';
 import type { IAnswerLoaderState } from '../Loader/AnswerLoader';
 import type { IVariantLoaderState } from '../Loader/VariantLoader';
 import { Status } from '../../types';
@@ -63,7 +64,7 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 		setStatus({ title: StatusTitle.STOPPED, status: Status.IDLE });
 	};
 
-	const running = !!parser.data;
+
 
 	useEffect(() => {
 		if (!parser.data || !question || !variants.length) return;
@@ -89,8 +90,17 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 	}, [parser.data, question, variants, topic, activeUrl]);
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === 'Enter') { e.preventDefault(); search(); }
+		if (e.key !== 'Enter') return;
+		 e.preventDefault();
+		 search();
 	};
+
+
+	const isRunning = !!parser.data;
+
+	const isWarning = status.status === Status.WARN;
+	const isNotFound = status.title === StatusTitle.ANSWER_NOT_FOUND || status.title === StatusTitle.ANSWER_MISMATCH;
+
 
 	return (
 		<div className="nmo-section">
@@ -136,15 +146,17 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 			</div>
 
 			<div className="nmo-btn-row">
-				{!running &&
+				{!isRunning &&
 					<button className="nmo-btn nmo-btn-primary" onClick={run} disabled={parser.loading}>
 						Запуск
 					</button>
 				}
-				{running && <button className="nmo-btn nmo-btn-stop" onClick={stop}> Стоп </button>}
+				{isRunning && <button className="nmo-btn nmo-btn-stop" onClick={stop}> Стоп </button>}
 			</div>
 
 			<div className={`nmo-status ${status.status}`}>{status.title}</div>
+
+			{isWarning && isNotFound && !!activeUrl && <BugReportButton activeUrl={activeUrl}/>}
 		</div>
 	);
 };

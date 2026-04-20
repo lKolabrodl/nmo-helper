@@ -74,54 +74,11 @@ body {
 	flex-shrink: 0;
 }
 
-.popup-mascot-wrap {
-	flex-shrink: 0;
-	position: relative;
-}
-
-.speech-bubble {
-	display: none;
-	position: absolute;
-	bottom: 100%;
-	left: 50%;
-	transform: translateX(-50%);
-	margin-bottom: 6px;
-	background: #ffffff;
-	border-radius: 12px;
-	padding: 5px 10px;
-	font-size: 10px;
-	color: #1a1a2e;
-	font-weight: 500;
-	text-align: center;
-	width: 88px;
-	word-wrap: break-word;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-	z-index: 1;
-}
-
-.speech-bubble.visible {
-	display: block;
-}
-
-.speech-bubble::after {
-	content: '';
-	position: absolute;
-	bottom: -6px;
-	left: 50%;
-	transform: translateX(-50%);
-	width: 0;
-	height: 0;
-	border-left: 6px solid transparent;
-	border-right: 6px solid transparent;
-	border-top: 6px solid #ffffff;
-}
-
 .popup-mascot {
 	flex-shrink: 0;
 	width: 88px;
 	height: 88px;
 	border-radius: 10px;
-	cursor: pointer;
 }
 
 .popup-export {

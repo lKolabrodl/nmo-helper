@@ -46,6 +46,14 @@ export function getQuestionText(): string | null {
 	return queryFirst('questionText', anchor)?.textContent?.trim() ?? null;
 }
 
+/** Сырой innerHTML блока вопроса — для диагностических баг-репортов */
+export function getQuestionHtml(): string | null {
+	const anchor = getQuestionAnchor();
+	if (!anchor) return null;
+	const el = queryFirst('questionText', anchor);
+	return el?.innerHTML ?? null;
+}
+
 /** DOM-элементы вариантов ответов */
 export function getVariantElements(): HTMLElement[] {
 	const anchor = getQuestionAnchor();

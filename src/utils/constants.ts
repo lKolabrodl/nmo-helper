@@ -65,6 +65,12 @@ export const StatusTitle = {
 /** Единый OpenAI-совместимый endpoint ProxyAPI для всех провайдеров */
 export const AI_URL = 'https://openai.api.proxyapi.ru/v1/chat/completions';
 
+/** Эндпоинт серверного приёма баг-репортов (проксируется nginx'ом в Python-бот) */
+export const BUG_REPORT_ENDPOINT = 'https://nmo-helper.ru/api/bug-report';
+
+/** Ключ chrome.storage.local для клиентского состояния баг-репортов (дедуп/кулдаун/дневной лимит) */
+export const BUG_REPORT_STORAGE_KEY = 'bugReports';
+
 /**
  * Список доступных AI-моделей.
  * - tier: уровень (low → ultra)

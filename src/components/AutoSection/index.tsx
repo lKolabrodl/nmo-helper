@@ -6,6 +6,7 @@ import { findCorrectIndexes } from '../../utils/matching';
 import { Status } from '../../types';
 import VariantLoader from '../Loader/VariantLoader';
 import AnswerLoader from '../Loader/AnswerLoader';
+import BugReportButton from '../BugReportButton';
 import type { IVariantLoaderState } from '../Loader/VariantLoader';
 import type { IAnswerLoaderState } from '../Loader/AnswerLoader';
 import { StatusTitle } from '../../utils/constants';
@@ -19,7 +20,10 @@ const AutoSection: React.FC<unknown> = () => {
 	const [activeUrl, setActiveUrl] = useState('');
 	const [parser, setParser] = useState<IAnswerLoaderState>({ loading: false, error: null, data: null });
 
-	const handleSearch = (state: IVariantLoaderState): void => {
+	const _updateSearch = (state: IVariantLoaderState): void => {
+		// Ждём появления вопроса — на карточке с одной темой молчим
+		if (!question) return;
+
 		if (state.loading) return setStatus({title: StatusTitle.SEARCHING_ANSWERS, status: Status.LOADING});
 		if (state.error) return setStatus({title: state.error, status: Status.WARN});
 
@@ -80,11 +84,17 @@ const AutoSection: React.FC<unknown> = () => {
 
 	}, [question, variants, topic, parser.data, activeUrl, rosmedUrl]);
 
+	const isWarning = status.status === Status.WARN;
+	const isNotFound = status.title === StatusTitle.ANSWER_NOT_FOUND || status.title === StatusTitle.ANSWER_MISMATCH;
+
+
 	return (
 		<div className="nmo-section">
-			<VariantLoader text={rawTopic ?? ''} onChange={handleSearch} />
+			<VariantLoader text={question ? (topic ?? '') : ''} onChange={_updateSearch} />
 			<AnswerLoader url={activeUrl} onChange={handleLoader} />
 			<div className={`nmo-status ${status.status}`}>{status.title}</div>
+
+			{isWarning && isNotFound && !!activeUrl && <BugReportButton activeUrl={activeUrl}/>}
 		</div>
 	);
 };
