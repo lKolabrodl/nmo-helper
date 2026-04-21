@@ -1,19 +1,22 @@
 import { useEffect, useRef } from 'react';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
-import { answerCache } from '../../utils/answer-cache';
+import { answerCache2 } from '../../utils/answer-cache2';
 import { highlightByIndexes } from '../../utils/matching';
-import { getVariantElements, getQuestionText, getTopicElement } from '../../utils';
-import { cleanTopic } from '../../utils';
+import { getVariantElements, getQuestionText, getTopicElement, cleanTopic } from '../../utils';
 import { Status } from '../../types';
 
 /**
- * Headless-компонент: каждые 200ms проверяет кеш и подсвечивает.
- * Статус "(кеш)" пишет только при смене вопроса на ранее закешированный.
- * Если ответ только что записали — молчит (статус уже поставил тот кто нашёл).
+ * Headless-компонент: каждые 200ms проверяет answerCache2 и подсвечивает.
+ * Статус «кеш» выводится только при смене вопроса на ранее закешированный.
+ * Если ответ только что записали — молчит (статус уже поставил тот, кто нашёл).
+ *
+ * Индексы берутся напрямую из `cached.idx` — QuestionFinder читает variants
+ * из DOM в стабильном порядке, `set` и `get` видят одинаковый массив,
+ * поэтому сохранённые позиции остаются валидными.
  */
 const AnswerHighlighter = () => {
 	const { setStatus } = usePanelStatus();
-	const lastQuestionRef = useRef('');
+	const lastKeyRef = useRef('');
 
 	useEffect(() => {
 		const timer = setInterval(() => {
@@ -27,22 +30,19 @@ const AnswerHighlighter = () => {
 			const topicEl = getTopicElement();
 			const topic = cleanTopic(topicEl?.innerText?.trim() ?? null) ?? '';
 
-			const cachedIndexes = answerCache.getCorrectIndexes(topic, question, variants);
-			if (!cachedIndexes) return;
+			const cached = answerCache2.get(topic, question, variants);
+			if (!cached || !cached.idx.length) return;
 
-			highlightByIndexes(elements, cachedIndexes);
+			highlightByIndexes(elements, cached.idx);
 
-			const key = `${topic}::${question}`;
-			if (lastQuestionRef.current !== key) {
-				lastQuestionRef.current = key;
+			if (lastKeyRef.current === cached.id) return;
+			lastKeyRef.current = cached.id;
 
-				// Только что записали — молчим, статус уже есть
-				if (answerCache.isFresh(topic, question)) return;
+			// Только что записали — молчим, статус уже есть
+			if (answerCache2.fresh(topic, question, variants)) return;
 
-				// Вернулись к ранее закешированному вопросу
-				const cached = answerCache.get(topic, question)!;
-				setStatus({ title: `${cached.source} (кеш)`, status: Status.OK });
-			}
+			// Вернулись к ранее закешированному вопросу
+			setStatus({ title: 'найдено в памяти', status: Status.OK });
 		}, 200);
 
 		return () => clearInterval(timer);

@@ -64,14 +64,7 @@ export interface ISourceConfig {
 }
 
 /** Ключ источника ответов */
-export type SourceKey = '24forcare' | 'rosmedicinfo';
-
-/** Результат поиска теста на сайте */
-export interface ISearchResult {
-  readonly source: SourceKey;
-  readonly title: string;
-  readonly url: string;
-}
+export type ISourceKey = '24forcare' | 'rosmedicinfo';
 
 /** Варианты статуса панели */
 export const Status = {

@@ -8,7 +8,7 @@
  * @module parsers
  */
 
-import type { ParserFunction, ISourceConfig, SourceKey } from '../types';
+import type { ParserFunction, ISourceConfig, ISourceKey } from '../types';
 import { normalizeDashes, similarity } from './text';
 import { SIMILARITY_THRESHOLD } from './constants';
 import {
@@ -85,13 +85,15 @@ export function parseFromRosmedicinfo(div: HTMLElement): ParserFunction {
 // ─── Реестр источников ───────────────────────────────────────────────
 
 /** Реестр источников ответов: ключ → парсер */
-export const SOURCES: Record<SourceKey, ISourceConfig> = {
+export const SOURCES: Record<ISourceKey, ISourceConfig> = {
 	'24forcare': { parseAnswers: parseFrom24forcare },
 	'rosmedicinfo': { parseAnswers: parseFromRosmedicinfo },
 };
 
+
+
 /** Определяет источник ответов по URL */
-export function detectSource(url: string): SourceKey | null {
+export function detectSource(url: string): ISourceKey | null {
 	if (url.includes('24forcare.com')) return '24forcare';
 	if (url.includes('rosmedicinfo.ru')) return 'rosmedicinfo';
 	return null;

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
-import { answerCache } from '../../utils/answer-cache';
+import { answerCache2 } from '../../utils/answer-cache2';
 import { askAI } from '../../utils/ai-logic';
 import { Status } from '../../types';
 import { StatusTitle } from '../../utils/constants';
@@ -31,9 +31,10 @@ const AIProxyLoader = ({ active, apiKey, model, aiUrl, onChange }: IAiSolverProp
 	useEffect(() => {
 		if (!active || !question || !variants.length) return;
 
-		const t = topic ?? '';
-		if (answerCache.get(t, question)) return;
+		if (answerCache2.has(topic, question, variants)) return;
 		if (pendingRef.current) return;
+
+		const t = topic ?? '';
 
 		async function solve() {
 			pendingRef.current = true;
@@ -49,10 +50,8 @@ const AIProxyLoader = ({ active, apiKey, model, aiUrl, onChange }: IAiSolverProp
 					return;
 				}
 
-				answerCache.set(t, question, {
-					variants: variants.map((title, i) => ({ title, answer: correctIndexes.includes(i) })),
-					source: 'ai',
-				});
+				const answers = correctIndexes.map(i => variants[i]);
+				answerCache2.set(t, question, variants, answers);
 
 				setStatus({ title: `AI: вариант${correctIndexes.length > 1 ? 'ы' : ''} ${correctIndexes.map(i => i + 1).join(', ')}`, status: Status.OK });
 			} catch (err) {

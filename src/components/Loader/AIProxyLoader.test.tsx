@@ -11,13 +11,13 @@ vi.mock('../../utils/ai-logic', () => ({
 	getApiModel: vi.fn((m: string) => m),
 }));
 
-// Мокаем answerCache
-vi.mock('../../utils/answer-cache', () => ({
-	answerCache: {
+// Мокаем answerCache2
+vi.mock('../../utils/answer-cache2', () => ({
+	answerCache2: {
+		has: vi.fn(() => false),
 		get: vi.fn(() => null),
 		set: vi.fn(),
-		getCorrectIndexes: vi.fn(),
-		isFresh: vi.fn(),
+		fresh: vi.fn(),
 	},
 }));
 
@@ -54,14 +54,14 @@ vi.mock('../../contexts/PanelUiContext', () => ({
 }));
 
 import { askAI } from '../../utils/ai-logic';
-import { answerCache } from '../../utils/answer-cache';
+import { answerCache2 } from '../../utils/answer-cache2';
 
 const mockAskAI = vi.mocked(askAI);
-const mockCacheGet = vi.mocked(answerCache.get);
+const mockCacheHas = vi.mocked(answerCache2.has);
 
 beforeEach(() => {
 	vi.clearAllMocks();
-	mockCacheGet.mockReturnValue(null);
+	mockCacheHas.mockReturnValue(false);
 });
 
 describe('AIProxyLoader', () => {
@@ -98,11 +98,15 @@ describe('AIProxyLoader', () => {
 			await flushPromises();
 		});
 
-		expect(answerCache.set).toHaveBeenCalled();
+		expect(answerCache2.set).toHaveBeenCalledWith(
+			'Кардиология', 'Что такое ЭКГ?',
+			['вариант 1', 'вариант 2', 'вариант 3'],
+			['вариант 2'],   // correctIndexes=[1] → variants[1]
+		);
 	});
 
 	it('не вызывает askAI если ответ уже в кеше', async () => {
-		mockCacheGet.mockReturnValue({ variants: [], source: 'ai' });
+		mockCacheHas.mockReturnValue(true);
 		const onChange = vi.fn();
 
 		await act(async () => {

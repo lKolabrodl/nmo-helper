@@ -19,19 +19,19 @@ vi.mock('../../utils/matching', () => ({
 	highlightByIndexes: vi.fn(),
 }));
 
-// Мокаем answerCache
-vi.mock('../../utils/answer-cache', () => ({
-	answerCache: {
+// Мокаем answerCache2
+vi.mock('../../utils/answer-cache2', () => ({
+	answerCache2: {
 		get: vi.fn(() => null),
+		has: vi.fn(() => false),
 		set: vi.fn(),
-		getCorrectIndexes: vi.fn(() => null),
-		isFresh: vi.fn(() => false),
+		fresh: vi.fn(() => false),
 	},
 }));
 
 import { getQuestionText, getVariantElements, getTopicElement } from '../../utils';
 import { highlightByIndexes } from '../../utils/matching';
-import { answerCache } from '../../utils/answer-cache';
+import { answerCache2 } from '../../utils/answer-cache2';
 
 beforeEach(() => {
 	vi.useFakeTimers();
@@ -67,7 +67,7 @@ describe('AnswerHighlighter', () => {
 		const el = document.createElement('span');
 		el.innerText = 'вариант';
 		vi.mocked(getVariantElements).mockReturnValue([el]);
-		vi.mocked(answerCache.getCorrectIndexes).mockReturnValue(null);
+		vi.mocked(answerCache2.get).mockReturnValue(null);
 
 		renderWithProviders(<AnswerHighlighter />, { initialMode: 'auto' });
 		act(() => { vi.advanceTimersByTime(400); });
@@ -75,15 +75,27 @@ describe('AnswerHighlighter', () => {
 		expect(highlightByIndexes).not.toHaveBeenCalled();
 	});
 
-	it('подсвечивает когда есть кеш', () => {
+	it('не подсвечивает когда в кеше idx пустой', () => {
+		vi.mocked(getQuestionText).mockReturnValue('Вопрос?');
+		const el = document.createElement('span');
+		el.innerText = 'вариант';
+		vi.mocked(getVariantElements).mockReturnValue([el]);
+		vi.mocked(answerCache2.get).mockReturnValue({ id: 'x', answers: [], idx: [] });
+
+		renderWithProviders(<AnswerHighlighter />, { initialMode: 'auto' });
+		act(() => { vi.advanceTimersByTime(400); });
+
+		expect(highlightByIndexes).not.toHaveBeenCalled();
+	});
+
+	it('подсвечивает индексы напрямую из cached.idx', () => {
 		vi.mocked(getQuestionText).mockReturnValue('Вопрос?');
 		const el = document.createElement('span');
 		el.innerText = 'вариант';
 		vi.mocked(getVariantElements).mockReturnValue([el]);
 		vi.mocked(getTopicElement).mockReturnValue(null);
-		vi.mocked(answerCache.getCorrectIndexes).mockReturnValue([0]);
-		vi.mocked(answerCache.get).mockReturnValue({ variants: [], source: 'rosmed' });
-		vi.mocked(answerCache.isFresh).mockReturnValue(true);
+		vi.mocked(answerCache2.get).mockReturnValue({ id: 'x', answers: ['вариант'], idx: [0] });
+		vi.mocked(answerCache2.fresh).mockReturnValue(true);
 
 		renderWithProviders(<AnswerHighlighter />, { initialMode: 'auto' });
 		act(() => { vi.advanceTimersByTime(400); });

@@ -1,25 +1,31 @@
 import { useEffect } from 'react';
 import { fetchViaBackground, parseHtml } from '../../utils';
-import type { ISearchResult } from '../../types';
+import {ISourceKey} from '../../types';
 
-export interface IVariantLoaderState {
+export interface IVariantModel {
 	readonly loading: boolean;
 	readonly error: string | null;
 	readonly data: ISearchResult[];
 }
 
-const IDLE: IVariantLoaderState = { loading: false, error: null, data: [] };
+interface ISearchResult {
+	readonly source: ISourceKey;
+	readonly title: string;
+	readonly url: string;
+}
+
+const INIT_STATE: IVariantModel = { loading: false, error: null, data: [] };
 
 interface IVariantLoaderProps {
-	readonly text: string;
-	readonly onChange: (state: IVariantLoaderState) => void;
+	readonly text: string | null;
+	readonly onChange: (state: IVariantModel) => void;
 }
 
 const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 
 	useEffect(() => {
-		const query = text.trim();
-		if (!query) return onChange({...IDLE});
+		const query = (text ?? '').trim();
+		if (!query) return onChange({...INIT_STATE});
 
 		onChange({ loading: true, error: null, data: [] });
 
@@ -42,10 +48,10 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 			const results: ISearchResult[] = [];
 
 			// 24forcare всё оки
-			if (fcRes && !fcRes.error && fcRes.text) results.push(...parseForcare(fcRes.text));
+			if (fcRes && !fcRes.error && fcRes.text) results.push(...parseForcareUrls(fcRes.text));
 
 			// rosmed всё оки доки
-			if (rosRes && !rosRes.error && rosRes.text) results.push(...parseRosmed(rosRes.text));
+			if (rosRes && !rosRes.error && rosRes.text) results.push(...parseRosmedUrls(rosRes.text));
 
 			// не судьба
 			if (results.length === 0) return onChange({loading: false, error: 'ничего не найдено', data: []});
@@ -64,7 +70,7 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 export default VariantLoader;
 
 
-function parseForcare(html: string): ISearchResult[] {
+function parseForcareUrls(html: string): ISearchResult[] {
 	const results: ISearchResult[] = [];
 	const links = Array.from(parseHtml(html).querySelectorAll('a.item-name'));
 	links.forEach(a => {
@@ -77,7 +83,7 @@ function parseForcare(html: string): ISearchResult[] {
 	return results;
 }
 
-function parseRosmed(html: string): ISearchResult[] {
+function parseRosmedUrls(html: string): ISearchResult[] {
 	const results: ISearchResult[] = [];
 	const links = Array.from(parseHtml(html).querySelectorAll('.short__title a'));
 	links.forEach(a => {
