@@ -5,14 +5,15 @@ import AIProxyLoader from './AIProxyLoader';
 const flushPromises = () => new Promise(r => setTimeout(r, 0));
 
 // Мокаем askAI
-vi.mock('../../utils/ai-logic', () => ({
+vi.mock('../../api/fetch', () => ({
 	askAI: vi.fn(),
 	validateApiKey: vi.fn(),
 	getApiModel: vi.fn((m: string) => m),
+	fetchViaBackground: vi.fn(),
 }));
 
 // Мокаем answerCache2
-vi.mock('../../utils/answer-cache2', () => ({
+vi.mock('../../utils/answer-cache', () => ({
 	answerCache2: {
 		has: vi.fn(() => false),
 		get: vi.fn(() => null),
@@ -53,8 +54,8 @@ vi.mock('../../contexts/PanelUiContext', () => ({
 	}),
 }));
 
-import { askAI } from '../../utils/ai-logic';
-import { answerCache2 } from '../../utils/answer-cache2';
+import { askAI } from '../../api/fetch';
+import { answerCache2 } from '../../utils/answer-cache';
 
 const mockAskAI = vi.mocked(askAI);
 const mockCacheHas = vi.mocked(answerCache2.has);

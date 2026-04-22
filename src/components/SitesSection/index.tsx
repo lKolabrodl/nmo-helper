@@ -3,13 +3,13 @@ import './styles.scss';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
 import { storageSet } from '../../utils';
-import { answerCache2 } from '../../utils/answer-cache2';
-import { detectSource } from '../../utils/parsers';
-import { parse2, parseCases2 } from '../../utils/parsers.cases2';
-import AnswerLoader2 from '../Loader/AnswerLoader2';
+import { answerCache2 } from '../../utils/answer-cache';
+import { detectSource } from '../../utils/matching';
+import { findAnswers, extractCases } from '../../utils/cases';
+import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import BugReportButton from '../BugReportButton';
-import type { IAnswerModel } from '../Loader/AnswerLoader2';
+import type { IAnswerModel } from '../Loader/AnswerLoader';
 import type { IVariantModel } from '../Loader/VariantLoader';
 import { Status } from '../../types';
 import { StatusTitle } from '../../utils/constants';
@@ -75,10 +75,10 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 		if (!source) return;
 
 		// собираем все пары вопрос/варианты/ответы из html источника
-		const model = parseCases2(source, answerModel.data);
+		const model = extractCases(source, answerModel.data);
 
 		// ищем нужный case и получаем правильные варианты уже в терминах ВХОДНЫХ variants
-		const found = parse2(model, question, variants);
+		const found = findAnswers(model, question, variants);
 		if (!found) return setStatus({ title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN });
 		if (!found.answers.length) return setStatus({ title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN });
 
@@ -104,7 +104,7 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 
 	return (
 		<div className="nmo-section">
-			<AnswerLoader2 url={activeUrl} onChange={_updateHtml} />
+			<AnswerLoader url={activeUrl} onChange={_updateHtml} />
 			<VariantLoader text={activeSearch} onChange={_updateSearchUrl} />
 
 			<div className="nmo-field">

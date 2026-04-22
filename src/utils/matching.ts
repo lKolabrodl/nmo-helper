@@ -1,72 +1,115 @@
-/**
- * Логика сопоставления и подсветки ответов.
- * @module matching
- */
-
-import { normalizeText } from './text';
-import { HIGHLIGHT_COLOR } from './constants';
+import type { ISourceKey } from '../types';
+import { normalizeDashes, stripQuotes } from './text';
+import { SIMILARITY_THRESHOLD } from './constants';
 
 /**
- * Находит индексы правильных вариантов по текстовым ответам.
+ * Определяет, к какому из поддерживаемых сайтов-источников относится URL.
  *
- * Алгоритм двухуровневый:
- * 1. **Точное совпадение** — нормализованный текст варианта === нормализованный текст ответа
- * 2. **Нечёткое совпадение** — подстрока на границе слова
- *
- * @param variantTexts — тексты вариантов ответа
- * @param answers — тексты правильных ответов с сайта-источника
- * @returns массив 0-based индексов совпавших вариантов
+ * @param url Любой URL (обычно активная вкладка пользователя).
+ * @returns Ключ источника или `null`, если домен не поддерживается.
  */
-export function findCorrectIndexes(variantTexts: string[], answers: string[]): number[] {
-	const indexes: number[] = [];
-
-	// Этап 1: точное совпадение
-	variantTexts.forEach((v, i) => {
-		const nv = normalizeText(v);
-		for (const ans of answers) {
-			if (normalizeText(ans) === nv) {
-				indexes.push(i);
-				return;
-			}
-		}
-	});
-	if (indexes.length) return indexes;
-
-	// Этап 2: нечёткое совпадение по границе слова
-	variantTexts.forEach((v, i) => {
-		const variant = normalizeText(v);
-		for (const ans of answers) {
-			const a = normalizeText(ans);
-			const longer = a.length >= variant.length ? a : variant;
-			const shorter = a.length >= variant.length ? variant : a;
-			const idx = longer.indexOf(shorter);
-			if (idx === -1) continue;
-
-			const charBefore = idx > 0 ? longer[idx - 1] : ' ';
-			const charAfter = idx + shorter.length < longer.length ? longer[idx + shorter.length] : ' ';
-			const isBoundary = /[\s,;.\-\u2014():]/.test(charBefore) || idx === 0;
-			const isEndBoundary = /[\s,;.\-\u2014():]/.test(charAfter) || (idx + shorter.length === longer.length);
-
-			if (isBoundary && isEndBoundary) {
-				indexes.push(i);
-				return;
-			}
-		}
-	});
-
-	return indexes;
+export function detectSource(url: string): ISourceKey | null {
+	if (url.includes('24forcare.com')) return '24forcare';
+	if (url.includes('rosmedicinfo.ru')) return 'rosmedicinfo';
+	return null;
 }
 
 /**
- * Подсвечивает варианты ответов по индексам.
+ * Коэффициент Дайса (Dice similarity) на биграммах — насколько похожи две
+ * строки независимо от общей длины.
  *
- * @param elements — DOM-элементы вариантов
- * @param correctIndexes — индексы правильных вариантов (0-based)
+ * Формула: `2·|A ∩ B| / (|A| + |B|)`, где `|A|`, `|B|` — число биграмм
+ * (пар соседних символов) в каждой строке, `|A ∩ B|` — пересечение
+ * с учётом кратности. На практике устойчив к опечаткам, перестановкам
+ * слов, лишним символам лучше, чем Levenshtein по длине.
+ *
+ * Крайние случаи:
+ *  - `a === b` → `1` (ранний выход; корректно обрабатывает и строки длиной 1).
+ *  - Если хотя бы одна короче 2 символов и они не равны → `0` (биграмм нет).
+ *  - Пустая строка vs непустая → `0`.
+ *
+ * @param a Первая строка (обычно уже нормализованная через `normalizeDashes`).
+ * @param b Вторая строка.
+ * @returns Число в диапазоне `[0, 1]`, где `1` — идентичны, `0` — общих биграмм нет.
  */
-export function highlightByIndexes(elements: HTMLElement[], correctIndexes: number[]): void {
-	elements.forEach((el, i) => {
-		if (correctIndexes.includes(i) && el.style.color !== HIGHLIGHT_COLOR) {
-			el.style.color = HIGHLIGHT_COLOR;
+export function similarity(a: string, b: string): number {
+	if (a === b) return 1;
+	if (a.length < 2 || b.length < 2) return 0;
+
+	const bigrams = (s: string) => {
+		const map = new Map<string, number>();
+		for (let i = 0; i < s.length - 1; i++) {
+			const pair = s.slice(i, i + 2);
+			map.set(pair, (map.get(pair) || 0) + 1);
 		}
-	});
+		return map;
+	};
+
+	const a2 = bigrams(a), b2 = bigrams(b);
+	let matches = 0;
+	for (const [pair, count] of a2) {
+		matches += Math.min(count, b2.get(pair) || 0);
+	}
+	return (2 * matches) / (a.length + b.length - 2);
+}
+
+/** Минимальная длина обоих операндов для срабатывания `includes` — отсекает шум на коротких вариантах. */
+const MIN_INCLUDES_LEN = 10;
+/** Порог Dice similarity для fuzzy-матча ВАРИАНТОВ (для вопроса используется `SIMILARITY_THRESHOLD`). */
+const VARIANT_SIMILARITY_THRESHOLD = 0.85;
+
+/** Нормализация для матчинга: dashes/homoglyphs/spaces/case + стрипаем кавычки. */
+function normForMatch(s: string): string {
+	return stripQuotes(normalizeDashes(s));
+}
+
+/**
+ * Сравнивает два текста ВОПРОСА и возвращает score 0..1, где
+ * `0` — не похожи достаточно, `1` — полное совпадение после нормализации.
+ *
+ * Три уровня по возрастающей «слабости»:
+ *  1. Точное равенство после {@link normForMatch} → `1`.
+ *  2. Одна строка — префикс/подстрока другой при длине ≥ {@link MIN_INCLUDES_LEN}.
+ *     Score = `minLen / maxLen` (отражает, насколько «меньшая» строка целиком
+ *     покрывает «большую»).
+ *  3. Dice similarity ≥ {@link SIMILARITY_THRESHOLD} → возвращаем сам score.
+ *
+ * Порог `MIN_INCLUDES_LEN` нужен, чтобы короткие совпадения («да», «нет»)
+ * не триггерили includes-ветку.
+ *
+ * @param stored Вопрос из модели источника.
+ * @param input  Текущий вопрос пользователя.
+ * @returns `0..1` — score матча.
+ */
+export function matchQuestion(stored: string, input: string): number {
+	const a = normForMatch(stored);
+	const b = normForMatch(input);
+	if (a === b) return 1;
+
+	const minLen = Math.min(a.length, b.length);
+	if (minLen >= MIN_INCLUDES_LEN && (a.includes(b) || b.includes(a))) {
+		return minLen / Math.max(a.length, b.length);
+	}
+
+	const s = similarity(a, b);
+	return s > SIMILARITY_THRESHOLD ? s : 0;
+}
+
+/**
+ * Проверяет, что два ВАРИАНТА ответа «похожи достаточно для матча».
+ *
+ * Тот же каскад, что и {@link matchQuestion}, но с бинарным результатом
+ * и более строгим порогом {@link VARIANT_SIMILARITY_THRESHOLD} —
+ * варианты короче вопросов, им нужна большая точность.
+ *
+ * @param stored Вариант из модели источника.
+ * @param input  Вариант, показанный пользователю на НМО.
+ * @returns `true` — можно считать одинаковыми.
+ */
+export function variantMatches(stored: string, input: string): boolean {
+	const a = normForMatch(stored);
+	const b = normForMatch(input);
+	if (a === b) return true;
+	if (Math.min(a.length, b.length) >= MIN_INCLUDES_LEN && (a.includes(b) || b.includes(a))) return true;
+	return similarity(a, b) > VARIANT_SIMILARITY_THRESHOLD;
 }

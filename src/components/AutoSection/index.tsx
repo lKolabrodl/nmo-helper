@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
-import { answerCache2 } from '../../utils/answer-cache2';
+import { answerCache2 } from '../../utils/answer-cache';
 import { Status } from '../../types';
 import VariantLoader from '../Loader/VariantLoader';
-import AnswerLoader2 from '../Loader/AnswerLoader2';
+import AnswerLoader from '../Loader/AnswerLoader';
 import BugReportButton from '../BugReportButton';
 import type { IVariantModel } from '../Loader/VariantLoader';
-import type { IAnswerModel } from '../Loader/AnswerLoader2';
+import type { IAnswerModel } from '../Loader/AnswerLoader';
 import { StatusTitle } from '../../utils/constants';
-import {detectSource} from '../../utils/parsers';
-import {parse2, parseCases2} from '../../utils/parsers.cases2';
-import {normalizeDashes} from '../../utils/text';
+import {detectSource} from '../../utils';
+import {findAnswers, extractCases} from '../../utils/cases';
+import {normalizeDashes} from '../../utils';
 import type {ISourceKey} from '../../types';
-
-
 
 const AutoSection: React.FC<unknown> = () => {
 	const { status, setStatus } = usePanelStatus();
@@ -79,10 +77,10 @@ const AutoSection: React.FC<unknown> = () => {
 		if (!source) return;   // activeUrl ещё не опознан / пустой
 
 		// собираем все пары вопрос/варианты/ответы из html источника
-		const model = parseCases2(source, html);
+		const model = extractCases(source, html);
 
 		// ищем нужный case и получаем правильные варианты уже в терминах ВХОДНЫХ variants
-		const found = parse2(model, question, variants);
+		const found = findAnswers(model, question, variants);
 		if (!found) return setStatus({ title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN });
 		if (!found.answers.length) return setStatus({ title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN });
 
@@ -101,7 +99,7 @@ const AutoSection: React.FC<unknown> = () => {
  	return (
 		<div className="nmo-section">
 			<VariantLoader text={_topc} onChange={_updateSearchUrl} />
-			<AnswerLoader2 url={activeUrl} onChange={_updateHtml} />
+			<AnswerLoader url={activeUrl} onChange={_updateHtml} />
 			<div className={`nmo-status ${status.status}`}>{status.title}</div>
 
 			{isWarning && isNotFound && !!activeUrl && <BugReportButton activeUrl={activeUrl}/>}

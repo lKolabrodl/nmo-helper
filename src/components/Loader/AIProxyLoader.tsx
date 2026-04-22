@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
-import { answerCache2 } from '../../utils/answer-cache2';
-import { askAI } from '../../utils/ai-logic';
+import { answerCache2 } from '../../utils/answer-cache';
+import { askAI } from '../../api/fetch';
 import { Status } from '../../types';
 import { StatusTitle } from '../../utils/constants';
 

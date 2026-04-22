@@ -2,13 +2,12 @@ import './content.scss';
 import type { IExtensionState } from './types';
 import { storageGet } from './utils';
 import { createPanel, initPanelBehavior } from './Panel';
-import { answerCache } from './utils/answer-cache';
 
 /** Слушает сообщения от popup для экспорта кеша */
 function initExportListener() {
 	chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-		if (msg?.type === 'EXPORT_JSON') sendResponse(answerCache.exportAll());
-		else if (msg?.type === 'EXPORT_CSV') sendResponse(answerCache.exportCsv());
+		// if (msg?.type === 'EXPORT_JSON') sendResponse(answerCache.exportAll());
+		// else if (msg?.type === 'EXPORT_CSV') sendResponse(answerCache.exportCsv());
 	});
 }
 
@@ -28,12 +27,8 @@ function initExportListener() {
 		savedCustomAiModel: await storageGet('customAiModel', ''),
 	};
 
-	await answerCache.load();
-
 	const panel = createPanel(state);
 
 	// Drag needs DOM to be rendered first
 	requestAnimationFrame(() => initPanelBehavior(panel));
-
-	initExportListener();
 })();

@@ -1,9 +1,22 @@
 import { useEffect, useRef } from 'react';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
-import { answerCache2 } from '../../utils/answer-cache2';
-import { highlightByIndexes } from '../../utils/matching';
+import { answerCache2 } from '../../utils/answer-cache';
 import { getVariantElements, getQuestionText, getTopicElement, cleanTopic } from '../../utils';
+import { HIGHLIGHT_COLOR } from '../../utils/constants';
 import { Status } from '../../types';
+
+/**
+ * Подсвечивает цветом `HIGHLIGHT_COLOR` DOM-элементы из `elements`,
+ * индексы которых входят в `correctIndexes`. Idempotent: уже
+ * подсвеченные не трогает, чтобы не перетирать inline-стиль на ровном месте.
+ */
+export function highlightByIndexes(elements: HTMLElement[], correctIndexes: number[]): void {
+	elements.forEach((el, i) => {
+		if (correctIndexes.includes(i) && el.style.color !== HIGHLIGHT_COLOR) {
+			el.style.color = HIGHLIGHT_COLOR;
+		}
+	});
+}
 
 /**
  * Headless-компонент: каждые 200ms проверяет answerCache2 и подсвечивает.
