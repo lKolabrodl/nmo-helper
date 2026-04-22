@@ -3,8 +3,9 @@
  * @module utils
  */
 
-export { storageGet, storageSet } from './storage';
-export { fetchViaBackground } from './fetch';
+export { storageGet, storageSet } from '../api/storage';
+export { fetchViaBackground } from '../api/fetch';
 export { parseHtml } from './html';
-export { cleanTopic, normalizeDashes, normalizeText, similarity } from './text';
-export { getTopicElement, getQuestionAnchor, getQuestionText, getQuestionHtml, getVariantElements, getVariantTexts, isSingleAnswer } from './dom';
+export { cleanTopic, normalizeDashes, normalizeText } from './text';
+export { similarity, detectSource } from './matching';
+export { getTopicElement, getQuestionAnchor, getQuestionText, getQuestionHtml, getVariantElements, getVariantTexts, isSingleAnswer } from '../api/dom';

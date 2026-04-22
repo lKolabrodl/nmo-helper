@@ -5,14 +5,14 @@ import Button from './Button';
 import { type BugReportStatus } from './status';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
 import { getQuestionHtml } from '../../utils';
-import { detectSource } from '../../utils/parsers';
+import { detectSource } from '../../utils/matching';
 import {
 	canSubmitBugReport,
 	computeFingerprint,
 	submitBugReport,
 	type BugReportGate,
 	type BugReportResult
-} from '../../utils/bug-report';
+} from '../../api/bug-report';
 
 const EXT_VERSION = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest?.()?.version) || '';
 

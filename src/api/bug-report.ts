@@ -6,12 +6,12 @@
  * сервере. Значения лимитов подобраны под серверные: 5 мин между отправками,
  * 5 отчётов в сутки, дедуп на 7 дней.
  *
- * @module utils/bug-report
+ * @module api/bug-report
  */
 
 import { storageGet, storageSet } from './storage';
 import { fetchViaBackground } from './fetch';
-import { BUG_REPORT_ENDPOINT, BUG_REPORT_STORAGE_KEY } from './constants';
+import { BUG_REPORT_ENDPOINT, BUG_REPORT_STORAGE_KEY } from '../utils/constants';
 
 /** Минимальный интервал между двумя отправками с одного устройства (мс) */
 const COOLDOWN_MS = 5 * 60 * 1000;
@@ -51,11 +51,11 @@ export interface IBugReportPayload {
  */
 interface IBugReportState {
 	/** `fingerprint → ts отправки`. TTL = {@link DEDUP_TTL_MS}, старые чистятся в {@link prune} */
-	sent: Record<string, number>;
+	readonly sent: Record<string, number>;
 	/** Таймстемпы успешных отправок за последние 24 часа — для {@link DAILY_CAP} */
-	history: number[];
+	readonly history: number[];
 	/** Время последней отправки — для кулдауна {@link COOLDOWN_MS} */
-	lastSentAt: number;
+	readonly lastSentAt: number;
 }
 
 const EMPTY_STATE: IBugReportState = { sent: {}, history: [], lastSentAt: 0 };

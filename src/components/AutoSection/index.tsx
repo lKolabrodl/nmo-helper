@@ -1,26 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
-import { answerCache } from '../../utils/answer-cache';
-import { findCorrectIndexes } from '../../utils/matching';
+import { answerCache2 } from '../../utils/answer-cache';
 import { Status } from '../../types';
 import VariantLoader from '../Loader/VariantLoader';
 import AnswerLoader from '../Loader/AnswerLoader';
 import BugReportButton from '../BugReportButton';
-import type { IVariantLoaderState } from '../Loader/VariantLoader';
-import type { IAnswerLoaderState } from '../Loader/AnswerLoader';
+import type { IVariantModel } from '../Loader/VariantLoader';
+import type { IAnswerModel } from '../Loader/AnswerLoader';
 import { StatusTitle } from '../../utils/constants';
+import {detectSource} from '../../utils';
+import {findAnswers, extractCases} from '../../utils/cases';
+import {normalizeDashes} from '../../utils';
+import type {ISourceKey} from '../../types';
 
 const AutoSection: React.FC<unknown> = () => {
 	const { status, setStatus } = usePanelStatus();
 	const { topic, rawTopic, question, variants } = useQuestionFinder();
 
+	// url
 	const [rosmedUrl, setRosmedUrl] = useState('');
 	const [forcareUrl, setForcareUrl] = useState('');
 	const [activeUrl, setActiveUrl] = useState('');
-	const [parser, setParser] = useState<IAnswerLoaderState>({ loading: false, error: null, data: null });
 
-	const _updateSearch = (state: IVariantLoaderState): void => {
+	//html
+	const [html, setHtml] = useState<HTMLElement | null>(null);
+
+
+	const _updateSearchUrl = (state: IVariantModel): void => {
 		// Ждём появления вопроса — на карточке с одной темой молчим
 		if (!question) return;
 
@@ -30,23 +37,25 @@ const AutoSection: React.FC<unknown> = () => {
 		// Нет темы — не на странице с вопросами, молчим
 		if (!state.data.length && !rawTopic) return;
 
-		const ros = state.data.find(r => r.source === 'rosmedicinfo');
-		const fc = state.data.find(r => r.source === '24forcare');
+		const ros = pickResult(state.data, 'rosmedicinfo', topic);
+		const fc = pickResult(state.data, '24forcare', topic);
 
 		setRosmedUrl(ros?.url ?? '');
 		setForcareUrl(fc?.url ?? '');
-		setActiveUrl(ros?.url ?? fc?.url ?? '');
 
+		setActiveUrl(ros?.url ?? fc?.url ?? '');
+		// ничего не нашли кидаем предупреждение
 		if (!ros && !fc) setStatus({ title: StatusTitle.NOT_FOUND, status: Status.WARN });
 	};
 
-	const handleLoader = (state: IAnswerLoaderState): void => {
-		setParser(state);
+	const _updateHtml = (state: IAnswerModel): void => {
+		setHtml(state.data);
 
 		if (state.loading) return setStatus({title: StatusTitle.LOADING_ANSWERS, status: Status.LOADING});
 
+
 		if (state.error) {
-			// ищем в forcareUrl
+			// ищем в forcareUrldataSource
 			if (activeUrl === rosmedUrl && forcareUrl) return setActiveUrl(forcareUrl);
 			// =( нет вариантов
 			return setStatus({ title: StatusTitle.LOADING_FAILED, status: Status.ERR });
@@ -59,39 +68,38 @@ const AutoSection: React.FC<unknown> = () => {
 	};
 
 	useEffect(() => {
-		if (!question || !variants.length || !parser.data) return;
+		if (!question || !variants.length || !html) return;
 
-		const t = topic ?? '';
-		if (answerCache.get(t, question)) return;
+		// уже в кеше — пропускаем
+		if (answerCache2.has(topic, question, variants)) return;
 
-		const answers = parser.data(question);
+		const source = detectSource(activeUrl);
+		if (!source) return;   // activeUrl ещё не опознан / пустой
 
-		// ничего не нашли =(
-		if (!answers || !answers.length) return setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
+		// собираем все пары вопрос/варианты/ответы из html источника
+		const model = extractCases(source, html);
 
-		// полезли в кеш
-		const correctIndexes = findCorrectIndexes(variants, answers);
+		// ищем нужный case и получаем правильные варианты уже в терминах ВХОДНЫХ variants
+		const found = findAnswers(model, question, variants);
+		if (!found) return setStatus({ title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN });
+		if (!found.answers.length) return setStatus({ title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN });
 
-		// опаньки ответы то не совпадают
-		if (correctIndexes.length === 0) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});
+		answerCache2.set(topic ?? '', question, variants, found.answers);
 
-		const source = activeUrl === rosmedUrl ? 'rosmed' : '24forcare';
-		// обогощаем кеш
-		const _variants = variants.map((title, i) => ({title, answer: correctIndexes.includes(i)}));
-		answerCache.set(t, question, {variants: _variants, source});
+		const label = activeUrl === rosmedUrl ? 'rosmed' : '24forcare';
+		setStatus({ title: `найдено \u2022 ${label}`, status: Status.OK });
 
-		setStatus({ title: `найдено \u2022 ${source}`, status: Status.OK });
-
-	}, [question, variants, topic, parser.data, activeUrl, rosmedUrl]);
+	}, [question, variants, topic, html]);
 
 	const isWarning = status.status === Status.WARN;
 	const isNotFound = status.title === StatusTitle.ANSWER_NOT_FOUND || status.title === StatusTitle.ANSWER_MISMATCH;
 
+	const _topc = question ? topic ?? null : null;
 
-	return (
+ 	return (
 		<div className="nmo-section">
-			<VariantLoader text={question ? (topic ?? '') : ''} onChange={_updateSearch} />
-			<AnswerLoader url={activeUrl} onChange={handleLoader} />
+			<VariantLoader text={_topc} onChange={_updateSearchUrl} />
+			<AnswerLoader url={activeUrl} onChange={_updateHtml} />
 			<div className={`nmo-status ${status.status}`}>{status.title}</div>
 
 			{isWarning && isNotFound && !!activeUrl && <BugReportButton activeUrl={activeUrl}/>}
@@ -100,3 +108,31 @@ const AutoSection: React.FC<unknown> = () => {
 };
 
 export default AutoSection;
+
+
+interface ISearchResult {
+	readonly source: ISourceKey;
+	readonly title: string;
+	readonly url: string;
+}
+/**
+ * Для заданного источника — выбирает лучший match по topic:
+ *  1. title ⟷ topic через `normalizeDashes` + `includes` (в обе стороны)
+ *  2. fallback — последний результат (rosmed отдаёт старые → новые, берём свежий)
+ */
+function pickResult(results: readonly ISearchResult[], source: ISourceKey, topic: string | null): ISearchResult | undefined {
+	const filtered = results.filter(r => r.source === source);
+	if (!filtered.length) return undefined;
+	if (filtered.length === 1) return filtered[0];
+
+	if (topic) {
+		const nt = normalizeDashes(topic);
+		const match = filtered.find(r => {
+			const nr = normalizeDashes(r.title);
+			return nr.includes(nt) || nt.includes(nr);
+		});
+		if (match) return match;
+	}
+
+	return filtered[filtered.length - 1];
+}

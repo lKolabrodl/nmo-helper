@@ -1,26 +1,25 @@
 import { useEffect } from 'react';
 import { fetchViaBackground, parseHtml } from '../../utils';
-import { detectSource, SOURCES } from '../../utils/parsers';
-import type { ParserFunction } from '../../types';
+import { detectSource } from '../../utils';
 
-export interface IAnswerLoaderState {
+export interface IAnswerModel {
 	readonly loading: boolean;
 	readonly error: string | null;
-	readonly data: ParserFunction | null;
+	readonly data: HTMLElement | null;
 }
 
-const IDLE: IAnswerLoaderState = { loading: false, error: null, data: null };
+const INIT_STATE: IAnswerModel = { loading: false, error: null, data: null };
 
 interface IAnswerLoaderProps {
 	readonly url: string;
-	readonly onChange: (state: IAnswerLoaderState) => void;
+	readonly onChange: (state: IAnswerModel) => void;
 }
 
 const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 
 	useEffect(() => {
 		const trimmed = url.trim();
-		if (!trimmed) return onChange({...IDLE});
+		if (!trimmed) return onChange({...INIT_STATE});
 
 		let valid: URL;
 		try {
@@ -30,7 +29,6 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 			return;
 		}
 
-		// сайт не из списка 24forcare или rosmedicinfo
 		const sourceKey = detectSource(valid.href);
 		if (!sourceKey) return onChange({loading: false, error: 'URL не от rosmed или 24forcare', data: null});
 
@@ -53,9 +51,7 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 					return onChange({ loading: false, error: 'пустой ответ от сервера', data: null });
 				}
 
-				const parser = SOURCES[sourceKey].parseAnswers(parseHtml(res.text, true));
-
-				onChange({ loading: false, error: null, data: parser });
+				onChange({ loading: false, error: null, data: parseHtml(res.text, true) });
 
 			} catch (error) {
 				if (cancelled) return;

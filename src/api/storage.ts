@@ -1,7 +1,3 @@
-/**
- * Обёртки над chrome.storage.local.
- * @module utils/storage
- */
 
 /**
  * Читает значение из chrome.storage.local.

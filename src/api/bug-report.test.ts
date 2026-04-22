@@ -5,7 +5,7 @@ vi.mock('./fetch', () => ({
 }));
 
 import { fetchViaBackground } from './fetch';
-import { BUG_REPORT_STORAGE_KEY } from './constants';
+import { BUG_REPORT_STORAGE_KEY } from '../utils/constants';
 import {
 	computeFingerprint,
 	canSubmitBugReport,

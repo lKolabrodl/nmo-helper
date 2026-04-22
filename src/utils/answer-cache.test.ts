@@ -1,167 +1,178 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { answerCache, AnswerCache } from './answer-cache';
+import { describe, it, expect } from 'vitest';
+import { AnswerCache, answerCache2 } from './answer-cache';
 
-beforeEach(() => {
-	answerCache.clear();
+describe('AnswerCache.set + get', () => {
+	it('сохраняет и достаёт запись по тройке (topic, question, variants)', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['a', 'b', 'c'], ['b']);
+
+		const got = c.get('T', 'Q', ['a', 'b', 'c']);
+		expect(got).not.toBeNull();
+		expect(got!.answers).toEqual(['b']);
+		expect(got!.idx).toEqual([1]);
+	});
+
+	it('возвращает null для неизвестного ключа', () => {
+		const c = new AnswerCache();
+		expect(c.get('T', 'Q', ['a'])).toBeNull();
+	});
+
+	it('id содержит topic/question/variants', () => {
+		const c = new AnswerCache();
+		const entry = c.set('T', 'Q', ['a'], ['a']);
+		expect(entry.id).toContain('t');
+		expect(entry.id).toContain('q');
+		expect(entry.id).toContain('a');
+	});
+
+	it('answers копируется, а не мутируется через внешнюю ссылку', () => {
+		const c = new AnswerCache();
+		const answers = ['a'];
+		c.set('T', 'Q', ['a', 'b'], answers);
+		answers.push('b');
+
+		const got = c.get('T', 'Q', ['a', 'b'])!;
+		expect(got.answers).toEqual(['a']);
+	});
+
+	it('idx корректен для нескольких правильных ответов', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['a', 'b', 'c', 'd'], ['a', 'c', 'd']);
+
+		const got = c.get('T', 'Q', ['a', 'b', 'c', 'd'])!;
+		expect(got.idx).toEqual([0, 2, 3]);
+	});
+
+	it('idx пуст если ни один answer не нашёлся в variants', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['a', 'b'], ['z']);
+
+		const got = c.get('T', 'Q', ['a', 'b'])!;
+		expect(got.idx).toEqual([]);
+	});
 });
 
-describe('answerCache', () => {
-	const answer = {
-		variants: [
-			{ title: 'Лапароскопия', answer: true },
-			{ title: 'Лапаротомия', answer: false },
-		],
-		source: 'ai' as const,
-	};
-
-	it('get возвращает null для несуществующего', () => {
-		expect(answerCache.get('тема', 'вопрос')).toBeNull();
+describe('AnswerCache — нормализация ключа', () => {
+	it('регистронезависимый topic', () => {
+		const c = new AnswerCache();
+		c.set('Кардиология', 'Q', ['a'], ['a']);
+		expect(c.get('КАРДИОЛОГИЯ', 'Q', ['a'])).not.toBeNull();
+		expect(c.get('кардиология', 'Q', ['a'])).not.toBeNull();
 	});
 
-	it('set + get работают', () => {
-		answerCache.set('Хирургия', 'Какой метод?', answer);
-		expect(answerCache.get('Хирургия', 'Какой метод?')).toEqual(answer);
+	it('регистронезависимый question', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Какой препарат?', ['a'], ['a']);
+		expect(c.get('T', 'КАКОЙ ПРЕПАРАТ?', ['a'])).not.toBeNull();
 	});
 
-	it('разные темы не пересекаются', () => {
-		answerCache.set('Тема1', 'Вопрос', answer);
-		expect(answerCache.get('Тема2', 'Вопрос')).toBeNull();
+	it('регистронезависимые variants', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['Аспирин', 'Ибупрофен'], ['Аспирин']);
+		expect(c.get('T', 'Q', ['АСПИРИН', 'ИБУПРОФЕН'])).not.toBeNull();
 	});
 
-	it('isFresh возвращает true один раз после set', () => {
-		answerCache.set('Т', 'В', answer);
-		expect(answerCache.isFresh('Т', 'В')).toBe(true);
-		expect(answerCache.isFresh('Т', 'В')).toBe(false); // второй раз false
+	it('игнорирует пробелы в начале/конце', () => {
+		const c = new AnswerCache();
+		c.set('  T  ', '  Q  ', ['  a  '], ['a']);
+		expect(c.get('T', 'Q', ['a'])).not.toBeNull();
 	});
 
-	it('getCorrectIndexes возвращает индексы правильных', () => {
-		answerCache.set('Т', 'В', answer);
-		// currentVariants в другом порядке
-		const indexes = answerCache.getCorrectIndexes('Т', 'В', ['Лапаротомия', 'Лапароскопия']);
-		expect(indexes).toEqual([1]); // Лапароскопия на позиции 1
+	it('ключ инвариантен к перестановке variants', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['a', 'b', 'c'], ['b']);
+		// запрашиваем в другом порядке — ключ тот же после внутренней сортировки
+		expect(c.get('T', 'Q', ['c', 'a', 'b'])).not.toBeNull();
+		expect(c.get('T', 'Q', ['b', 'c', 'a'])).not.toBeNull();
 	});
 
-	it('getCorrectIndexes возвращает null для несуществующего', () => {
-		expect(answerCache.getCorrectIndexes('Т', 'В', ['A'])).toBeNull();
+	it('разные variants дают разные записи', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['a', 'b'], ['a']);
+		expect(c.get('T', 'Q', ['a', 'c'])).toBeNull();
 	});
 
-	it('getCorrectIndexes возвращает null если ни один не совпал', () => {
-		answerCache.set('Т', 'В', answer);
-		expect(answerCache.getCorrectIndexes('Т', 'В', ['Неизвестный вариант'])).toBeNull();
+	it('разные question дают разные записи', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q1', ['a'], ['a']);
+		expect(c.get('T', 'Q2', ['a'])).toBeNull();
+	});
+});
+
+describe('AnswerCache.has', () => {
+	it('true после set', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['a'], ['a']);
+		expect(c.has('T', 'Q', ['a'])).toBe(true);
 	});
 
-	it('clearTopic очищает одну тему', () => {
-		answerCache.set('Т1', 'В', answer);
-		answerCache.set('Т2', 'В', answer);
-		answerCache.clearTopic('Т1');
-		expect(answerCache.get('Т1', 'В')).toBeNull();
-		expect(answerCache.get('Т2', 'В')).toEqual(answer);
+	it('false до set', () => {
+		const c = new AnswerCache();
+		expect(c.has('T', 'Q', ['a'])).toBe(false);
 	});
 
-	it('clear очищает всё', () => {
-		answerCache.set('Т1', 'В', answer);
-		answerCache.set('Т2', 'В', answer);
-		answerCache.clear();
-		expect(answerCache.get('Т1', 'В')).toBeNull();
-		expect(answerCache.get('Т2', 'В')).toBeNull();
+	it('принимает null topic/question (трактует как пустую строку)', () => {
+		const c = new AnswerCache();
+		c.set('', '', ['a'], ['a']);
+		expect(c.has(null, null, ['a'])).toBe(true);
 	});
 
-	it('LRU: вытесняет старейшую тему при превышении лимита', () => {
-		const lru = new AnswerCache(2);
-		lru.set('Т1', 'В', answer);
-		lru.set('Т2', 'В', answer);
-		lru.set('Т3', 'В', answer); // Т1 должна быть вытеснена
-		expect(lru.get('Т1', 'В')).toBeNull();
-		expect(lru.get('Т2', 'В')).toEqual(answer);
-		expect(lru.get('Т3', 'В')).toEqual(answer);
+	it('принимает null variants → пустая тройка', () => {
+		const c = new AnswerCache();
+		c.set('', '', [], []);
+		expect(c.has(null, null, null as unknown as string[])).toBe(true);
+	});
+});
+
+describe('AnswerCache.fresh', () => {
+	it('true на первый вызов после set, затем false', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['a'], ['a']);
+
+		expect(c.fresh('T', 'Q', ['a'])).toBe(true);
+		expect(c.fresh('T', 'Q', ['a'])).toBe(false);
 	});
 
-	it('LRU: повторная запись в тему освежает её', () => {
-		const lru = new AnswerCache(2);
-		lru.set('Т1', 'В1', answer);
-		lru.set('Т2', 'В1', answer);
-		lru.set('Т1', 'В2', answer); // освежает Т1
-		lru.set('Т3', 'В1', answer); // вытесняет Т2 (а не Т1)
-		expect(lru.get('Т1', 'В1')).toEqual(answer);
-		expect(lru.get('Т2', 'В1')).toBeNull();
-		expect(lru.get('Т3', 'В1')).toEqual(answer);
+	it('false для незнакомой тройки', () => {
+		const c = new AnswerCache();
+		expect(c.fresh('T', 'Q', ['a'])).toBe(false);
 	});
 
-	it('exportAll возвращает null для пустого кеша', () => {
-		expect(answerCache.exportAll()).toBeNull();
+	it('fresh отдельно для каждой записи', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q1', ['a'], ['a']);
+		c.set('T', 'Q2', ['b'], ['b']);
+
+		expect(c.fresh('T', 'Q1', ['a'])).toBe(true);
+		expect(c.fresh('T', 'Q2', ['b'])).toBe(true);
+		expect(c.fresh('T', 'Q1', ['a'])).toBe(false);
 	});
 
-	it('exportAll возвращает все темы и вопросы', () => {
-		answerCache.set('Хирургия', 'Какой метод?', answer);
-		answerCache.set('Хирургия', 'Какой препарат?', answer);
-		answerCache.set('Терапия', 'Доза?', answer);
+	it('повторный set возвращает fresh-метку', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['a'], ['a']);
+		expect(c.fresh('T', 'Q', ['a'])).toBe(true);
+		expect(c.fresh('T', 'Q', ['a'])).toBe(false);
 
-		const exported = answerCache.exportAll();
-		expect(exported).not.toBeNull();
-		expect(Object.keys(exported!)).toEqual(['Хирургия', 'Терапия']);
-		expect(exported!['Хирургия']).toHaveLength(2);
-		expect(exported!['Терапия']).toHaveLength(1);
-		expect(exported!['Хирургия'][0]).toEqual({
-			question: 'Какой метод?',
-			variants: [
-				{ title: 'Лапароскопия', answer: true },
-				{ title: 'Лапаротомия', answer: false },
-			],
-			source: 'ai',
-		});
+		c.set('T', 'Q', ['a'], ['a']);
+		expect(c.fresh('T', 'Q', ['a'])).toBe(true);
 	});
+});
 
-	it('exportCsv возвращает null для пустого кеша', () => {
-		expect(answerCache.exportCsv()).toBeNull();
+describe('AnswerCache.set — перезапись', () => {
+	it('повторный set по той же тройке перезаписывает answers', () => {
+		const c = new AnswerCache();
+		c.set('T', 'Q', ['a', 'b'], ['a']);
+		c.set('T', 'Q', ['a', 'b'], ['b']);
+
+		const got = c.get('T', 'Q', ['a', 'b'])!;
+		expect(got.answers).toEqual(['b']);
+		expect(got.idx).toEqual([1]);
 	});
+});
 
-	it('exportCsv возвращает CSV со всеми данными', () => {
-		answerCache.set('Хирургия', 'Какой метод?', answer);
-
-		const csv = answerCache.exportCsv()!;
-		const lines = csv.split('\n');
-		expect(lines[0]).toBe('Тема;Вопрос;Правильные ответы;Все варианты;Источник');
-		expect(lines[1]).toContain('Хирургия');
-		expect(lines[1]).toContain('Какой метод?');
-		expect(lines[1]).toContain('Лапароскопия');
-		expect(lines[1]).toContain('Лапаротомия');
-		expect(lines[1]).toContain('ai');
-	});
-
-	it('set сохраняет данные в chrome.storage.local', () => {
-		answerCache.set('Т', 'В', answer);
-		// Проверяем что chrome.storage.local.set был вызван с данными
-		chrome.storage.local.get('answerCacheData', (result: Record<string, unknown>) => {
-			const data = result['answerCacheData'] as Record<string, Record<string, unknown>>;
-			expect(data).toBeTruthy();
-			expect(data['Т']).toBeTruthy();
-			expect(data['Т']['В']).toEqual(answer);
-		});
-	});
-
-	it('load восстанавливает данные из chrome.storage.local', async () => {
-		// Записываем напрямую в storage
-		const stored = {
-			'Тема': {
-				'Вопрос': answer,
-			},
-		};
-		chrome.storage.local.set({ answerCacheData: stored });
-
-		// Создаём новый инстанс и загружаем
-		const fresh = new AnswerCache(10);
-		await fresh.load();
-
-		expect(fresh.get('Тема', 'Вопрос')).toEqual(answer);
-	});
-
-	it('clear очищает chrome.storage.local', () => {
-		answerCache.set('Т', 'В', answer);
-		answerCache.clear();
-
-		chrome.storage.local.get('answerCacheData', (result: Record<string, unknown>) => {
-			const data = result['answerCacheData'] as Record<string, unknown>;
-			expect(Object.keys(data)).toHaveLength(0);
-		});
+describe('answerCache2 — синглтон', () => {
+	it('экспортируется и является экземпляром AnswerCache', () => {
+		expect(answerCache2).toBeInstanceOf(AnswerCache);
 	});
 });

@@ -27,18 +27,6 @@ export interface IExtensionState {
   readonly savedCustomAiModel: string;
 }
 
-/** Ответ от background service worker после fetch-запроса */
-export interface IFetchResponse {
-  /** true если произошла сетевая ошибка */
-  readonly error: boolean;
-  /** HTTP-статус ответа */
-  readonly status: number;
-  /** Тело ответа (HTML или JSON) */
-  readonly text: string;
-  /** Текст ошибки (при error: true) */
-  readonly message?: string;
-}
-
 /** Описание AI-модели для выбора в панели */
 export interface IAiModel {
   /** Идентификатор модели для API */
@@ -51,27 +39,8 @@ export interface IAiModel {
   readonly tag?: 'rec' | 'pricey';
 }
 
-/**
- * Функция поиска ответов по тексту вопроса.
- * Возвращает массив текстов правильных ответов или null если вопрос не найден.
- */
-export type ParserFunction = (questionText: string) => string[] | null;
-
-/** Конфигурация источника ответов (сайт с готовыми ответами) */
-export interface ISourceConfig {
-  /** Создаёт парсер из DOM-контейнера загруженной страницы */
-  readonly parseAnswers: (div: HTMLElement) => ParserFunction;
-}
-
 /** Ключ источника ответов */
-export type SourceKey = '24forcare' | 'rosmedicinfo';
-
-/** Результат поиска теста на сайте */
-export interface ISearchResult {
-  readonly source: SourceKey;
-  readonly title: string;
-  readonly url: string;
-}
+export type ISourceKey = '24forcare' | 'rosmedicinfo';
 
 /** Варианты статуса панели */
 export const Status = {

@@ -3,14 +3,14 @@ import './styles.scss';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
 import { storageSet } from '../../utils';
-import { answerCache } from '../../utils/answer-cache';
-import { findCorrectIndexes } from '../../utils/matching';
-import { detectSource } from '../../utils/parsers';
+import { answerCache2 } from '../../utils/answer-cache';
+import { detectSource } from '../../utils/matching';
+import { findAnswers, extractCases } from '../../utils/cases';
 import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import BugReportButton from '../BugReportButton';
-import type { IAnswerLoaderState } from '../Loader/AnswerLoader';
-import type { IVariantLoaderState } from '../Loader/VariantLoader';
+import type { IAnswerModel } from '../Loader/AnswerLoader';
+import type { IVariantModel } from '../Loader/VariantLoader';
 import { Status } from '../../types';
 import { StatusTitle } from '../../utils/constants';
 
@@ -22,20 +22,21 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 	const [activeUrl, setActiveUrl] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeSearch, setActiveSearch] = useState('');
-	const [searchResults, setSearchResults] = useState<IVariantLoaderState>({ loading: false, error: null, data: [] });
-	const [parser, setParser] = useState<IAnswerLoaderState>({ loading: false, error: null, data: null });
+
+	const [variantModel, setVariantModel] = useState<IVariantModel>({ loading: false, error: null, data: [] });
+	const [answerModel, setAnswerModel] = useState<IAnswerModel>({ loading: false, error: null, data: null });
 
 	const setUrl = (v: string) => { setUrlRaw(v); storageSet('customUrl', v); };
 
-	const handleLoaderChange = (state: IAnswerLoaderState) => {
-		setParser(state);
+	const _updateHtml = (state: IAnswerModel) => {
+		setAnswerModel(state);
 		if (state.loading) setStatus({ title: StatusTitle.LOADING_ANSWERS, status: Status.LOADING });
 		else if (state.error) setStatus({ title: state.error, status: Status.ERR });
 		else if (state.data) setStatus({ title: StatusTitle.RUNNING, status: Status.OK });
 	};
 
-	const handleSearchChange = (state: IVariantLoaderState) => {
-		setSearchResults(state);
+	const _updateSearchUrl = (state: IVariantModel) => {
+		setVariantModel(state);
 		if (state.loading) setStatus({ title: StatusTitle.SEARCHING, status: Status.LOADING });
 		else if (state.error) setStatus({ title: state.error, status: Status.WARN });
 		else if (state.data.length) setStatus({ title: `найдено ${state.data.length} результат(ов)`, status: Status.OK });
@@ -49,7 +50,7 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 	const selectResult = (result: { url: string }) => {
 		setUrl(result.url);
 		setActiveSearch('');
-		setSearchResults({ loading: false, error: null, data: [] });
+		setVariantModel({ loading: false, error: null, data: [] });
 		setActiveUrl(result.url);
 	};
 
@@ -60,34 +61,33 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 
 	const stop = () => {
 		setActiveUrl('');
-		setParser({ loading: false, error: null, data: null });
+		setAnswerModel({ loading: false, error: null, data: null });
 		setStatus({ title: StatusTitle.STOPPED, status: Status.IDLE });
 	};
 
-
-
 	useEffect(() => {
-		if (!parser.data || !question || !variants.length) return;
+		if (!answerModel.data || !question || !variants.length) return;
 
-		if (answerCache.get(topic ?? '', question)) return;
+		// уже в кеше — пропускаем
+		if (answerCache2.has(topic, question, variants)) return;
 
-		const answers = parser.data(question);
-		if (!answers || answers.length === 0) {
-			return setStatus({ title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN });
-		}
+		const source = detectSource(activeUrl);
+		if (!source) return;
 
-		const correctIndexes = findCorrectIndexes(variants, answers);
-		if (correctIndexes.length === 0) {
-			return setStatus({ title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN });
-		}
+		// собираем все пары вопрос/варианты/ответы из html источника
+		const model = extractCases(source, answerModel.data);
 
-		const source = detectSource(activeUrl) ?? 'rosmed';
-		const _variants = variants.map((title, i) => ({title, answer: correctIndexes.includes(i)}));
-		answerCache.set(topic ?? '', question, {variants: _variants, source});
+		// ищем нужный case и получаем правильные варианты уже в терминах ВХОДНЫХ variants
+		const found = findAnswers(model, question, variants);
+		if (!found) return setStatus({ title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN });
+		if (!found.answers.length) return setStatus({ title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN });
 
-		setStatus({ title: `найдено \u2022 ${source}`, status: Status.OK });
+		answerCache2.set(topic ?? '', question, variants, found.answers);
 
-	}, [parser.data, question, variants, topic, activeUrl]);
+		const label = source === 'rosmedicinfo' ? 'rosmed' : '24forcare';
+		setStatus({ title: `найдено \u2022 ${label}`, status: Status.OK });
+
+	}, [answerModel.data, question, variants, topic, activeUrl]);
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key !== 'Enter') return;
@@ -96,7 +96,7 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 	};
 
 
-	const isRunning = !!parser.data;
+	const isRunning = !!answerModel.data;
 
 	const isWarning = status.status === Status.WARN;
 	const isNotFound = status.title === StatusTitle.ANSWER_NOT_FOUND || status.title === StatusTitle.ANSWER_MISMATCH;
@@ -104,8 +104,8 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 
 	return (
 		<div className="nmo-section">
-			<AnswerLoader url={activeUrl} onChange={handleLoaderChange} />
-			<VariantLoader text={activeSearch} onChange={handleSearchChange} />
+			<AnswerLoader url={activeUrl} onChange={_updateHtml} />
+			<VariantLoader text={activeSearch} onChange={_updateSearchUrl} />
 
 			<div className="nmo-field">
 				<label>Поиск</label>
@@ -117,13 +117,13 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 					onKeyDown={handleKeyDown}/>
 			</div>
 
-			<button className="nmo-btn nmo-btn-ghost" onClick={search} disabled={searchResults.loading}>
+			<button className="nmo-btn nmo-btn-ghost" onClick={search} disabled={variantModel.loading}>
 				Найти ответы
 			</button>
 
-			{searchResults.data.length > 0 && (
+			{variantModel.data.length > 0 && (
 				<div className="nmo-search-results">
-					{searchResults.data.map((r, i) => (
+					{variantModel.data.map((r, i) => (
 						<div key={i} className="nmo-result-item" onClick={() => selectResult(r)}>
 							<span className={`nmo-result-src ${r.source === '24forcare' ? 'src-24' : 'src-ros'}`}>
 								{r.source === '24forcare' ? '24fc' : 'rosmed'}
@@ -147,7 +147,7 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 
 			<div className="nmo-btn-row">
 				{!isRunning &&
-					<button className="nmo-btn nmo-btn-primary" onClick={run} disabled={parser.loading}>
+					<button className="nmo-btn nmo-btn-primary" onClick={run} disabled={answerModel.loading}>
 						Запуск
 					</button>
 				}

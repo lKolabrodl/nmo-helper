@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './styles.scss';
 import { usePanelUi } from '../../contexts/PanelUiContext';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
-import { validateApiKey } from '../../utils/ai-logic';
+import { validateApiKey } from '../../api/fetch';
 import { storageSet, storageGet } from '../../utils';
 import { Status } from '../../types';
 import { StatusTitle } from '../../utils/constants';
