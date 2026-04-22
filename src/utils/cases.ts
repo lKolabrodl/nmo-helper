@@ -1,5 +1,5 @@
 import type { ISourceKey } from '../types';
-import { matchQuestion, variantMatches } from './matching';
+import { matchQuestion, variantScore } from './matching';
 import {
 	extract24forcare2,
 	extractRosmedH3Highlighted2,
@@ -16,6 +16,14 @@ export interface QaCaseModel {
 	/** Порядковый индекс case'а в выходном массиве `extractCases`. Уникален в рамках одного вызова. */
 	readonly idx: number;
 }
+
+/**
+ * Минимальный score в `variantScore`, чтобы считать пару «совпадением».
+ * Применяется только как нижний порог в top-1 assignment — чтобы утиль-шум
+ * (Dice случайных коротких строк) не попадал в ответы. Реальный отбор идёт
+ * через «лучший кандидат», не через этот порог.
+ */
+const MIN_VARIANT_SCORE = 0.7;
 
 // ─── Публичный диспатчер ─────────────────────────────────────────────
 
@@ -52,11 +60,18 @@ export interface IParse2Result {
  * Ищет case в модели по (question, variants).
  *
  * 1. Фильтрует кандидатов по вопросу (`matchQuestion` — exact / includes≥10 / similarity).
- * 2. Для каждого считает overlap: сколько УНИКАЛЬНЫХ входных вариантов матчнулись
- *    хоть к одному сохранённому (`variantMatches`).
+ * 2. Для каждого считает overlap через top-1 assignment:
+ *    каждый source-вариант выбирает ЛУЧШИЙ ещё не занятый входной вариант
+ *    по `variantScore`. Один входной вариант не может быть «подхвачен» дважды.
  * 3. Сортирует: `overlap desc → qScore desc → idx asc` — стабильный тай-брейкер.
- * 4. Сопоставляет source-ответы победителя со ВХОДНЫМИ variants и возвращает
- *    подмножество ВХОДНЫХ как `answers`.
+ * 4. Тем же top-1 assignment сопоставляет source-answers победителя со ВХОДНЫМИ
+ *    variants и возвращает подмножество ВХОДНЫХ как `answers`.
+ *
+ * Ключевая идея: «лучший» вместо «любой выше порога» — настоящее совпадение
+ * всегда даёт score 1.0 и выигрывает у похожих-но-разных меток
+ * (напр., «катепсина К» выигрывает у «катепсина А» со score 0.9, даже если
+ * обе прошли бы порог). Порог {@link MIN_VARIANT_SCORE} — только floor против
+ * утиль-шума, не инструмент отбора.
  *
  * @returns
  *  - `null` — вопрос не нашёлся в модели
@@ -70,15 +85,10 @@ export function findAnswers(model: QaCaseModel[], question: string, variants: st
 
 	if (!candidates.length) return null;
 
-	const scored = candidates.map(cand => {
-		const matched = new Set<number>();
-		cand.c.variants.forEach(v => {
-			variants.forEach((iv, i) => {
-				if (!matched.has(i) && variantMatches(v, iv)) matched.add(i);
-			});
-		});
-		return { ...cand, overlap: matched.size };
-	});
+	const scored = candidates.map(cand => ({
+		...cand,
+		overlap: assignTopOne(cand.c.variants, variants).length,
+	}));
 
 	scored.sort((a, b) =>
 		(b.overlap - a.overlap) ||
@@ -89,11 +99,40 @@ export function findAnswers(model: QaCaseModel[], question: string, variants: st
 	const winner = scored[0];
 	const confidence = variants.length ? winner.overlap / variants.length : 1;
 
-	// подмножество ВХОДНЫХ variants, которые матчнулись к source-answers победителя
-	const answers = variants.filter(iv => winner.c.answers.some(sa => variantMatches(sa, iv)));
+	// Top-1 assignment source-answers → input variants.
+	// Возвращаем подмножество ВХОДНЫХ variants в порядке их появления.
+	const assignedIdx = assignTopOne(winner.c.answers, variants).sort((a, b) => a - b);
+	const answers = assignedIdx.map(i => variants[i]);
 
 	return {
 		answers,
 		score: winner.qScore * confidence,
 	};
+}
+
+/**
+ * Жадное назначение: каждому элементу из `sources` ищет индекс лучшего
+ * ещё не занятого элемента в `targets` по {@link variantScore}. Если лучший
+ * score ниже {@link MIN_VARIANT_SCORE} — source-элемент пропускается (пары нет).
+ *
+ * @returns Массив индексов в `targets`, каждый уникален. Порядок соответствует
+ *          порядку обхода `sources`.
+ */
+function assignTopOne(sources: readonly string[], targets: readonly string[]): number[] {
+	const used = new Set<number>();
+	const assigned: number[] = [];
+	for (const src of sources) {
+		let bestIdx = -1;
+		let bestScore = 0;
+		targets.forEach((tgt, i) => {
+			if (used.has(i)) return;
+			const s = variantScore(src, tgt);
+			if (s > bestScore) { bestScore = s; bestIdx = i; }
+		});
+		if (bestIdx >= 0 && bestScore >= MIN_VARIANT_SCORE) {
+			assigned.push(bestIdx);
+			used.add(bestIdx);
+		}
+	}
+	return assigned;
 }

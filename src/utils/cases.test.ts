@@ -591,4 +591,30 @@ describe('баг репорт', () => {
 		expect(c.answers[1]).toContain('отсутствие ответа на стандартную терапию');
 		expect(typeof c.idx).toBe('number');
 	});
+
+	it('Ревматоидный артрит (по утвержденным клиническим рекомендациям) - 2024', () => {
+		const div = createDiv(`
+			<p class="MsoNormal" style="margin-bottom:0cm;">11. Деструктивная свойства активированных остеокластов при РА связаны с синтезом широкого спектра протеаз, в первую очередь</p>
+			<p class="MsoNormal" style="margin-bottom:0cm;"><b>1) катепсина К;+</b><br>2) папаина;<br>3) эреисина;<br>4) катепсина А.</p>
+		`);
+
+		const model = extractCases('rosmedicinfo', div);
+
+		const question = 'Деструктивная свойства активированных остеокластов при РА связаны с синтезом широкого спектра протеаз, в первую очередь';
+
+		const userVariants = [
+			'катепсина К',
+			'эреисина',
+			'папаина',
+			'катепсина А'
+		];
+
+		const res = findAnswers(model, question, userVariants);
+
+		expect(res).not.toBeNull();
+		expect(res?.answers).toHaveLength(1);
+		expect(res?.answers?.[0]).toContain('катепсина К');
+	});
+
+
 });

@@ -55,8 +55,6 @@ export function similarity(a: string, b: string): number {
 
 /** Минимальная длина обоих операндов для срабатывания `includes` — отсекает шум на коротких вариантах. */
 const MIN_INCLUDES_LEN = 10;
-/** Порог Dice similarity для fuzzy-матча ВАРИАНТОВ (для вопроса используется `SIMILARITY_THRESHOLD`). */
-const VARIANT_SIMILARITY_THRESHOLD = 0.85;
 
 /** Нормализация для матчинга: dashes/homoglyphs/spaces/case + стрипаем кавычки. */
 function normForMatch(s: string): string {
@@ -96,20 +94,28 @@ export function matchQuestion(stored: string, input: string): number {
 }
 
 /**
- * Проверяет, что два ВАРИАНТА ответа «похожи достаточно для матча».
+ * Непрерывный score похожести двух ВАРИАНТОВ ответа в диапазоне `[0, 1]`.
  *
- * Тот же каскад, что и {@link matchQuestion}, но с бинарным результатом
- * и более строгим порогом {@link VARIANT_SIMILARITY_THRESHOLD} —
- * варианты короче вопросов, им нужна большая точность.
+ * Каскад по возрастающей «слабости»:
+ *  1. Равенство после {@link normForMatch} → `1`.
+ *  2. Одна — подстрока другой при длине обеих ≥ {@link MIN_INCLUDES_LEN} → `1`
+ *     (включение семантически = «тот же вариант, возможно усечённый»).
+ *  3. Dice similarity → само значение `0..1`.
+ *
+ * БЕЗ внутреннего порога: решение «это матч или нет» принимает вызывающий
+ * в рамках top-1 assignment (см. `findAnswers`), где лучший кандидат
+ * выбирается из всех, а не по порогу. Это устраняет false-positive'ы от
+ * длинного общего префикса («катепсина К» vs «катепсина А», Dice ≈ 0.9) —
+ * настоящий совпадающий вариант всегда даёт 1.0 и выигрывает.
  *
  * @param stored Вариант из модели источника.
  * @param input  Вариант, показанный пользователю на НМО.
- * @returns `true` — можно считать одинаковыми.
+ * @returns `0..1` — score похожести.
  */
-export function variantMatches(stored: string, input: string): boolean {
+export function variantScore(stored: string, input: string): number {
 	const a = normForMatch(stored);
 	const b = normForMatch(input);
-	if (a === b) return true;
-	if (Math.min(a.length, b.length) >= MIN_INCLUDES_LEN && (a.includes(b) || b.includes(a))) return true;
-	return similarity(a, b) > VARIANT_SIMILARITY_THRESHOLD;
+	if (a === b) return 1;
+	if (Math.min(a.length, b.length) >= MIN_INCLUDES_LEN && (a.includes(b) || b.includes(a))) return 1;
+	return similarity(a, b);
 }
