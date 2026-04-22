@@ -147,6 +147,8 @@ src/
 │   ├── SitesSection/           # Ручной режим
 │   ├── AiSection/              # AI-режим (ProxyAPI + свой endpoint)
 │   ├── ModelDropdown/          # Выбор AI-модели
+│   ├── BugReportButton/        # Кнопка отправки баг-репорта
+│   ├── ErrorBoundary/          # Перехват ошибок рендера
 │   └── Loader/                 # Headless-компоненты (загрузка, подсветка)
 │
 ├── contexts/
@@ -154,26 +156,30 @@ src/
 │   ├── PanelStatusContext.tsx   # Статус per-mode
 │   └── QuestionFinderContext.tsx # Отслеживание вопроса на странице
 │
-└── utils/
-    ├── ai-logic.ts             # AI-запросы (ProxyAPI / custom endpoint)
-    ├── answer-cache.ts         # Глобальный кеш ответов
-    ├── constants.ts            # Константы (селекторы, статусы, модели)
-    ├── dom.ts                  # DOM-запросы с fallback-цепочками
-    ├── fetch.ts                # Fetch через background (CORS bypass)
-    ├── html.ts                 # HTML-санитизация и парсинг
-    ├── matching.ts             # Сопоставление и подсветка ответов
-    ├── parsers.ts              # Парсеры сайтов (extractors + findInPairs)
-    ├── storage.ts              # Обёртки chrome.storage
-    └── text.ts                 # Нормализация текста, similarity
+├── api/                         # Обёртки над браузерными API и сетью
+│   ├── dom.ts                   # DOM-запросы с fallback-цепочками селекторов
+│   ├── fetch.ts                 # Fetch через background (CORS bypass)
+│   ├── storage.ts               # Обёртки chrome.storage
+│   └── bug-report.ts            # Отправка баг-репортов на сервер
+│
+└── utils/                       # Чистые функции без сайд-эффектов
+    ├── answer-cache.ts          # Кеш ответов (topic, question, variants) → answers
+    ├── cases.ts                 # Диспатчер: extractCases + findAnswers (top-1 assignment)
+    ├── extractors.ts            # Парсеры раскладок 24forcare / rosmedicinfo
+    ├── matching.ts              # matchQuestion / variantScore / similarity
+    ├── text.ts                  # Нормализация (тире, омоглифы, кавычки, пробелы)
+    ├── html.ts                  # HTML-санитизация и парсинг
+    ├── constants.ts             # Константы (селекторы, статусы, модели)
+    └── index.ts                 # Реэкспорты для удобного импорта
 ```
 
 ### Сборка
 
 ```bash
 npm install
-npm run build       # Собрать dist/chrome и dist/firefox
-npm run build:watch # Сборка в watch-режиме
-npm test            # Запустить тесты (107 тестов)
+npm run build       # Собрать dist/chrome, dist/firefox, dist/firefox-store
+npm run dev         # Сборка в watch-режиме
+npm test            # Запустить тесты (324 теста, покрытие utils + api + components)
 ```
 
 ---
@@ -195,6 +201,9 @@ npm test            # Запустить тесты (107 тестов)
 
 ## Предыдущие версии
 
+- [v3.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.1) — фикс парсера rosmedicinfo для новых разметок + рефакторинг
+- [v3.1.0](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.0) — встроенный баг-репорт, ErrorBoundary, фикс cleanTopic
+- [v3.0.1](https://github.com/lKolabrodl/nmo-helper/tree/v3.0.1) — публикация в Firefox Add-ons
 - [v3.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v3.0.0) — публичный релиз на React, приватный `.xpi` (`NMO Helper`)
 - [v2.3.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.3.0) — новые AI-модели, обновлённый парсинг
 - [v2.2.2](https://github.com/lKolabrodl/nmo-helper/tree/v2.2.2) — миграция на TypeScript, тесты, JSDoc
