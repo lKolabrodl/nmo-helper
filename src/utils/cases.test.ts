@@ -95,165 +95,6 @@ describe('extractCases — idx уникален в пределах массив
 	});
 });
 
-describe('extractCases — rosmedicinfo реальные примеры', () => {
-
-	it('#1 нумерованный per-paragraph вопрос с последним вариантом правильным', () => {
-		const div = createDiv(`
-			<p class="MsoNormal" style="margin-bottom:0cm;"><b><span style="font-family:Arial, Helvetica, sans-serif;font-size:14px;">1. Цель сестринского процесса</span></b></p>
-			<p class="MsoNormal" style="margin-top:0cm;margin-right:0cm;margin-bottom:0cm;margin-left:36pt;text-indent:-18pt;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;">1)<span style="line-height:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			</span>обследование пациента</span></span></p>
-			<p class="MsoNormal" style="margin-top:0cm;margin-right:0cm;margin-bottom:0cm;margin-left:36pt;text-indent:-18pt;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;">2)<span style="line-height:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			</span>оценка качества ухода</span></span></p>
-			<p class="MsoNormal" style="margin-top:0cm;margin-right:0cm;margin-bottom:0cm;margin-left:36pt;text-indent:-18pt;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;">3)<span style="line-height:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			</span>активное сотрудничество с пациентом</span></span></p>
-			<p class="MsoNormal" style="margin-top:0cm;margin-right:0cm;margin-bottom:0cm;margin-left:36pt;text-indent:-18pt;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;">4)<span style="line-height:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-			</span><b>обеспечение приемлемого качества жизни в	болезни+</b></span></span></p>
-		`);
-
-		const cases = extractCases('rosmedicinfo', div);
-		const c = cases.find(x => x.question === 'Цель сестринского процесса')!;
-
-		expect(c).toBeDefined();
-		expect(c.variants.length).toBe(4);
-		expect(c.answers).toHaveLength(1);
-		expect(c.answers[0]).toContain('обеспечение приемлемого качества жизни в болезни');
-		expect(typeof c.idx).toBe('number');
-	});
-
-	it('#2 нумерованный inline-br вопрос с одним правильным', () => {
-		const div = createDiv(`
-			<p><b>14. Выбор «укладки» пациента на операционный стол (на животе или на спине) при перкутанной нефролитотрипсии зависит от</b></p>
-			<p>1) пола и возраста пациента;<br><b>2) предпочтений хирурга и соматического статуса пациента;+</b><br>3) размеров камней и количества доступов;<br>4) стороны оперируемой почки.</p>
-		`);
-
-		const cases = extractCases('rosmedicinfo', div);
-		const c = cases.find(x =>
-			x.question === 'Выбор «укладки» пациента на операционный стол (на животе или на спине) при перкутанной нефролитотрипсии зависит от',
-		)!;
-
-		expect(c).toBeDefined();
-		expect(c.variants).toHaveLength(4);
-		expect(c.answers).toEqual(['предпочтений хирурга и соматического статуса пациента']);
-		expect(typeof c.idx).toBe('number');
-	});
-
-	it('#3 h3 + p с двумя правильными через `+`', () => {
-		const div = createDiv(`
-			<h3>4. В патогенезе синдрома Рейно ключевую роль играет</h3>
-			<p>1) повышение липопротеинов высокой плотности в крови;<br>2) разветвленная периферическая сосудистая сеть;<br><b>3) дисбаланс между вазодилататорами и вазоконстрикторами;+</b><br>4) выделение биологически активных веществ надпочечниками.</p>
-		`);
-
-		const cases = extractCases('rosmedicinfo', div);
-		const c = cases.find(x => x.question.includes('В патогенезе синдрома Рейно'))!;
-
-		expect(c).toBeDefined();
-		expect(c.variants).toHaveLength(4);
-		expect(c.answers).toHaveLength(1);
-		expect(c.answers[0]).toContain('дисбаланс между вазодилататорами и вазоконстрикторами');
-		expect(typeof c.idx).toBe('number');
-	});
-
-	it('#5 per-paragraph, короткие варианты-числа', () => {
-		const div = createDiv(`
-			<p class="MsoNormal"><b>3. Количество стадий эфирного наркоза по Гведелу</b></p>
-			<p class="MsoNormal">1) 3</p>
-			<p class="MsoNormal">2) 2</p>
-			<p class="MsoNormal"><b>3) </b><b>4 +</b></p>
-			<p class="MsoNormal">4) 1</p>
-		`);
-
-		const cases = extractCases('rosmedicinfo', div);
-		const c = cases.find(x => x.question === 'Количество стадий эфирного наркоза по Гведелу')!;
-
-		expect(c).toBeDefined();
-		expect(c.variants).toEqual(['3', '2', '4', '1']);
-		expect(c.answers).toEqual(['4']);
-		expect(typeof c.idx).toBe('number');
-	});
-
-	it('#6 h3 + p с одним правильным через `+`', () => {
-		const div = createDiv(`
-			<p><b>2. В системе самоконтроля АККОРД буква «Р» означает&nbsp;</b></p>
-			<p>1) радиус;<br>2) результат;<br><b>3) размер; +&nbsp;</b><br>4) расстояние.</p>
-		`);
-
-		const cases = extractCases('rosmedicinfo', div);
-		const c = cases.find(x => x.question.includes('В системе самоконтроля АККОРД'))!;
-
-		expect(c).toBeDefined();
-		expect(c.variants).toHaveLength(4);
-		expect(c.answers).toHaveLength(1);
-		expect(c.answers[0]).toContain('размер');
-		expect(typeof c.idx).toBe('number');
-	});
-
-	it('#7 h3 + highlighted span (одно правильное)', () => {
-		const div = createDiv(`
-			<h3>3. Взрослым пациентам с мозолями и омозолелостями физические методы деструктивной терапии рекомендуются проводить с предварительной</h3>
-			<p>1) эпидуральной анестезией; <br>2) проводниковой анестезией; <br>3) аппликационной анестезией; <br><span style="background-color:#fbeeb8;">4) местной инфильтративной анестезией кожи.+</span></p>
-		`);
-
-		const cases = extractCases('rosmedicinfo', div);
-		const c = cases.find(x => x.question.includes('мозолями'))!;
-
-		expect(c).toBeDefined();
-		expect(c.variants).toHaveLength(4);
-		expect(c.answers).toHaveLength(1);
-		expect(c.answers[0]).toContain('местной инфильтративной анестезией кожи');
-		expect(typeof c.idx).toBe('number');
-	});
-
-	it('#9 h3 + highlighted span среди 5 вариантов', () => {
-		const div = createDiv(`
-			<h3>13. Морфологический субстрат ЛГ</h3>
-			<p><span style="background-color:#fbeeb8;">1) ремоделирование правого желудочка; +</span> <br>2) гипертрофия и дилатация левого желудочка; <br>3) миокардит; <br>4) отек головного мозга; <br>5) увеличение селезенки.</p>
-		`);
-
-		const cases = extractCases('rosmedicinfo', div);
-		const c = cases.find(x => x.question.includes('Морфологический субстрат ЛГ'))!;
-
-		expect(c).toBeDefined();
-		expect(c.variants).toHaveLength(5);
-		expect(c.answers).toHaveLength(1);
-		expect(c.answers[0]).toContain('ремоделирование правого желудочка');
-		expect(typeof c.idx).toBe('number');
-	});
-
-	it('#11 h3 + highlighted (два правильных подряд)', () => {
-		const div = createDiv(`
-			<h3>2. Абсолютные противопоказания к двусторонней тонзиллэктомии включают</h3>
-			<p><span style="background-color:#fbeeb8;">1) болезни крови (гемофилия, лейкозы, геморрагические диатезы); </span> <br><span style="background-color:#fbeeb8;">2) наличие аномальных сосудов в глотке (пульсация боковой стенки глотки); </span> <br>3) наличие всех видов декомпенсации хронического тонзиллита, кроме рецидивов острого тонзиллита (ангин); <br>4) наличие декомпенсации хронического тонзиллита в виде рецидивов острого тонзиллита (ангин); <br>5) наличие неэффективности повторных (2-3 раза в год) тщательно проведенных курсов консервативного лечения у больных хронического тонзиллита простой формы.</p>
-		`);
-
-		const cases = extractCases('rosmedicinfo', div);
-		const c = cases.find(x => x.question.includes('тонзиллэктомии'))!;
-
-		expect(c).toBeDefined();
-		expect(c.variants).toHaveLength(5);
-		expect(c.answers).toHaveLength(2);
-		expect(c.answers[0]).toContain('болезни крови');
-		expect(c.answers[1]).toContain('наличие аномальных сосудов в глотке');
-		expect(typeof c.idx).toBe('number');
-	});
-
-	it('#12 нумерованный inline-br, два правильных через `+`', () => {
-		const div = createDiv(`
-			<p><b>2. В каких клинических ситуациях выполнения аспирационной биопсии костного мозга при иммунной тромбоцитопении (ИТП) является обязательным?</b></p>
-			<p><b>1) возраст более 60 лет для исключения МДС и лейкозов;+</b><br><b>2) отсутствие ответа на стандартную терапию в течение 6 мес.;+</b><br>3) повышение лейкоцитов периферической крови &gt; 15,0 х 109/л на терапии глюкокортикостероидами;<br>4) уровень тромбоцитов 30,0-50,0 х 109/л на фоне терапии.</p>
-		`);
-
-		const cases = extractCases('rosmedicinfo', div);
-		const c = cases.find(x => x.question.includes('аспирационной биопсии'))!;
-
-		expect(c).toBeDefined();
-		expect(c.variants).toHaveLength(4);
-		expect(c.answers).toHaveLength(2);
-		expect(c.answers[0]).toContain('возраст более 60 лет');
-		expect(c.answers[1]).toContain('отсутствие ответа на стандартную терапию');
-		expect(typeof c.idx).toBe('number');
-	});
-});
-
 // ═══ findAnswers ══════════════════════════════════════════════════════════
 
 /** Шорткат для сборки QaCase2 без ручной расстановки idx. */
@@ -534,6 +375,17 @@ describe('findAnswers — интеграция с extractCases (реальный
 	});
 });
 
+
+// ═════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
+//  ═══════════════════════════Баг РЕПОРТ═══════════════════════
+// ═════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════
+
 describe('баг репорт', () => {
 
 	it('Большие языковые модели и генеративный искусственный интеллект', () => {
@@ -584,4 +436,159 @@ describe('баг репорт', () => {
 		expect(res?.answers?.[0]).toContain('«Лейтер-3 – Международные шкалы продуктивности»');
 	});
 
+	it('#1 нумерованный per-paragraph вопрос с последним вариантом правильным', () => {
+		const div = createDiv(`
+			<p class="MsoNormal" style="margin-bottom:0cm;"><b><span style="font-family:Arial, Helvetica, sans-serif;font-size:14px;">1. Цель сестринского процесса</span></b></p>
+			<p class="MsoNormal" style="margin-top:0cm;margin-right:0cm;margin-bottom:0cm;margin-left:36pt;text-indent:-18pt;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;">1)<span style="line-height:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>обследование пациента</span></span></p>
+			<p class="MsoNormal" style="margin-top:0cm;margin-right:0cm;margin-bottom:0cm;margin-left:36pt;text-indent:-18pt;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;">2)<span style="line-height:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>оценка качества ухода</span></span></p>
+			<p class="MsoNormal" style="margin-top:0cm;margin-right:0cm;margin-bottom:0cm;margin-left:36pt;text-indent:-18pt;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;">3)<span style="line-height:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span>активное сотрудничество с пациентом</span></span></p>
+			<p class="MsoNormal" style="margin-top:0cm;margin-right:0cm;margin-bottom:0cm;margin-left:36pt;text-indent:-18pt;"><span style="font-size:14px;"><span style="font-family:Arial, Helvetica, sans-serif;">4)<span style="line-height:normal;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			</span><b>обеспечение приемлемого качества жизни в	болезни+</b></span></span></p>
+		`);
+
+		const cases = extractCases('rosmedicinfo', div);
+		const c = cases.find(x => x.question === 'Цель сестринского процесса')!;
+
+		expect(c).toBeDefined();
+		expect(c.variants.length).toBe(4);
+		expect(c.answers).toHaveLength(1);
+		expect(c.answers[0]).toContain('обеспечение приемлемого качества жизни в болезни');
+		expect(typeof c.idx).toBe('number');
+	});
+
+	it('#2 нумерованный inline-br вопрос с одним правильным', () => {
+		const div = createDiv(`
+			<p><b>14. Выбор «укладки» пациента на операционный стол (на животе или на спине) при перкутанной нефролитотрипсии зависит от</b></p>
+			<p>1) пола и возраста пациента;<br><b>2) предпочтений хирурга и соматического статуса пациента;+</b><br>3) размеров камней и количества доступов;<br>4) стороны оперируемой почки.</p>
+		`);
+
+		const cases = extractCases('rosmedicinfo', div);
+		const c = cases.find(x =>
+			x.question === 'Выбор «укладки» пациента на операционный стол (на животе или на спине) при перкутанной нефролитотрипсии зависит от',
+		)!;
+
+		expect(c).toBeDefined();
+		expect(c.variants).toHaveLength(4);
+		expect(c.answers).toEqual(['предпочтений хирурга и соматического статуса пациента']);
+		expect(typeof c.idx).toBe('number');
+	});
+
+	it('#3 h3 + p с двумя правильными через `+`', () => {
+		const div = createDiv(`
+			<h3>4. В патогенезе синдрома Рейно ключевую роль играет</h3>
+			<p>1) повышение липопротеинов высокой плотности в крови;<br>2) разветвленная периферическая сосудистая сеть;<br><b>3) дисбаланс между вазодилататорами и вазоконстрикторами;+</b><br>4) выделение биологически активных веществ надпочечниками.</p>
+		`);
+
+		const cases = extractCases('rosmedicinfo', div);
+		const c = cases.find(x => x.question.includes('В патогенезе синдрома Рейно'))!;
+
+		expect(c).toBeDefined();
+		expect(c.variants).toHaveLength(4);
+		expect(c.answers).toHaveLength(1);
+		expect(c.answers[0]).toContain('дисбаланс между вазодилататорами и вазоконстрикторами');
+		expect(typeof c.idx).toBe('number');
+	});
+
+	it('#5 per-paragraph, короткие варианты-числа', () => {
+		const div = createDiv(`
+			<p class="MsoNormal"><b>3. Количество стадий эфирного наркоза по Гведелу</b></p>
+			<p class="MsoNormal">1) 3</p>
+			<p class="MsoNormal">2) 2</p>
+			<p class="MsoNormal"><b>3) </b><b>4 +</b></p>
+			<p class="MsoNormal">4) 1</p>
+		`);
+
+		const cases = extractCases('rosmedicinfo', div);
+		const c = cases.find(x => x.question === 'Количество стадий эфирного наркоза по Гведелу')!;
+
+		expect(c).toBeDefined();
+		expect(c.variants).toEqual(['3', '2', '4', '1']);
+		expect(c.answers).toEqual(['4']);
+		expect(typeof c.idx).toBe('number');
+	});
+
+	it('#6 h3 + p с одним правильным через `+`', () => {
+		const div = createDiv(`
+			<p><b>2. В системе самоконтроля АККОРД буква «Р» означает&nbsp;</b></p>
+			<p>1) радиус;<br>2) результат;<br><b>3) размер; +&nbsp;</b><br>4) расстояние.</p>
+		`);
+
+		const cases = extractCases('rosmedicinfo', div);
+		const c = cases.find(x => x.question.includes('В системе самоконтроля АККОРД'))!;
+
+		expect(c).toBeDefined();
+		expect(c.variants).toHaveLength(4);
+		expect(c.answers).toHaveLength(1);
+		expect(c.answers[0]).toContain('размер');
+		expect(typeof c.idx).toBe('number');
+	});
+
+	it('#7 h3 + highlighted span (одно правильное)', () => {
+		const div = createDiv(`
+			<h3>3. Взрослым пациентам с мозолями и омозолелостями физические методы деструктивной терапии рекомендуются проводить с предварительной</h3>
+			<p>1) эпидуральной анестезией; <br>2) проводниковой анестезией; <br>3) аппликационной анестезией; <br><span style="background-color:#fbeeb8;">4) местной инфильтративной анестезией кожи.+</span></p>
+		`);
+
+		const cases = extractCases('rosmedicinfo', div);
+		const c = cases.find(x => x.question.includes('мозолями'))!;
+
+		expect(c).toBeDefined();
+		expect(c.variants).toHaveLength(4);
+		expect(c.answers).toHaveLength(1);
+		expect(c.answers[0]).toContain('местной инфильтративной анестезией кожи');
+		expect(typeof c.idx).toBe('number');
+	});
+
+	it('#9 h3 + highlighted span среди 5 вариантов', () => {
+		const div = createDiv(`
+			<h3>13. Морфологический субстрат ЛГ</h3>
+			<p><span style="background-color:#fbeeb8;">1) ремоделирование правого желудочка; +</span> <br>2) гипертрофия и дилатация левого желудочка; <br>3) миокардит; <br>4) отек головного мозга; <br>5) увеличение селезенки.</p>
+		`);
+
+		const cases = extractCases('rosmedicinfo', div);
+		const c = cases.find(x => x.question.includes('Морфологический субстрат ЛГ'))!;
+
+		expect(c).toBeDefined();
+		expect(c.variants).toHaveLength(5);
+		expect(c.answers).toHaveLength(1);
+		expect(c.answers[0]).toContain('ремоделирование правого желудочка');
+		expect(typeof c.idx).toBe('number');
+	});
+
+	it('#11 h3 + highlighted (два правильных подряд)', () => {
+		const div = createDiv(`
+			<h3>2. Абсолютные противопоказания к двусторонней тонзиллэктомии включают</h3>
+			<p><span style="background-color:#fbeeb8;">1) болезни крови (гемофилия, лейкозы, геморрагические диатезы); </span> <br><span style="background-color:#fbeeb8;">2) наличие аномальных сосудов в глотке (пульсация боковой стенки глотки); </span> <br>3) наличие всех видов декомпенсации хронического тонзиллита, кроме рецидивов острого тонзиллита (ангин); <br>4) наличие декомпенсации хронического тонзиллита в виде рецидивов острого тонзиллита (ангин); <br>5) наличие неэффективности повторных (2-3 раза в год) тщательно проведенных курсов консервативного лечения у больных хронического тонзиллита простой формы.</p>
+		`);
+
+		const cases = extractCases('rosmedicinfo', div);
+		const c = cases.find(x => x.question.includes('тонзиллэктомии'))!;
+
+		expect(c).toBeDefined();
+		expect(c.variants).toHaveLength(5);
+		expect(c.answers).toHaveLength(2);
+		expect(c.answers[0]).toContain('болезни крови');
+		expect(c.answers[1]).toContain('наличие аномальных сосудов в глотке');
+		expect(typeof c.idx).toBe('number');
+	});
+
+	it('#12 нумерованный inline-br, два правильных через `+`', () => {
+		const div = createDiv(`
+			<p><b>2. В каких клинических ситуациях выполнения аспирационной биопсии костного мозга при иммунной тромбоцитопении (ИТП) является обязательным?</b></p>
+			<p><b>1) возраст более 60 лет для исключения МДС и лейкозов;+</b><br><b>2) отсутствие ответа на стандартную терапию в течение 6 мес.;+</b><br>3) повышение лейкоцитов периферической крови &gt; 15,0 х 109/л на терапии глюкокортикостероидами;<br>4) уровень тромбоцитов 30,0-50,0 х 109/л на фоне терапии.</p>
+		`);
+
+		const cases = extractCases('rosmedicinfo', div);
+		const c = cases.find(x => x.question.includes('аспирационной биопсии'))!;
+
+		expect(c).toBeDefined();
+		expect(c.variants).toHaveLength(4);
+		expect(c.answers).toHaveLength(2);
+		expect(c.answers[0]).toContain('возраст более 60 лет');
+		expect(c.answers[1]).toContain('отсутствие ответа на стандартную терапию');
+		expect(typeof c.idx).toBe('number');
+	});
 });
