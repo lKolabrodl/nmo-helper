@@ -11,6 +11,9 @@ export const HIGHLIGHT_COLOR = '#4ecca3';
 /** Порог нечёткого совпадения (Dice coefficient) для поиска вопросов на сайтах-источниках */
 export const SIMILARITY_THRESHOLD = 0.85;
 
+/** Минимальный порог нечёткого совпадения */
+export const LOW_CONFIDENCE_THRESHOLD = 0.5;
+
 /** Максимальное количество тем в кеше ответов (LRU — старые вытесняются) */
 export const CACHE_MAX_TOPICS = 10;
 
@@ -52,6 +55,7 @@ export const StatusTitle = {
 	NOT_FOUND: 'ответы не найдены на сайтах',
 	ANSWER_NOT_FOUND: 'ответ не найден',
 	ANSWER_MISMATCH: 'ответ не совпал с вариантами',
+	ANSWER_LOW_CONFIDENCE: 'низкая уверенность',
 	AI_THINKING: 'думаю...',
 	AI_NO_ANSWER: 'AI не определил ответ',
 	CHECKING_KEY: 'проверяю ключ...',

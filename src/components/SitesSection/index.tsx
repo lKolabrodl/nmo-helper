@@ -12,7 +12,7 @@ import BugReportButton from '../BugReportButton';
 import type { IAnswerModel } from '../Loader/AnswerLoader';
 import type { IVariantModel } from '../Loader/VariantLoader';
 import { Status } from '../../types';
-import { StatusTitle } from '../../utils/constants';
+import { StatusTitle, LOW_CONFIDENCE_THRESHOLD } from '../../utils/constants';
 
 const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 	const { status, setStatus } = usePanelStatus();
@@ -85,7 +85,11 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 		answerCache.set(topic ?? '', question, variants, found.answers);
 
 		const label = source === 'rosmedicinfo' ? 'rosmed' : '24forcare';
-		setStatus({ title: `найдено \u2022 ${label}`, status: Status.OK });
+
+		if (found.score < LOW_CONFIDENCE_THRESHOLD) {
+			setStatus({title: `${StatusTitle.ANSWER_LOW_CONFIDENCE} \u2022 ${label}`, status: Status.WARN});
+		} else setStatus({title: `найдено \u2022 ${label}`, status: Status.OK});
+
 
 	}, [answerModel.data, question, variants, topic, activeUrl]);
 
@@ -95,12 +99,11 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 		 search();
 	};
 
-
 	const isRunning = !!answerModel.data;
 
 	const isWarning = status.status === Status.WARN;
-	const isNotFound = status.title === StatusTitle.ANSWER_NOT_FOUND || status.title === StatusTitle.ANSWER_MISMATCH;
-
+	const warnTitles: string[] = [StatusTitle.ANSWER_NOT_FOUND, StatusTitle.ANSWER_MISMATCH, StatusTitle.ANSWER_LOW_CONFIDENCE];
+	const isNotFound = warnTitles.includes(status.title);
 
 	return (
 		<div className="nmo-section">

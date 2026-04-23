@@ -8,11 +8,11 @@ import AnswerLoader from '../Loader/AnswerLoader';
 import BugReportButton from '../BugReportButton';
 import type { IVariantModel } from '../Loader/VariantLoader';
 import type { IAnswerModel } from '../Loader/AnswerLoader';
-import { StatusTitle } from '../../utils/constants';
+import { StatusTitle, LOW_CONFIDENCE_THRESHOLD } from '../../utils/constants';
 import {detectSource, pickResult} from '../../utils';
 import {findAnswers, extractCases} from '../../utils/cases';
 
-const AutoSection: React.FC<unknown> = () => {
+const AutoSection: React.FC<unknown> = (): React.JSX.Element => {
 	const { status, setStatus } = usePanelStatus();
 	const { topic, rawTopic, question, variants } = useQuestionFinder();
 
@@ -85,12 +85,18 @@ const AutoSection: React.FC<unknown> = () => {
 		answerCache.set(topic ?? '', question, variants, found.answers);
 
 		const label = activeUrl === rosmedUrl ? 'rosmed' : '24forcare';
-		setStatus({ title: `найдено \u2022 ${label}`, status: Status.OK });
+
+		if (found.score < LOW_CONFIDENCE_THRESHOLD) {
+			setStatus({title: `${StatusTitle.ANSWER_LOW_CONFIDENCE} \u2022 ${label}`, status: Status.WARN});
+		}
+		else setStatus({title: `найдено \u2022 ${label}`, status: Status.OK});
+
 
 	}, [question, variants, topic, html]);
 
 	const isWarning = status.status === Status.WARN;
-	const isNotFound = status.title === StatusTitle.ANSWER_NOT_FOUND || status.title === StatusTitle.ANSWER_MISMATCH;
+	const warnTitles: string[] = [StatusTitle.ANSWER_NOT_FOUND, StatusTitle.ANSWER_MISMATCH, StatusTitle.ANSWER_LOW_CONFIDENCE];
+	const isNotFound = warnTitles.includes(status.title);
 
 	const _topc = question ? topic ?? null : null;
 
