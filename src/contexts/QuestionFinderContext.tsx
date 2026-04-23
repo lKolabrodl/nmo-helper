@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useState, useEffect, useRef} from 'react';
-import {debounce} from 'lodash-es';
+import {debounce} from '../libs';
 import {cleanTopic, getTopicElement, getQuestionText, getVariantTexts, isSingleAnswer} from '../utils';
 
 interface IQuestionState {
