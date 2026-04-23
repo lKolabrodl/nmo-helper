@@ -3,7 +3,7 @@ import {act} from '@testing-library/react';
 import AnswerHighlighter from './AnswerHighlighter';
 import {renderWithProviders} from '../../tests-helpers';
 import {getQuestionText, getVariantElements, getTopicElement} from '../../utils';
-import {answerCache2} from '../../utils/answer-cache';
+import {answerCache} from '../../utils/answer-cache';
 
 // Мокаем DOM-утилиты
 vi.mock('../../utils', async (importOriginal) => {
@@ -16,9 +16,9 @@ vi.mock('../../utils', async (importOriginal) => {
 	};
 });
 
-// Мокаем answerCache2
+// Мокаем answerCache
 vi.mock('../../utils/answer-cache', () => ({
-	answerCache2: {
+	answerCache: {
 		get: vi.fn(() => null),
 		has: vi.fn(() => false),
 		set: vi.fn(),
@@ -63,7 +63,7 @@ describe('AnswerHighlighter', () => {
 		const el = document.createElement('span');
 		el.innerText = 'вариант';
 		vi.mocked(getVariantElements).mockReturnValue([el]);
-		vi.mocked(answerCache2.get).mockReturnValue(null);
+		vi.mocked(answerCache.get).mockReturnValue(null);
 
 		renderWithProviders(<AnswerHighlighter />, { initialMode: 'auto' });
 		act(() => { vi.advanceTimersByTime(400); });
@@ -76,7 +76,7 @@ describe('AnswerHighlighter', () => {
 		const el = document.createElement('span');
 		el.innerText = 'вариант';
 		vi.mocked(getVariantElements).mockReturnValue([el]);
-		vi.mocked(answerCache2.get).mockReturnValue({ id: 'x', answers: [], idx: [] });
+		vi.mocked(answerCache.get).mockReturnValue({ id: 'x', answers: [], idx: [] });
 
 		renderWithProviders(<AnswerHighlighter />, { initialMode: 'auto' });
 		act(() => { vi.advanceTimersByTime(400); });
@@ -90,8 +90,8 @@ describe('AnswerHighlighter', () => {
 		el.innerText = 'вариант';
 		vi.mocked(getVariantElements).mockReturnValue([el]);
 		vi.mocked(getTopicElement).mockReturnValue(null);
-		vi.mocked(answerCache2.get).mockReturnValue({ id: 'x', answers: ['вариант'], idx: [0] });
-		vi.mocked(answerCache2.fresh).mockReturnValue(true);
+		vi.mocked(answerCache.get).mockReturnValue({ id: 'x', answers: ['вариант'], idx: [0] });
+		vi.mocked(answerCache.fresh).mockReturnValue(true);
 
 		renderWithProviders(<AnswerHighlighter />, { initialMode: 'auto' });
 		act(() => { vi.advanceTimersByTime(400); });

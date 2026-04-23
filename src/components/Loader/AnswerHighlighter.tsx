@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
-import { answerCache2 } from '../../utils/answer-cache';
+import { answerCache } from '../../utils/answer-cache';
 import { getVariantElements, getQuestionText, getTopicElement, cleanTopic } from '../../utils';
 import { HIGHLIGHT_COLOR } from '../../utils/constants';
 import { Status } from '../../types';
@@ -19,7 +19,7 @@ export function highlightByIndexes(elements: HTMLElement[], correctIndexes: numb
 }
 
 /**
- * Headless-компонент: каждые 200ms проверяет answerCache2 и подсвечивает.
+ * Headless-компонент: каждые 200ms проверяет answerCache и подсвечивает.
  * Статус «кеш» выводится только при смене вопроса на ранее закешированный.
  * Если ответ только что записали — молчит (статус уже поставил тот, кто нашёл).
  *
@@ -43,7 +43,7 @@ const AnswerHighlighter = () => {
 			const topicEl = getTopicElement();
 			const topic = cleanTopic(topicEl?.innerText?.trim() ?? null) ?? '';
 
-			const cached = answerCache2.get(topic, question, variants);
+			const cached = answerCache.get(topic, question, variants);
 			if (!cached || !cached.idx.length) return;
 
 			highlightByIndexes(elements, cached.idx);
@@ -52,7 +52,7 @@ const AnswerHighlighter = () => {
 			lastKeyRef.current = cached.id;
 
 			// Только что записали — молчим, статус уже есть
-			if (answerCache2.fresh(topic, question, variants)) return;
+			if (answerCache.fresh(topic, question, variants)) return;
 
 			// Вернулись к ранее закешированному вопросу
 			setStatus({ title: 'найдено в памяти', status: Status.OK });

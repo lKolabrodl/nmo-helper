@@ -3,7 +3,7 @@ import './styles.scss';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
 import { storageSet } from '../../utils';
-import { answerCache2 } from '../../utils/answer-cache';
+import { answerCache } from '../../utils/answer-cache';
 import { detectSource } from '../../utils/matching';
 import { findAnswers, extractCases } from '../../utils/cases';
 import AnswerLoader from '../Loader/AnswerLoader';
@@ -69,7 +69,7 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 		if (!answerModel.data || !question || !variants.length) return;
 
 		// уже в кеше — пропускаем
-		if (answerCache2.has(topic, question, variants)) return;
+		if (answerCache.has(topic, question, variants)) return;
 
 		const source = detectSource(activeUrl);
 		if (!source) return;
@@ -82,7 +82,7 @@ const SitesSection = ({ initialUrl }: { initialUrl: string }) => {
 		if (!found) return setStatus({ title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN });
 		if (!found.answers.length) return setStatus({ title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN });
 
-		answerCache2.set(topic ?? '', question, variants, found.answers);
+		answerCache.set(topic ?? '', question, variants, found.answers);
 
 		const label = source === 'rosmedicinfo' ? 'rosmed' : '24forcare';
 		setStatus({ title: `найдено \u2022 ${label}`, status: Status.OK });

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
-import { answerCache2 } from '../../utils/answer-cache';
+import { answerCache } from '../../utils/answer-cache';
 import { Status } from '../../types';
 import VariantLoader from '../Loader/VariantLoader';
 import AnswerLoader from '../Loader/AnswerLoader';
@@ -69,7 +69,7 @@ const AutoSection: React.FC<unknown> = () => {
 		if (!question || !variants.length || !html) return;
 
 		// уже в кеше — пропускаем
-		if (answerCache2.has(topic, question, variants)) return;
+		if (answerCache.has(topic, question, variants)) return;
 
 		const source = detectSource(activeUrl);
 		if (!source) return;   // activeUrl ещё не опознан / пустой
@@ -82,7 +82,7 @@ const AutoSection: React.FC<unknown> = () => {
 		if (!found) return setStatus({ title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN });
 		if (!found.answers.length) return setStatus({ title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN });
 
-		answerCache2.set(topic ?? '', question, variants, found.answers);
+		answerCache.set(topic ?? '', question, variants, found.answers);
 
 		const label = activeUrl === rosmedUrl ? 'rosmed' : '24forcare';
 		setStatus({ title: `найдено \u2022 ${label}`, status: Status.OK });

@@ -52,9 +52,7 @@ export class AnswerCache {
 	}
 }
 
-export const answerCache2 = new AnswerCache();
-
-
+export const answerCache = new AnswerCache();
 
 const norm = (s: string): string => s.trim().toLowerCase();
 

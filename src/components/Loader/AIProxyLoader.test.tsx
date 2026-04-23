@@ -12,9 +12,9 @@ vi.mock('../../api/fetch', () => ({
 	fetchViaBackground: vi.fn(),
 }));
 
-// Мокаем answerCache2
+// Мокаем answerCache
 vi.mock('../../utils/answer-cache', () => ({
-	answerCache2: {
+	answerCache: {
 		has: vi.fn(() => false),
 		get: vi.fn(() => null),
 		set: vi.fn(),
@@ -55,10 +55,10 @@ vi.mock('../../contexts/PanelUiContext', () => ({
 }));
 
 import { askAI } from '../../api/fetch';
-import { answerCache2 } from '../../utils/answer-cache';
+import { answerCache } from '../../utils/answer-cache';
 
 const mockAskAI = vi.mocked(askAI);
-const mockCacheHas = vi.mocked(answerCache2.has);
+const mockCacheHas = vi.mocked(answerCache.has);
 
 beforeEach(() => {
 	vi.clearAllMocks();
@@ -99,7 +99,7 @@ describe('AIProxyLoader', () => {
 			await flushPromises();
 		});
 
-		expect(answerCache2.set).toHaveBeenCalledWith(
+		expect(answerCache.set).toHaveBeenCalledWith(
 			'Кардиология', 'Что такое ЭКГ?',
 			['вариант 1', 'вариант 2', 'вариант 3'],
 			['вариант 2'],   // correctIndexes=[1] → variants[1]

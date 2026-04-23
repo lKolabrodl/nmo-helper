@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { AnswerCache, answerCache2 } from './answer-cache';
+import { AnswerCache, answerCache } from './answer-cache';
 
 describe('AnswerCache.set + get', () => {
 	it('сохраняет и достаёт запись по тройке (topic, question, variants)', () => {
@@ -171,8 +171,8 @@ describe('AnswerCache.set — перезапись', () => {
 	});
 });
 
-describe('answerCache2 — синглтон', () => {
+describe('answerCache — синглтон', () => {
 	it('экспортируется и является экземпляром AnswerCache', () => {
-		expect(answerCache2).toBeInstanceOf(AnswerCache);
+		expect(answerCache).toBeInstanceOf(AnswerCache);
 	});
 });
