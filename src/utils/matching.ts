@@ -119,3 +119,61 @@ export function variantScore(stored: string, input: string): number {
 	if (Math.min(a.length, b.length) >= MIN_INCLUDES_LEN && (a.includes(b) || b.includes(a))) return 1;
 	return similarity(a, b);
 }
+
+/**
+ * Минимальный {@link variantScore} между title и topic, при котором считаем,
+ * что это «та же тема». Подобран эмпирически: title — обрезанная подстрока
+ * topic даёт 1.0 через includes-ветку; частично перекрывающиеся темы
+ * («Острая интоксикация» vs «Синдром зависимости» из одной серии ИОМ)
+ * дают Dice 0.55–0.7; ниже — почти случайные совпадения биграмм.
+ */
+const MIN_TITLE_SCORE = 0.5;
+
+/**
+ * Префикс, который сайты-источники добавляют к названию темы:
+ * «Ответы к тестам НМО: "X"». Стрипается перед сравнением, чтобы X
+ * стало (часто полной) подстрокой topic — это позволяет
+ * includes-ветке {@link variantScore} вернуть 1.0 при усечённом title.
+ */
+const TITLE_PREFIX_RE = /^Ответы\s+к\s+тестам\s+НМО:\s*/iu;
+
+/** Минимальный shape элемента для {@link pickResult}: source + title. */
+export interface IPickResultItem {
+	readonly source: ISourceKey;
+	readonly title: string;
+}
+
+/**
+ * Среди результатов поиска по теме выбирает наиболее похожий title для
+ * указанного источника.
+ *
+ * Алгоритм:
+ *  1. Фильтрует по `source`. Пусто → `undefined`. Один элемент → он.
+ *  2. Если задан `topic` — для каждого title считает {@link variantScore}
+ *     с предварительным стрипом префикса «Ответы к тестам НМО: "..."».
+ *     Возвращает аргмакс при score ≥ {@link MIN_TITLE_SCORE}.
+ *  3. Иначе fallback — последний элемент (rosmed возвращает старые → новые,
+ *     свежий обычно правильнее).
+ *
+ * Та же идеология, что и {@link findAnswers} в `cases.ts`: «лучший по score»
+ * вместо «первый прошедший includes». Это решает кейс, когда сайт усекает
+ * title в выдаче поиска и привычный `nr.includes(nt) || nt.includes(nr)`
+ * падает на обе стороны.
+ */
+export function pickResult<T extends IPickResultItem>(results: readonly T[], source: ISourceKey, topic: string | null): T | undefined {
+	const filtered = results.filter(r => r.source === source);
+	if (!filtered.length) return undefined;
+	if (filtered.length === 1) return filtered[0];
+
+	if (topic) {
+		let bestIdx = -1;
+		let bestScore = 0;
+		filtered.forEach((r, i) => {
+			const s = variantScore(r.title.replace(TITLE_PREFIX_RE, ''), topic);
+			if (s > bestScore) { bestScore = s; bestIdx = i; }
+		});
+		if (bestIdx >= 0 && bestScore >= MIN_TITLE_SCORE) return filtered[bestIdx];
+	}
+
+	return filtered[filtered.length - 1];
+}

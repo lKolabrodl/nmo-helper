@@ -9,10 +9,8 @@ import BugReportButton from '../BugReportButton';
 import type { IVariantModel } from '../Loader/VariantLoader';
 import type { IAnswerModel } from '../Loader/AnswerLoader';
 import { StatusTitle } from '../../utils/constants';
-import {detectSource} from '../../utils';
+import {detectSource, pickResult} from '../../utils';
 import {findAnswers, extractCases} from '../../utils/cases';
-import {normalizeDashes} from '../../utils';
-import type {ISourceKey} from '../../types';
 
 const AutoSection: React.FC<unknown> = () => {
 	const { status, setStatus } = usePanelStatus();
@@ -108,31 +106,3 @@ const AutoSection: React.FC<unknown> = () => {
 };
 
 export default AutoSection;
-
-
-interface ISearchResult {
-	readonly source: ISourceKey;
-	readonly title: string;
-	readonly url: string;
-}
-/**
- * Для заданного источника — выбирает лучший match по topic:
- *  1. title ⟷ topic через `normalizeDashes` + `includes` (в обе стороны)
- *  2. fallback — последний результат (rosmed отдаёт старые → новые, берём свежий)
- */
-function pickResult(results: readonly ISearchResult[], source: ISourceKey, topic: string | null): ISearchResult | undefined {
-	const filtered = results.filter(r => r.source === source);
-	if (!filtered.length) return undefined;
-	if (filtered.length === 1) return filtered[0];
-
-	if (topic) {
-		const nt = normalizeDashes(topic);
-		const match = filtered.find(r => {
-			const nr = normalizeDashes(r.title);
-			return nr.includes(nt) || nt.includes(nr);
-		});
-		if (match) return match;
-	}
-
-	return filtered[filtered.length - 1];
-}
