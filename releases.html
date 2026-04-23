@@ -199,6 +199,47 @@
             border-radius: 4px;
             font-size: 0.85em;
         }
+        .release-body blockquote {
+            border-left: 3px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 14px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 0 6px 6px 0;
+        }
+        .release-body blockquote.alert-warning {
+            border-left-color: #f59e0b;
+            background: rgba(245, 158, 11, 0.08);
+        }
+        .release-body blockquote.alert-note {
+            border-left-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.08);
+        }
+        .release-body blockquote.alert-important {
+            border-left-color: #a855f7;
+            background: rgba(168, 85, 247, 0.08);
+        }
+        .release-body blockquote.alert-caution {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.08);
+        }
+        .release-body blockquote.alert-tip {
+            border-left-color: #10b981;
+            background: rgba(16, 185, 129, 0.08);
+        }
+        .release-body blockquote .alert-label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+        }
+        .release-body blockquote.alert-warning .alert-label { color: #f59e0b; }
+        .release-body blockquote.alert-note .alert-label { color: #3b82f6; }
+        .release-body blockquote.alert-important .alert-label { color: #a855f7; }
+        .release-body blockquote.alert-caution .alert-label { color: #ef4444; }
+        .release-body blockquote.alert-tip .alert-label { color: #10b981; }
+        .release-body blockquote p:last-child { margin-bottom: 0; }
 
         .release-assets {
             display: flex;
@@ -339,13 +380,49 @@
             var html = '';
             var lines = text.split('\n');
             var inList = false;
+            var quoteBuffer = [];
+            var quoteAlert = null;
+
+            function flushQuote() {
+                if (!quoteBuffer.length && !quoteAlert) return;
+                var cls = 'release-body-quote';
+                var label = '';
+                if (quoteAlert) {
+                    cls += ' alert-' + quoteAlert.toLowerCase();
+                    var labelText = { WARNING: 'Внимание', NOTE: 'Заметка', IMPORTANT: 'Важно', CAUTION: 'Осторожно', TIP: 'Совет' }[quoteAlert] || quoteAlert;
+                    label = '<span class="alert-label">' + labelText + '</span>';
+                }
+                var inner = quoteBuffer.map(function(l) { return l ? '<p>' + formatInline(l) + '</p>' : ''; }).join('');
+                html += '<blockquote class="' + cls + '">' + label + inner + '</blockquote>';
+                quoteBuffer = [];
+                quoteAlert = null;
+            }
 
             for (var i = 0; i < lines.length; i++) {
                 var line = lines[i].trim();
-                if (!line) {
+
+                // Blockquote / GitHub alert
+                var quoteMatch = line.match(/^>\s?(.*)$/);
+                if (quoteMatch) {
                     if (inList) { html += '</ul>'; inList = false; }
+                    var content = quoteMatch[1];
+                    var alertMatch = content.match(/^\[!(WARNING|NOTE|IMPORTANT|CAUTION|TIP)\]\s*$/);
+                    if (alertMatch) {
+                        flushQuote();
+                        quoteAlert = alertMatch[1];
+                    } else if (content) {
+                        quoteBuffer.push(content);
+                    }
                     continue;
                 }
+
+                if (!line) {
+                    if (inList) { html += '</ul>'; inList = false; }
+                    flushQuote();
+                    continue;
+                }
+
+                flushQuote();
 
                 // Headings
                 if (line.match(/^### (.+)/)) {
@@ -367,6 +444,7 @@
                 }
             }
             if (inList) html += '</ul>';
+            flushQuote();
             return html;
         }
 
