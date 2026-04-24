@@ -43,7 +43,7 @@ interface RawLine {
 //──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /**
- * 24forcare: вопрос лежит в `<h3>`, варианты идут в следующем `<p>`
+ * 24forcare — Case A: вопрос лежит в `<h3>`, варианты идут в следующем `<p>`
  * отдельными строками через `<br>`, правильные обёрнуты в `<strong>`.
  *
  * Пример раскладки:
@@ -63,7 +63,7 @@ interface RawLine {
  * @param div Распаршенный HTML источника (результат `parseHtml(..., true)`).
  * @returns Массив case'ов. Пустой — если на странице нет вопросов нужной формы.
  */
-export function extract24forcare2(div: HTMLElement): QaCaseRaw[] {
+export function extract24forcare(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 
 	for (const h3 of Array.from(div.querySelectorAll('h3'))) {
@@ -76,6 +76,56 @@ export function extract24forcare2(div: HTMLElement): QaCaseRaw[] {
 		const candidates = splitBrLines(p.innerHTML).map<ICandidate>(line => ({
 			text: line.text,
 			correct: /<strong[\s>]/i.test(line.html),
+		}));
+
+		const result = finalize(question, candidates);
+		if (result) out.push(result);
+	}
+
+	return out;
+}
+
+/**
+ * 24forcare — Case B: вопрос вида «N. ...» лежит в `<p><strong>...</strong></p>`,
+ * следующий `<p>` содержит ВСЕ варианты через `<br>`, правильные помечены
+ * текстовым `+` в конце строки (часто также обёрнуты в `<strong>`,
+ * но детектим по `+` — это более стабильный текстовый маркер).
+ *
+ * Пример раскладки:
+ * ```html
+ * <p><strong>1. Вопрос?</strong></p>
+ * <p>
+ *   <strong>1) первый;+</strong><br>
+ *   2) второй;<br>
+ *   3) третий.
+ * </p>
+ * ```
+ *
+ * Структурно идентичен {@link extractRosmedNumberedPInlineBr} — отличается
+ * только тегом-обёрткой нумерованного заголовка (`<strong>` vs `<b>`),
+ * это покрыто расширением {@link readNumberedQuestionText}.
+ *
+ * Хвостовой `+` снимается в {@link finalize} через
+ * `text.replace(/\+$/, '')` перед `cleanAnswer`.
+ *
+ * @param div Распарсенный HTML источника.
+ * @returns Массив case'ов.
+ */
+export function extract24forcareNumberedPPlus(div: HTMLElement): QaCaseRaw[] {
+	const out: QaCaseRaw[] = [];
+	const allP = Array.from(div.querySelectorAll('p'));
+
+	for (let i = 0; i < allP.length; i++) {
+		const rawText = readNumberedQuestionText(allP[i]);
+		if (!rawText) continue;
+
+		const nextP = allP[i + 1];
+		if (!nextP || !nextP.innerHTML.includes('<br')) continue;
+
+		const question = rawText.replace(/^\d+\.\s*/, '').trim();
+		const candidates = splitBrLines(nextP.innerHTML).map<ICandidate>(line => ({
+			text: line.text,
+			correct: line.text.includes('+'),
 		}));
 
 		const result = finalize(question, candidates);
@@ -111,7 +161,7 @@ export function extract24forcare2(div: HTMLElement): QaCaseRaw[] {
  * @param div Распарсенный HTML источника.
  * @returns Массив case'ов.
  */
-export function extractRosmedH3Highlighted2(div: HTMLElement): QaCaseRaw[] {
+export function extractRosmedH3Highlighted(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 
 	for (const h3 of Array.from(div.querySelectorAll('h3'))) {
@@ -153,7 +203,7 @@ export function extractRosmedH3Highlighted2(div: HTMLElement): QaCaseRaw[] {
  * @param div Распарсенный HTML источника.
  * @returns Массив case'ов.
  */
-export function extractRosmedH3BrPlus2(div: HTMLElement): QaCaseRaw[] {
+export function extractRosmedH3BrPlus(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 
 	for (const h3 of Array.from(div.querySelectorAll('h3'))) {
@@ -199,7 +249,7 @@ export function extractRosmedH3BrPlus2(div: HTMLElement): QaCaseRaw[] {
  * @param div Распарсенный HTML источника.
  * @returns Массив case'ов.
  */
-export function extractRosmedNumberedPInlineBr2(div: HTMLElement): QaCaseRaw[] {
+export function extractRosmedNumberedPInlineBr(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 	const allP = Array.from(div.querySelectorAll('p'));
 
@@ -248,7 +298,7 @@ export function extractRosmedNumberedPInlineBr2(div: HTMLElement): QaCaseRaw[] {
  * @param div Распарсенный HTML источника.
  * @returns Массив case'ов.
  */
-export function extractRosmedNumberedPPerParagraph2(div: HTMLElement): QaCaseRaw[] {
+export function extractRosmedNumberedPPerParagraph(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 	const allP = Array.from(div.querySelectorAll('p'));
 
@@ -319,10 +369,11 @@ function splitBrLines(html: string): RawLine[] {
 /**
  * Достаёт текст заголовка вопроса формата «N. …» из `<p>`-элемента.
  *
- * Сначала смотрит в `<b>` внутри параграфа (rosmedicinfo часто оборачивает
- * нумерацию в жирный), если его нет — берёт `innerText` всего параграфа.
- * Результат возвращается, только если начинается с `<цифры>.` — иначе
- * это обычный текст, не заголовок, и функция вернёт пустую строку.
+ * Сначала смотрит в `<b>`/`<strong>` внутри параграфа (rosmedicinfo
+ * оборачивает нумерацию в `<b>`, 24forcare — в `<strong>`), если ни того
+ * ни другого нет — берёт `innerText` всего параграфа. Результат
+ * возвращается, только если начинается с `<цифры>.` — иначе это обычный
+ * текст, не заголовок, и функция вернёт пустую строку.
  *
  * Префикс «N. » НЕ снимается здесь — это делает вызывающий,
  * прогоняя результат через `replace` по регулярке вида «начало строки
@@ -332,7 +383,7 @@ function splitBrLines(html: string): RawLine[] {
  * @returns Нумерованный текст вопроса или `''`, если формат не подходит.
  */
 function readNumberedQuestionText(p: Element): string {
-	const firstBold = p.querySelector('b');
+	const firstBold = p.querySelector('b, strong');
 	const rawText = firstBold
 		? ((firstBold as HTMLElement).innerText || '').trim()
 		: ((p as HTMLElement).innerText || '').trim();

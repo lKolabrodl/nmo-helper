@@ -616,5 +616,30 @@ describe('баг репорт', () => {
 		expect(res?.answers?.[0]).toContain('катепсина К');
 	});
 
+	it('Дорсопатия. Миофасциальный болевой синдром: таргетная диагностика и терапия', () => {
+		const div = createDiv(`
+			<p>1) 10 мм;<br>2) 12 мм;<br><strong class="correct-answer-highlight">3) 15 мм;+</strong><br>4) 8 мм.</p>			<p class="MsoNormal" style="margin-bottom:0cm;"><b>1) катепсина К;+</b><br>2) папаина;<br>3) эреисина;<br>4) катепсина А.</p>
+			<p><strong>14. Лечение дискогенной компрессии корешков конского хвоста:</strong></p>
+			<p>1) антидепрессанты;<br>2) вытяжение позвоночника;<br>3) мануальная терапия;<br>4) рефлексотерапия;<br><strong class="correct-answer-highlight">5) хирургическое лечение.+</strong></p>
+		`);
+
+		const model = extractCases('24forcare', div);
+
+		const question = 'Лечение дискогенной компрессии корешков конского хвоста:';
+
+		const userVariants = [
+			'антидепрессанты',
+			'вытяжение позвоночника',
+			'хирургическое лечение',
+			'мануальная терапия',
+			'рефлексотерапия'
+		];
+
+		const res = findAnswers(model, question, userVariants);
+
+		expect(res).not.toBeNull();
+		expect(res?.answers).toHaveLength(1);
+		expect(res?.answers?.[0]).toContain('хирургическое лечение');
+	});
 
 });

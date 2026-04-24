@@ -1,11 +1,12 @@
 import type { ISourceKey } from '../types';
 import { matchQuestion, variantScore } from './matching';
 import {
-	extract24forcare2,
-	extractRosmedH3Highlighted2,
-	extractRosmedH3BrPlus2,
-	extractRosmedNumberedPInlineBr2,
-	extractRosmedNumberedPPerParagraph2,
+	extract24forcare,
+	extract24forcareNumberedPPlus,
+	extractRosmedH3Highlighted,
+	extractRosmedH3BrPlus,
+	extractRosmedNumberedPInlineBr,
+	extractRosmedNumberedPPerParagraph,
 	type QaCaseRaw,
 } from './extractors';
 
@@ -34,13 +35,16 @@ const MIN_VARIANT_SCORE = 0.7;
  */
 export function extractCases(source: ISourceKey, div: HTMLElement): QaCaseModel[] {
 	let raw: QaCaseRaw[] = [];
-	if (source === '24forcare') raw = [...extract24forcare2(div)];
+	if (source === '24forcare') raw = [
+		...extract24forcare(div),
+		...extract24forcareNumberedPPlus(div),
+	];
 	else if (source === 'rosmedicinfo') {
 		raw = [
-			...extractRosmedH3Highlighted2(div),
-			...extractRosmedH3BrPlus2(div),
-			...extractRosmedNumberedPInlineBr2(div),
-			...extractRosmedNumberedPPerParagraph2(div),
+			...extractRosmedH3Highlighted(div),
+			...extractRosmedH3BrPlus(div),
+			...extractRosmedNumberedPInlineBr(div),
+			...extractRosmedNumberedPPerParagraph(div),
 		];
 	}
 
