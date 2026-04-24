@@ -54,15 +54,21 @@
         "step": [
             {
                 "@type": "HowToStep",
-                "name": "Скачайте расширение",
-                "text": "Скачайте nmo-helper-chrome-3.1.5.zip для Chrome или nmo-helper-firefox.xpi для Firefox с GitHub.",
-                "url": "https://nmo-helper.ru/instruction#install"
+                "name": "Установите расширение в Google Chrome",
+                "text": "Скачайте nmo-helper-chrome-3.1.5.zip, разархивируйте, откройте chrome://extensions/, включите Режим разработчика и загрузите распакованное расширение.",
+                "url": "https://nmo-helper.ru/instruction#install-chrome"
             },
             {
                 "@type": "HowToStep",
-                "name": "Установите расширение",
-                "text": "Для Chrome: откройте chrome://extensions/, включите режим разработчика, загрузите распакованное расширение. Для Firefox: перетащите .xpi файл в окно браузера.",
-                "url": "https://nmo-helper.ru/instruction#install"
+                "name": "Установите расширение в Яндекс Браузер",
+                "text": "Тот же zip-архив работает в Яндекс Браузере: откройте browser://extensions/, включите Режим разработчика и загрузите распакованную папку.",
+                "url": "https://nmo-helper.ru/instruction#install-yandex"
+            },
+            {
+                "@type": "HowToStep",
+                "name": "Установите расширение в Mozilla Firefox",
+                "text": "Откройте страницу дополнения на addons.mozilla.org и нажмите «Добавить в Firefox», либо скачайте firefox_nmo_helper.xpi с GitHub и перетащите файл в окно браузера.",
+                "url": "https://nmo-helper.ru/instruction#install-firefox"
             },
             {
                 "@type": "HowToStep",
@@ -371,7 +377,13 @@
         <div class="toc fade-in">
             <h3>Содержание</h3>
             <ol>
-                <li><a href="#install">Установка расширения</a></li>
+                <li><a href="#install">Установка расширения</a>
+                    <ol style="margin-top: 6px;">
+                        <li><a href="#install-chrome">в Google Chrome (Edge, Brave, Opera)</a></li>
+                        <li><a href="#install-yandex">в Яндекс Браузер</a></li>
+                        <li><a href="#install-firefox">в Mozilla Firefox</a></li>
+                    </ol>
+                </li>
                 <li><a href="#usage">Использование</a></li>
                 <li><a href="#autosearch">Авто-поиск ответов</a></li>
                 <li><a href="#manual">Ручной поиск</a></li>
@@ -384,65 +396,79 @@
         <!-- Installation -->
         <section id="install" class="section">
             <h2 class="section-title fade-in">Установка расширения</h2>
-            <p class="section-subtitle fade-in">Выберите ваш браузер и следуйте шагам</p>
-
-            <div class="tabs fade-in">
-                <button class="tab-btn active" onclick="showTab('chrome', this)">
-                    <img src="demo/chrome.svg" width="18" height="18" alt="Chrome">
-                    Chrome / Yandex
-                </button>
-                <button class="tab-btn" onclick="showTab('firefox', this)">
-                    <img src="demo/firefox.svg" width="18" height="18" alt="Firefox">
-                    Firefox
-                </button>
-            </div>
+            <p class="section-subtitle fade-in">Инструкция отличается для каждого браузера — выберите свой ниже</p>
 
             <!-- Chrome -->
-            <div id="tab-chrome" class="tab-content active">
-                <div class="card fade-in">
-                    <h3>Google Chrome, Edge, Brave, Opera, Яндекс Браузер</h3>
-                    <ol class="step-list">
-                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.1.5/nmo-helper-chrome-3.1.5.zip" style="color: var(--gradient-1);">nmo-helper-chrome-3.1.5.zip</a></li>
-                        <li>Разархивируйте содержимое в удобную папку</li>
-                        <li>Откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="chrome://extensions/"><code>chrome://extensions/</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> в адресной строке</li>
-                        <li>Включите переключатель <strong>«Режим разработчика»</strong> в правом верхнем углу</li>
-                        <li>Нажмите <strong>«Загрузить распакованное расширение»</strong></li>
-                        <li>Выберите папку <code>nmo-helper-plugin</code></li>
-                    </ol>
-                    <div class="media-block">
-                        <img src="demo/step_3.gif" alt="Установка в Chrome" loading="lazy">
-                        <p class="media-caption">Процесс установки в Chrome</p>
-                    </div>
+            <div id="install-chrome" class="card fade-in" style="scroll-margin-top: 80px;">
+                <h3>
+                    <img src="demo/chrome.svg" width="22" height="22" alt="" style="vertical-align: -5px; margin-right: 8px;">
+                    Установка в Google Chrome
+                </h3>
+                <ol class="step-list">
+                    <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.1.5/nmo-helper-chrome-3.1.5.zip" style="color: var(--gradient-1);">nmo-helper-chrome-3.1.5.zip</a></li>
+                    <li>Разархивируйте содержимое в удобную папку (запомните путь — Chrome будет ссылаться на неё всё время)</li>
+                    <li>Откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="chrome://extensions/"><code>chrome://extensions/</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> в адресной строке</li>
+                    <li>Включите переключатель <strong>«Режим разработчика»</strong> (<em>Developer mode</em>) в правом верхнем углу страницы</li>
+                    <li>Нажмите появившуюся кнопку <strong>«Загрузить распакованное расширение»</strong> (<em>Load unpacked</em>)</li>
+                    <li>Выберите ту самую разархивированную папку</li>
+                </ol>
+                <div class="media-block">
+                    <img src="demo/step_3.gif" alt="Установка NMO Helper в Google Chrome" loading="lazy">
+                    <p class="media-caption">Процесс установки в Chrome</p>
                 </div>
+                <p style="margin-top: 14px; font-size: 0.88rem; color: var(--text-muted);"><strong>Если кнопки «Загрузить распакованное расширение» нет</strong> — убедитесь, что включён «Режим разработчика» (переключатель в правом верхнем углу <code>chrome://extensions/</code>). Без него кнопка скрыта.</p>
+            </div>
+
+            <!-- Yandex -->
+            <div id="install-yandex" class="card fade-in" style="scroll-margin-top: 80px; margin-top: 20px;">
+                <h3>
+                    <img src="demo/yandex.svg" width="22" height="22" alt="" style="vertical-align: -5px; margin-right: 8px;">
+                    Установка в Яндекс Браузер
+                </h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">Яндекс Браузер построен на Chromium, поэтому дистрибутив нужен тот же, что и для Chrome. Единственный отличающийся шаг — адрес страницы расширений: у Яндекса это <code>browser://extensions/</code>.</p>
+                <ol class="step-list">
+                    <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.1.5/nmo-helper-chrome-3.1.5.zip" style="color: var(--gradient-1);">nmo-helper-chrome-3.1.5.zip</a> — тот же дистрибутив, что для Chrome</li>
+                    <li>Разархивируйте содержимое в удобную папку</li>
+                    <li>Откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="browser://extensions/"><code>browser://extensions/</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> в адресной строке (привычный <code>chrome://extensions/</code> тоже работает — Яндекс редиректит на свой путь)</li>
+                    <li>Прокрутите страницу вниз и включите <strong>«Режим разработчика»</strong></li>
+                    <li>Нажмите <strong>«Загрузить распакованное расширение»</strong> и выберите разархивированную папку</li>
+                </ol>
+                <div class="media-block">
+                    <img src="demo/yandex_install.gif" alt="Установка NMO Helper в Яндекс Браузер" loading="lazy">
+                    <p class="media-caption">Процесс установки в Яндекс Браузер</p>
+                </div>
+                <p style="margin-top: 14px; font-size: 0.88rem; color: var(--text-muted);"><strong>Если кнопки «Загрузить распакованное расширение» нет</strong> — убедитесь, что включён «Режим разработчика» (переключатель в правом верхнем углу <code>browser://extensions/</code>). Без него кнопка скрыта.</p>
             </div>
 
             <!-- Firefox -->
-            <div id="tab-firefox" class="tab-content">
-                <div class="card fade-in">
-                    <h3>Mozilla Firefox</h3>
-                    <p style="color: var(--green); font-size: 0.9rem; margin-bottom: 12px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align: -2px; margin-right: 4px;" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-                        Проверено и подписано Mozilla
-                    </p>
+            <div id="install-firefox" class="card fade-in" style="scroll-margin-top: 80px; margin-top: 20px;">
+                <h3>
+                    <img src="demo/firefox.svg" width="22" height="22" alt="" style="vertical-align: -5px; margin-right: 8px;">
+                    Установка в Mozilla Firefox
+                </h3>
+                <p style="color: var(--green); font-size: 0.9rem; margin-bottom: 12px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align: -2px; margin-right: 4px;" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+                    Проверено и подписано Mozilla — единственный браузер с официальной магазинной версией NMO Helper.
+                </p>
 
-                    <h4 style="margin-top: 16px; margin-bottom: 10px;">Способ 1. Firefox Add-ons (рекомендуется)</h4>
-                    <ol class="step-list">
-                        <li>Откройте страницу расширения на <a href="https://addons.mozilla.org/ru/firefox/addon/nmo-helper/" target="_blank" rel="noopener" style="color: var(--gradient-1);">addons.mozilla.org/firefox/addon/nmo-helper</a></li>
-                        <li>Нажмите <strong>«Добавить в Firefox»</strong></li>
-                        <li>Подтвердите установку. Расширение будет обновляться автоматически.</li>
-                    </ol>
+                <h4 style="margin-top: 16px; margin-bottom: 10px;">Способ 1. Firefox Add-ons (рекомендуется)</h4>
+                <ol class="step-list">
+                    <li>Откройте страницу расширения на <a href="https://addons.mozilla.org/ru/firefox/addon/nmo-helper/" target="_blank" rel="noopener" style="color: var(--gradient-1);">addons.mozilla.org/firefox/addon/nmo-helper</a></li>
+                    <li>Нажмите <strong>«Добавить в Firefox»</strong></li>
+                    <li>Подтвердите установку. Обновления приходят автоматически через AMO — ничего делать не нужно.</li>
+                </ol>
 
-                    <h4 style="margin-top: 20px; margin-bottom: 10px;">Способ 2. Прямая установка .xpi</h4>
-                    <ol class="step-list">
-                        <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.1.5/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">nmo-helper-firefox.xpi</a> из релиза на GitHub</li>
-                        <li>Откройте Firefox и перетащите файл <code>.xpi</code> прямо в окно браузера, или откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="about:addons"><code>about:addons</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> &rarr; нажмите шестерёнку &#9881; &rarr; <strong>«Установить дополнение из файла»</strong></li>
-                        <li>Подтвердите установку, нажав <strong>«Добавить»</strong></li>
-                    </ol>
-                    <div class="media-block">
-                        <img src="demo/firefox_install.gif" alt="Установка в Firefox" loading="lazy">
-                        <p class="media-caption">Процесс установки в Firefox</p>
-                    </div>
+                <h4 style="margin-top: 20px; margin-bottom: 10px;">Способ 2. Прямая установка .xpi</h4>
+                <ol class="step-list">
+                    <li>Скачайте <a href="https://github.com/lKolabrodl/nmo-helper/releases/download/v3.1.5/firefox_nmo_helper.xpi" style="color: var(--gradient-1);">firefox_nmo_helper.xpi</a> из релиза на GitHub</li>
+                    <li>Откройте Firefox и перетащите файл <code>.xpi</code> прямо в окно браузера, или откройте <span class="copyable-inline" onclick="copyUrl(this)" data-copy="about:addons"><code>about:addons</code><svg class="copy-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span> &rarr; нажмите шестерёнку &#9881; &rarr; <strong>«Установить дополнение из файла»</strong></li>
+                    <li>Подтвердите установку, нажав <strong>«Добавить»</strong></li>
+                </ol>
+                <div class="media-block">
+                    <img src="demo/firefox_install.gif" alt="Установка NMO Helper в Mozilla Firefox" loading="lazy">
+                    <p class="media-caption">Процесс установки в Firefox</p>
                 </div>
+                <p style="margin-top: 14px; font-size: 0.88rem; color: var(--text-muted);"><strong>Требуется Firefox 109+</strong> — в более ранних версиях нет поддержки Manifest V3. В актуальных версиях (128+) всё работает штатно.</p>
             </div>
         </section>
 
@@ -743,16 +769,6 @@
                     if (toast) toast.remove();
                 }, 1500);
             });
-        }
-
-        // Tabs
-        function showTab(browser, btn) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('active', 'active-firefox');
-            });
-            document.getElementById('tab-' + browser).classList.add('active');
-            btn.classList.add(browser === 'firefox' ? 'active-firefox' : 'active');
         }
 
         // Scroll to top
