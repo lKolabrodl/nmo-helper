@@ -1,4 +1,4 @@
-# NMO Helper v4.2.0
+# NMO Helper v4.0.0
 
 > Умный помощник в прохождении тестов НМО на портале [edu.rosminzdrav.ru](https://a.edu.rosminzdrav.ru) — бесплатное расширение для браузера с открытым исходным кодом.
 
@@ -40,12 +40,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-chrome-4.2.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.2.0/nmo-helper-chrome-4.2.0.zip)
+1. Скачайте [`nmo-helper-chrome-4.0.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.0.0/nmo-helper-chrome-4.0.0.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-chrome-4.2.0`
+6. Выберите папку `nmo-helper-chrome-4.0.0`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
@@ -61,7 +61,7 @@
 
 **Способ 2 — прямая установка `.xpi`:**
 
-1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.2.0/firefox_nmo_helper.xpi)
+1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.0.0/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
 3. Подтвердите установку
 
