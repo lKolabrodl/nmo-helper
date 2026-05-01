@@ -119,14 +119,8 @@ const UpdateBanner: React.FC<{info: IVersionInfo; onClose: () => void}> = ({info
 		</div>
 		<div className="nmo-update-body">
 			<div className="nmo-update-title">Доступна v{info.latest}</div>
-			<div className="nmo-update-sub">у вас v{info.current}</div>
+			<div className="nmo-update-sub">у вас v{info.current} — обновите расширение</div>
 		</div>
-		{info.url && (
-			<a className="nmo-btn nmo-btn-warning nmo-update-cta"
-				href={info.url}
-				target="_blank"
-				rel="noreferrer">Обновить</a>
-		)}
 		<button type="button" className="nmo-icon-btn nmo-update-close" onClick={onClose}>
 			<IconClose size={12}/>
 		</button>

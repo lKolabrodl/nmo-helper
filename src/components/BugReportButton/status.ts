@@ -12,6 +12,7 @@ export const STATUSES = {
 	DUPLICATE:     {text: 'этот вопрос уже отправлен'},
 	COOLDOWN:      {text: 'подождите до следующей отправки'},
 	DAILY_CAP:     {text: 'лимит 5 отчётов в сутки исчерпан'},
+	OUTDATED:      {text: 'обновите расширение, чтобы отправить отчёт'},
 
 	PAYLOAD_LARGE: {text: 'вопрос слишком большой'},
 	NETWORK:       {text: 'нет сети'},

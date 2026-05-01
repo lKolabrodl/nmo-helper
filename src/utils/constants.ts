@@ -27,6 +27,7 @@ export const SELECTORS = {
 	topic: [
 		'.mat-card-title-quiz-custom',
 		'.mat-mdc-card-title',
+		'.v-label.v-label-h2'
 	],
 	/** Контейнер текущего вопроса */
 	questionAnchor: [
@@ -69,37 +70,52 @@ export const StatusTitle = {
 /** Единый OpenAI-совместимый endpoint ProxyAPI для всех провайдеров */
 export const AI_URL = 'https://openai.api.proxyapi.ru/v1/chat/completions';
 
-/** Эндпоинт серверного приёма баг-репортов (проксируется nginx'ом в Python-бот) */
-export const BUG_REPORT_ENDPOINT = 'https://nmo-helper.ru/api/bug-report';
+/** Эндпоинт серверного приёма баг-репортов (проксируется nginx'ом в Python-бот).
+ *  v2: поддерживает поле message и блокирует старые версии (HTTP 426). */
+export const BUG_REPORT_ENDPOINT = 'https://nmo-helper.ru/api/v2/bug-report';
 
 /** Ключ chrome.storage.local для клиентского состояния баг-репортов (дедуп/кулдаун/дневной лимит) */
 export const BUG_REPORT_STORAGE_KEY = 'bugReports';
 
 /**
- * Список доступных AI-моделей.
- * - tier: уровень (low → ultra)
- * - tag: 'rec' — рекомендованная, 'pricey' — дорогая
+ * Список доступных AI-моделей через ProxyAPI.
+ * - tier: уровень (low → ultra) — основан на rate limits и позиции в линейке.
+ * - tag: 'rec' — рекомендованная, 'pricey' — дорогая (ставится на флагманов).
+ *
+ * id — точный идентификатор у ProxyAPI; name — отображаемое имя в дропдауне.
+ * Anthropic id с дефисами (`claude-opus-4-7`), name с точкой (`claude-opus-4.7`).
  */
 export const AI_MODELS: IAiModel[] = [
-	{ id: 'gpt-4.1-nano',           name: 'gpt-4.1-nano',           tier: 'low' },
+	// low — быстрые / дешёвые для простых задач
 	{ id: 'gpt-4o-mini',            name: 'gpt-4o-mini',            tier: 'low' },
+	{ id: 'gpt-4.1-nano',           name: 'gpt-4.1-nano',           tier: 'low' },
+	{ id: 'gpt-5-nano',             name: 'gpt-5-nano',             tier: 'low' },
 	{ id: 'gpt-5.4-nano',           name: 'gpt-5.4-nano',           tier: 'low' },
-	{ id: 'gemini-2.0-flash-lite',  name: 'gemini-2.0-flash-lite',  tier: 'low' },
 	{ id: 'gemini-2.0-flash',       name: 'gemini-2.0-flash',       tier: 'low' },
+	{ id: 'gemini-2.5-flash-lite',  name: 'gemini-2.5-flash-lite',  tier: 'low' },
 	{ id: 'claude-haiku-4-5',       name: 'claude-haiku-4.5',       tier: 'low' },
+
+	// medium — баланс цены и качества
 	{ id: 'gpt-4.1-mini',           name: 'gpt-4.1-mini',           tier: 'medium', tag: 'rec' },
 	{ id: 'gpt-4o',                 name: 'gpt-4o',                 tier: 'medium' },
 	{ id: 'gpt-5-mini',             name: 'gpt-5-mini',             tier: 'medium' },
 	{ id: 'gpt-5.4-mini',           name: 'gpt-5.4-mini',           tier: 'medium' },
 	{ id: 'gemini-2.5-flash',       name: 'gemini-2.5-flash',       tier: 'medium', tag: 'rec' },
+	{ id: 'gemini-3-flash-preview', name: 'gemini-3-flash',         tier: 'medium' },
+	{ id: 'claude-sonnet-4-5',      name: 'claude-sonnet-4.5',      tier: 'medium' },
+
+	// high — флагманы для точности
 	{ id: 'gpt-4.1',                name: 'gpt-4.1',                tier: 'high' },
-	{ id: 'gpt-5',                  name: 'gpt-5',                  tier: 'high',   tag: 'pricey' },
+	{ id: 'gpt-5',                  name: 'gpt-5',                  tier: 'high' },
 	{ id: 'gpt-5.4',                name: 'gpt-5.4',                tier: 'high',   tag: 'pricey' },
 	{ id: 'o3-mini',                name: 'o3-mini',                tier: 'high',   tag: 'rec' },
 	{ id: 'o4-mini',                name: 'o4-mini',                tier: 'high',   tag: 'rec' },
 	{ id: 'gemini-2.5-pro',         name: 'gemini-2.5-pro',         tier: 'high' },
-	{ id: 'claude-sonnet-4-6',      name: 'claude-sonnet-4.6',      tier: 'high' },
+	{ id: 'claude-sonnet-4-6',      name: 'claude-sonnet-4.6',      tier: 'high',   tag: 'rec' },
+
+	// ultra — премиум reasoning / pro-модели
+	{ id: 'gpt-5.5',                name: 'gpt-5.5',                tier: 'ultra',  tag: 'pricey' },
 	{ id: 'o3',                     name: 'o3',                     tier: 'ultra',  tag: 'pricey' },
 	{ id: 'gemini-3.1-pro-preview', name: 'gemini-3.1-pro',         tier: 'ultra' },
-	{ id: 'claude-opus-4-6',        name: 'claude-opus-4.6',        tier: 'ultra',  tag: 'rec' },
+	{ id: 'claude-opus-4-7',        name: 'claude-opus-4.7',        tier: 'ultra',  tag: 'rec' },
 ];

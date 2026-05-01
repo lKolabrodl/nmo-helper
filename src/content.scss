@@ -377,23 +377,6 @@ textarea.nmo-input {
   &.ultra  { background: $tier-ultra-bg;  color: $tier-ultra-text;  border: 1px solid $tier-ultra-border; }
 }
 
-// ─── Progress bar ────────────────────────────────
-.nmo-progress {
-  height: 4px;
-  background: $border-soft;
-  border-radius: 2px;
-  overflow: hidden;
-
-  > div {
-    height: 100%;
-    background: $accent;
-    transition: width .4s ease;
-    border-radius: 2px;
-  }
-
-  &.warning > div { background: $warning; }
-}
-
 // ─── Status row (inline текст) ───────────────────
 .nmo-status {
   text-align: center;

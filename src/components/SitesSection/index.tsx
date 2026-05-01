@@ -132,7 +132,7 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 							value={url}
 							onChange={e => setUrl(e.target.value)}/>
 						<div className="nmo-sites-help">
-							Поддерживаются rosmedicinfo, 24force и любые сайты с открытыми ответами.
+							Поддерживаются только на rosmedicinfo, 24force
 						</div>
 					</div>
 				) : (
@@ -170,8 +170,9 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 									{results.map((r, i) => (
 										<button key={i} type="button"
 											className="nmo-results-item"
+											title={r.title}
 											onClick={() => selectResult(r)}>
-											<div className="nmo-results-title" title={r.title}>{r.title}</div>
+											<div className="nmo-results-title">{r.title}</div>
 											<div className="nmo-results-meta-row">
 												<span className={`nmo-results-src ${r.source === 'rosmedicinfo' ? 'rosmed' : 'fc'}`}>
 													{r.source === 'rosmedicinfo' ? 'rosmed' : '24fc'}
@@ -191,22 +192,24 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 				<InlineToast toast={statusToToast(status.title, status.status)}/>
 			)}
 
-			<div className="nmo-footer">
-				{!isRunning ? (
-					<button type="button"
-						className="nmo-btn nmo-btn-primary nmo-btn-cta"
-						disabled={!url.trim() || answerModel.loading}
-						onClick={run}>
-						<IconPlay size={14}/>Запустить
-					</button>
-				) : (
-					<button type="button"
-						className="nmo-btn nmo-btn-stop nmo-btn-cta"
-						onClick={stop}>
-						Остановить
-					</button>
-				)}
-			</div>
+			{(tab === 'url' || isRunning) && (
+				<div className="nmo-footer">
+					{!isRunning ? (
+						<button type="button"
+							className="nmo-btn nmo-btn-primary nmo-btn-cta"
+							disabled={!url.trim() || answerModel.loading}
+							onClick={run}>
+							<IconPlay size={14}/>Запустить
+						</button>
+					) : (
+						<button type="button"
+							className="nmo-btn nmo-btn-stop nmo-btn-cta"
+							onClick={stop}>
+							Остановить
+						</button>
+					)}
+				</div>
+			)}
 		</div>
 	);
 };

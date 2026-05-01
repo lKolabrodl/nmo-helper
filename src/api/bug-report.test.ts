@@ -29,7 +29,7 @@ function makePayload(overrides: Partial<IBugReportPayload> = {}): IBugReportPayl
 		question: 'Какой диагноз?',
 		questionHtml: '<p>Какой диагноз?</p>',
 		variants: ['A', 'B', 'C'],
-		extVersion: '3.1.5',
+		extVersion: '4.2.0',
 		userAgent: 'Test/1.0',
 		...overrides,
 	};
@@ -217,7 +217,7 @@ describe('submitBugReport', () => {
 		await submitBugReport(payload);
 		expect(mockFetch).toHaveBeenCalledTimes(1);
 		const [url, opts] = mockFetch.mock.calls[0];
-		expect(url).toBe('https://nmo-helper.ru/api/bug-report');
+		expect(url).toBe('https://nmo-helper.ru/api/v2/bug-report');
 		expect(opts.method).toBe('POST');
 		expect(opts.headers).toEqual({ 'Content-Type': 'application/json' });
 		expect(JSON.parse(opts.body)).toEqual(payload);

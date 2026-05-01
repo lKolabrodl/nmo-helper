@@ -4,6 +4,8 @@
 .nmo-footer {
   padding: 14px 14px 16px;
   border-top: 1px solid $border-soft;
+  cursor: move;
+  user-select: none;
 }
 
 .nmo-footer-hint {
@@ -60,52 +62,4 @@
   width: 18px;
   height: 18px;
   color: $accent;
-}
-
-// running variant
-.nmo-strip-running {
-  display: block;
-  border-color: $accent-ring;
-  padding: 10px 12px;
-
-  &.warning { border-color: $warning-border; }
-}
-
-.nmo-strip-running-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 6px;
-}
-
-.nmo-strip-running-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: $text;
-}
-
-.nmo-strip-running-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: $accent;
-  box-shadow: 0 0 0 3px $accent-soft;
-  flex-shrink: 0;
-}
-
-.nmo-strip-running.warning .nmo-strip-running-dot {
-  background: $warning;
-  box-shadow: 0 0 0 3px rgba(245, 193, 75, 0.18);
-}
-
-.nmo-strip-running-counts {
-  font-size: $fs-sm;
-  font-variant-numeric: tabular-nums;
-
-  .ok { color: $success; }
-  .warn { color: $warning; }
-  .sep { color: $text-3; padding: 0 4px; }
 }

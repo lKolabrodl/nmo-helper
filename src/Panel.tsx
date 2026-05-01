@@ -20,11 +20,13 @@ export function createPanel(state: IExtensionState): HTMLElement {
 	return panel;
 }
 
-const DRAG_HANDLES = '.nmo-titlebar, .nmo-pill';
+const DRAG_HANDLES = '.nmo-titlebar, .nmo-pill, .nmo-footer';
 const INTERACTIVE = 'button, a, input, textarea, select, label';
 
 export function initPanelBehavior(panel: HTMLElement): void {
-	let isDragging = false, dx = 0, dy = 0;
+	let isDragging = false;
+	let dx = 0, dy = 0;
+	let panelWidth = 0;
 
 	panel.addEventListener('mousedown', (e: MouseEvent) => {
 		const target = e.target as HTMLElement;
@@ -32,10 +34,12 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		if (!target.closest(DRAG_HANDLES)) return;
 
 		e.preventDefault();
-		isDragging = true;
 		const rect = panel.getBoundingClientRect();
+		// смещение курсора относительно левого-верхнего угла панели — фиксируем в mousedown
 		dx = e.clientX - rect.left;
 		dy = e.clientY - rect.top;
+		panelWidth = rect.width;
+		isDragging = true;
 		panel.style.willChange = 'right, top';
 	});
 
@@ -43,9 +47,8 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		if (!isDragging) return;
 		e.preventDefault();
 		requestAnimationFrame(() => {
-			const rect = panel.getBoundingClientRect();
 			const newLeft = e.clientX - dx;
-			const right = window.innerWidth - (newLeft + rect.width);
+			const right = document.documentElement.clientWidth - (newLeft + panelWidth);
 			panel.style.right = right + 'px';
 			panel.style.left = 'auto';
 			panel.style.top = (e.clientY - dy) + 'px';
@@ -57,7 +60,7 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		isDragging = false;
 		panel.style.willChange = '';
 		const rect = panel.getBoundingClientRect();
-		const right = window.innerWidth - rect.right;
+		const right = document.documentElement.clientWidth - rect.right;
 		storageSet('panelRight', right);
 		storageSet('panelTop', rect.top);
 	});

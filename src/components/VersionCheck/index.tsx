@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './styles.scss';
 import {IconCheck, IconRefresh} from '../icons';
 import {checkVersion, isOutdated, type IVersionInfo} from '../../api/version-check';
@@ -15,11 +15,24 @@ const VersionCheck: React.FC<IProps> = ({onOutdated}) => {
 	const [state, setState] = useState<State>('idle');
 	const [hover, setHover] = useState(false);
 
+	// авто-проверка при mount — кэш 6ч на клиенте, реального запроса почти не будет
+	useEffect(() => {
+		let cancelled = false;
+		checkVersion(false).then(info => {
+			if (cancelled) return;
+			if (isOutdated(info)) {
+				setState('outdated');
+				onOutdated?.(info);
+			}
+		}).catch(() => { /* молча — UI не показывает ошибки */ });
+		return () => { cancelled = true; };
+	}, []);
+
 	const handleClick = async () => {
 		if (state === 'checking') return;
 		setState('checking');
 		try {
-			const info = await checkVersion();
+			const info = await checkVersion(true);
 			if (isOutdated(info)) {
 				setState('outdated');
 				onOutdated?.(info);

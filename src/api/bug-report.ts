@@ -43,6 +43,8 @@ export interface IBugReportPayload {
 	readonly extVersion: string;
 	/** `navigator.userAgent` — для повторения бага в том же браузере */
 	readonly userAgent: string;
+	/** Свободный текст от пользователя (необязательно). Лимит на сервере — 2000 символов. */
+	readonly message?: string;
 }
 
 /**
@@ -165,7 +167,7 @@ export async function canSubmitBugReport(fingerprint: string): Promise<BugReport
  */
 export type BugReportResult =
 	| { ok: true }
-	| { ok: false; error: 'duplicate' | 'cooldown' | 'daily_cap' | 'network' | 'server' | 'payload_too_large' };
+	| { ok: false; error: 'duplicate' | 'cooldown' | 'daily_cap' | 'network' | 'server' | 'payload_too_large' | 'outdated' };
 
 /**
  * Отправляет баг-репорт на сервер через background service worker
@@ -228,6 +230,7 @@ export async function submitBugReport(payload: IBugReportPayload): Promise<BugRe
 	}
 
 	if (res.status === 413) return { ok: false, error: 'payload_too_large' };
+	if (res.status === 426) return { ok: false, error: 'outdated' };
 
 	return { ok: false, error: 'server' };
 }

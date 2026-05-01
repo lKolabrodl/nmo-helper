@@ -10,10 +10,7 @@ import ModelDropdown from '../ModelDropdown';
 import AIProxyLoader from '../Loader/AIProxyLoader';
 import {IconPlay} from '../icons';
 import InlineToast, {type IToast} from '../ui/InlineToast';
-import RunningStrip, {type IProgress} from '../ui/RunningStrip';
 import ThinkingStrip from '../ui/ThinkingStrip';
-
-const ZERO_PROGRESS: IProgress = {current: 0, total: 0, found: 0, missed: 0};
 
 const AiSection: React.FC = () => {
 	const {mode, setMode} = usePanelUi();
@@ -30,9 +27,6 @@ const AiSection: React.FC = () => {
 
 	const [aiRunning, setAiRunning] = useState(false);
 	const [aiDisabled, setAiDisabled] = useState(false);
-
-	// прогресс — заглушка, наполняется логикой позже
-	const [progress] = useState<IProgress>(ZERO_PROGRESS);
 
 	useEffect(() => {
 		storageGet('apiKey', '').then(v => setApiKeyRaw(v || null));
@@ -130,11 +124,9 @@ const AiSection: React.FC = () => {
 				</div>
 			</div>
 
-			{isLoading && <ThinkingStrip title={status.title} steps={['Проверяю ключ…', 'Готовлю запрос…']}/>}
+			{isLoading && <ThinkingStrip title={status.title} steps={[]}/>}
 
-			{aiRunning && <RunningStrip progress={progress}/>}
-
-			{!aiRunning && !isLoading && (isOk || isError) && status.title && (
+			{(isOk || isError) && !isLoading && status.title && (
 				<InlineToast toast={statusToToast(status.title, status.status)}/>
 			)}
 

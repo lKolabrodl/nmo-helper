@@ -11,6 +11,7 @@ import {
 	type BugReportGate,
 	type BugReportResult,
 } from '../../api/bug-report';
+import {checkVersion, isOutdated} from '../../api/version-check';
 import {IconBug, IconCheck, IconClose, IconWarn} from '../icons';
 
 const EXT_VERSION = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest?.()?.version) || '';
@@ -49,16 +50,27 @@ const BugReportButton: React.FC<IProps> = ({activeUrl = '', isOpen: openProp, on
 	useEffect(() => {
 		let cancelled = false;
 		const fp = computeFingerprint({topic: rawTopic ?? '', question: question ?? '', activeUrl});
-		canSubmitBugReport(fp).then(gate => {
-			if (!cancelled) setStatus(gateStatus(gate));
+
+		// Сначала проверка версии (cached, обычно мгновенно), потом клиентский гейт.
+		checkVersion(false).then(info => {
+			if (cancelled) return;
+			if (isOutdated(info)) { setStatus('OUTDATED'); return; }
+			canSubmitBugReport(fp).then(gate => {
+				if (!cancelled) setStatus(gateStatus(gate));
+			});
 		});
+
 		return () => { cancelled = true; };
 	}, [rawTopic, question, activeUrl]);
 
-	// после успешной отправки — авто-закрытие через 1.5с
+	// после успешной отправки — авто-закрытие через 1.5с (закрываем форму И сбрасываем статус,
+	// иначе success-banner остаётся видимым в hideTrigger-режиме)
 	useEffect(() => {
 		if (status !== 'SENT') return;
-		const id = setTimeout(() => closeForm(), 1500);
+		const id = setTimeout(() => {
+			closeForm();
+			setStatus(null);
+		}, 1500);
 		return () => clearTimeout(id);
 	}, [status]);
 
@@ -77,7 +89,7 @@ const BugReportButton: React.FC<IProps> = ({activeUrl = '', isOpen: openProp, on
 			variants,
 			extVersion: EXT_VERSION,
 			userAgent: navigator.userAgent,
-			...(message.trim() ? {message: message.trim()} as Record<string, string> : {}),
+			message: message.trim(),
 		});
 
 		setSending(false);
@@ -180,6 +192,7 @@ function resultStatus(res: BugReportResult): BugReportStatus {
 	if (res.error === 'duplicate')         return 'DUPLICATE';
 	if (res.error === 'cooldown')          return 'COOLDOWN';
 	if (res.error === 'daily_cap')         return 'DAILY_CAP';
+	if (res.error === 'outdated')          return 'OUTDATED';
 	if (res.error === 'payload_too_large') return 'PAYLOAD_LARGE';
 	if (res.error === 'network')           return 'NETWORK';
 	return 'SERVER';

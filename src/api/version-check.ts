@@ -1,22 +1,65 @@
 /**
  * Проверка наличия новой версии расширения.
  *
- * Заглушка под будущий серверный API: всегда возвращает текущую версию
- * как latest. Реальный эндпоинт подключим позже — сигнатура останется.
+ * Сервер: GET https://nmo-helper.ru/api/version → {ok, latest, url}.
+ * Защита от спама — клиентский кэш в chrome.storage.local + throttle.
  */
+
+import {fetchViaBackground} from './fetch';
+import {storageGet, storageSet} from './storage';
+
+const VERSION_ENDPOINT = 'https://nmo-helper.ru/api/version';
+const CACHE_KEY = 'versionCheck';
+
+/** Максимальный возраст кэша для автоматических проверок (6 часов) */
+const TTL_AUTO_MS = 6 * 60 * 60 * 1000;
+/** Минимальный интервал между ручными проверками (30 секунд) */
+const TTL_MANUAL_MS = 30 * 1000;
+
+const EXT_VERSION = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest?.()?.version) || '';
 
 export interface IVersionInfo {
 	readonly current: string;
 	readonly latest: string;
-	readonly url?: string;
 }
 
-const EXT_VERSION = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest?.()?.version) || '';
+interface ICacheEntry {
+	readonly checkedAt: number;
+	readonly latest: string;
+}
 
-export async function checkVersion(): Promise<IVersionInfo> {
-	// TODO: заменить на реальный fetch к серверу версий.
-	await new Promise(r => setTimeout(r, 700));
-	return { current: EXT_VERSION, latest: EXT_VERSION };
+/**
+ * Возвращает данные о версии расширения. По умолчанию использует кэш с
+ * TTL 6 часов. При `force=true` (ручной клик) — TTL 30 секунд (анти-спам).
+ *
+ * Сетевые ошибки и 429 от сервера никогда не бросаются: возвращаем cached,
+ * либо «у вас актуальная версия», чтобы UI не визуализировал ошибку.
+ */
+export async function checkVersion(force = false): Promise<IVersionInfo> {
+	const cache = await storageGet<ICacheEntry | null>(CACHE_KEY, null);
+	const ttl = force ? TTL_MANUAL_MS : TTL_AUTO_MS;
+	const fresh = cache && Date.now() - cache.checkedAt < ttl;
+
+	if (fresh) {
+		return {current: EXT_VERSION, latest: cache.latest};
+	}
+
+	const res = await fetchViaBackground(VERSION_ENDPOINT, {method: 'GET'});
+
+	// сеть упала или сервер ругается — возвращаем кэш, либо «всё хорошо»
+	if (res.error || res.status === 429 || res.status < 200 || res.status >= 300) {
+		if (cache) return {current: EXT_VERSION, latest: cache.latest};
+		return {current: EXT_VERSION, latest: EXT_VERSION};
+	}
+
+	let body: {ok?: boolean; latest?: string} = {};
+	try { body = JSON.parse(res.text); } catch { /* noop */ }
+
+	const latest = (body.latest || '').trim() || EXT_VERSION;
+	const entry: ICacheEntry = {checkedAt: Date.now(), latest};
+	storageSet(CACHE_KEY, entry);
+
+	return {current: EXT_VERSION, latest};
 }
 
 export function isOutdated(info: IVersionInfo): boolean {

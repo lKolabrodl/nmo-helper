@@ -17,15 +17,30 @@
   width: 28px;
   height: 28px;
   border-radius: $r-sm + 2px;
-  background: $accent-soft;
-  color: $accent;
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  --pill-color: #{$text-3};
+  --pill-soft: rgba(107, 115, 144, 0.18);
+  background: var(--pill-soft);
+  color: var(--pill-color);
 
-  &.warning {
-    background: $warning-soft;
-    color: $warning;
+  &.idle {
+    --pill-color: #{$text-3};
+    --pill-soft: rgba(107, 115, 144, 0.18);
+  }
+  &.ok {
+    --pill-color: #{$accent};
+    --pill-soft: #{$accent-soft};
+  }
+  &.warn,
+  &.loading {
+    --pill-color: #{$warning};
+    --pill-soft: #{$warning-soft};
+  }
+  &.err {
+    --pill-color: #{$danger};
+    --pill-soft: #{$danger-soft};
   }
 }
 
@@ -34,6 +49,11 @@
   height: 8px;
   border-radius: 50%;
   background: currentColor;
+
+  // мерцание только если статус активный (не idle)
+  .nmo-pill-icon:not(.idle) & {
+    animation: nmo-pulse-soft 1.4s ease-in-out infinite;
+  }
 }
 
 .nmo-pill-body {
@@ -49,15 +69,3 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.nmo-pill-meta {
-  font-size: 10.5px;
-  color: $text-3;
-  margin-top: 1px;
-  font-variant-numeric: tabular-nums;
-
-  .sep { color: $text-disabled; }
-  .ok { color: $success; }
-  .warn { color: $warning; }
-}
-
