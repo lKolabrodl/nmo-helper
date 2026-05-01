@@ -70,9 +70,11 @@ const AutoSection: React.FC = () => {
 		answerCache.set(topic ?? '', question, variants, found.answers);
 
 		const label = activeUrl === rosmedUrl ? 'rosmed' : '24forcare';
+
 		if (found.score < LOW_CONFIDENCE_THRESHOLD) {
 			setStatus({title: `${StatusTitle.ANSWER_LOW_CONFIDENCE} • ${label}`, status: Status.WARN});
 		} else setStatus({title: `найдено • ${label}`, status: Status.OK});
+
 	}, [question, variants, topic, html]);
 
 	const isWarning = status.status === Status.WARN;

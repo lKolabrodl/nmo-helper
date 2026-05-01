@@ -14,30 +14,30 @@ const CollapsedPill: React.FC = () => {
 	const isError = status.status === Status.ERR;
 	const isOk = status.status === Status.OK;
 
-	const title =
-		status.title ||
-		(isLoading ? 'AI думает…' : 'NMO Helper');
+	const title = status.title || (isLoading ? 'AI думает…' : 'NMO Helper');
 
 	return (
 		<div className="nmo-pill nmo-fade-up">
 			<div className="nmo-pill-head">
+
 				<div className={`nmo-pill-icon ${status.status}`}>
 					{isLoading && <span className="nmo-spinner" style={{width: 14, height: 14}}/>}
 					{!isLoading && (isWarning || isError) && <IconWarn size={13}/>}
 					{!isLoading && !isWarning && !isError && isOk && <IconCheck size={13}/>}
-					{!isLoading && !isWarning && !isError && !isOk && (
-						<span className="nmo-pill-dot"/>
-					)}
+					{!isLoading && !isWarning && !isError && !isOk && (<span className="nmo-pill-dot"/>)}
 				</div>
+
 				<div className="nmo-pill-body">
 					<div className="nmo-pill-title">{title}</div>
 				</div>
+
 				<button type="button"
 					className="nmo-icon-btn"
 					title="Развернуть"
 					onClick={() => setCollapsed(false)}>
 					<IconExpand size={12}/>
 				</button>
+
 			</div>
 		</div>
 	);

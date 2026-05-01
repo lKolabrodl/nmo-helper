@@ -12,7 +12,7 @@ import {IconPlay} from '../icons';
 import InlineToast, {type IToast} from '../ui/InlineToast';
 import ThinkingStrip from '../ui/ThinkingStrip';
 
-const AiSection: React.FC = () => {
+const AiSection: React.FC = (): React.JSX.Element => {
 	const {mode, setMode} = usePanelUi();
 	const {status, setStatus} = usePanelStatus();
 
@@ -36,13 +36,14 @@ const AiSection: React.FC = () => {
 		storageGet('customAiModel', '').then(v => setCustomModelRaw(v || null));
 	}, []);
 
-	const setApiKey = (v: string) => { setApiKeyRaw(v); storageSet('apiKey', v); };
-	const setModel = (v: string) => { setModelRaw(v); storageSet('aiModel', v); };
-	const setCustomUrl = (v: string) => { setCustomUrlRaw(v); storageSet('customAiUrl', v); };
-	const setCustomToken = (v: string) => { setCustomTokenRaw(v); storageSet('customAiToken', v); };
-	const setCustomModel = (v: string) => { setCustomModelRaw(v); storageSet('customAiModel', v); };
+	const _setApiKey = (v: string) => { setApiKeyRaw(v); storageSet('apiKey', v); };
+	const _setModel = (v: string) => { setModelRaw(v); storageSet('aiModel', v); };
 
-	const validateProxy = async () => {
+	const _setCustomUrl = (v: string) => { setCustomUrlRaw(v); storageSet('customAiUrl', v); };
+	const _setCustomToken = (v: string) => { setCustomTokenRaw(v); storageSet('customAiToken', v); };
+	const _setCustomModel = (v: string) => { setCustomModelRaw(v); storageSet('customAiModel', v); };
+
+	const validateProxy = async (): Promise<void> => {
 		if (!apiKey) throw new Error(StatusTitle.ENTER_KEY);
 		setAiDisabled(true);
 		setStatus({title: StatusTitle.CHECKING_KEY, status: Status.LOADING});
@@ -107,18 +108,18 @@ const AiSection: React.FC = () => {
 					{!isCustom ? (
 						<ProxyFields
 							apiKey={apiKey}
-							setApiKey={setApiKey}
+							setApiKey={_setApiKey}
 							model={model}
-							setModel={setModel}
+							setModel={_setModel}
 							disabled={aiRunning}/>
 					) : (
 						<CustomFields
 							url={customUrl}
-							setUrl={setCustomUrl}
+							setUrl={_setCustomUrl}
 							token={customToken}
-							setToken={setCustomToken}
+							setToken={_setCustomToken}
 							model={customModel}
-							setModel={setCustomModel}
+							setModel={_setCustomModel}
 							disabled={aiRunning}/>
 					)}
 				</div>

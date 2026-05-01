@@ -40,9 +40,8 @@ export async function checkVersion(force = false): Promise<IVersionInfo> {
 	const ttl = force ? TTL_MANUAL_MS : TTL_AUTO_MS;
 	const fresh = cache && Date.now() - cache.checkedAt < ttl;
 
-	if (fresh) {
-		return {current: EXT_VERSION, latest: cache.latest};
-	}
+	if (fresh) return {current: EXT_VERSION, latest: cache.latest};
+
 
 	const res = await fetchViaBackground(VERSION_ENDPOINT, {method: 'GET'});
 

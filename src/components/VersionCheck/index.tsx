@@ -45,11 +45,13 @@ const VersionCheck: React.FC<IProps> = ({onOutdated}) => {
 		}
 	};
 
-	const tooltip =
-		state === 'idle' ? 'Проверить обновления'
-		: state === 'checking' ? 'Проверяю на сервере…'
-		: state === 'uptodate' ? 'У вас последняя версия'
-		: 'Доступно обновление';
+	const tooltip = state === 'idle'
+		? 'Проверить обновления'
+		: state === 'checking'
+			? 'Проверяю на сервере…'
+		 : state === 'uptodate'
+				? 'У вас последняя версия'
+		 : 'Доступно обновление';
 
 	const cls = `nmo-chip nmo-version-chip ${state}`;
 

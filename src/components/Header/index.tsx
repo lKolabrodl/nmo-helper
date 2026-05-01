@@ -8,7 +8,7 @@ import VersionCheck from '../VersionCheck';
 import BugReportButton from '../BugReportButton';
 import type {IVersionInfo} from '../../api/version-check';
 
-const Header: React.FC = () => {
+const Header: React.FC = (): React.JSX.Element => {
 	const {setCollapsed} = usePanelUi();
 	const {topic, question, variants} = useQuestionFinder();
 	const {status} = usePanelStatus();

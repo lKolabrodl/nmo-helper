@@ -24,15 +24,18 @@ const ICONS: Record<ToastKind, React.ReactNode> = {
 const InlineToast: React.FC<IProps> = ({toast, onClose}) => (
 	<div className={`nmo-banner nmo-banner-${toast.kind} nmo-fade-up nmo-toast`}>
 		<div className="nmo-banner-icon">{ICONS[toast.kind]}</div>
+
 		<div className="nmo-banner-body">
 			<div className="nmo-banner-title">{toast.title}</div>
 			{toast.sub && <div className="nmo-banner-sub">{toast.sub}</div>}
 		</div>
+
 		{onClose && (
 			<button type="button" className="nmo-icon-btn nmo-toast-close" onClick={onClose}>
 				<IconClose size={12}/>
 			</button>
 		)}
+
 	</div>
 );
 

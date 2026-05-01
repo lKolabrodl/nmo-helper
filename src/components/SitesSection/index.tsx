@@ -85,9 +85,12 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		answerCache.set(topic ?? '', question, variants, found.answers);
 
 		const label = source === 'rosmedicinfo' ? 'rosmed' : '24forcare';
+
 		if (found.score < LOW_CONFIDENCE_THRESHOLD) {
 			setStatus({title: `${StatusTitle.ANSWER_LOW_CONFIDENCE} • ${label}`, status: Status.WARN});
-		} else setStatus({title: `найдено • ${label}`, status: Status.OK});
+		}
+		else setStatus({title: `найдено • ${label}`, status: Status.OK});
+
 	}, [answerModel.data, question, variants, topic, activeUrl]);
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -106,6 +109,7 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		const br = b.source === 'rosmedicinfo' ? 0 : 1;
 		return ar - br;
 	});
+
 	const canSearch = searchQuery.trim().length > 0 && !variantModel.loading;
 
 	return (
@@ -188,9 +192,7 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 				)}
 			</div>
 
-			{(isOk || isWarning || isError) && status.title && (
-				<InlineToast toast={statusToToast(status.title, status.status)}/>
-			)}
+			{(isOk || isWarning || isError) && status.title && 	<InlineToast toast={statusToToast(status.title, status.status)}/>}
 
 			{(tab === 'url' || isRunning) && (
 				<div className="nmo-footer">

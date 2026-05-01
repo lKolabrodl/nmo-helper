@@ -16,13 +16,7 @@ import {IconBug, IconCheck, IconClose, IconWarn} from '../icons';
 
 const EXT_VERSION = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest?.()?.version) || '';
 
-function getBrowserInfo(): string {
-	const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-	const m = ua.match(/(Firefox|Edg|OPR|Chrome|Safari)\/(\d+(?:\.\d+)?)/);
-	if (!m) return 'неизвестно';
-	const name = m[1] === 'Edg' ? 'Edge' : m[1] === 'OPR' ? 'Opera' : m[1];
-	return `${name} ${m[2]}`;
-}
+
 
 interface IProps {
 	readonly activeUrl?: string;
@@ -41,6 +35,7 @@ const BugReportButton: React.FC<IProps> = ({activeUrl = '', isOpen: openProp, on
 	const controlled = openProp !== undefined;
 	const [openLocal, setOpenLocal] = useState(false);
 	const isOpen = controlled ? !!openProp : openLocal;
+
 	const closeForm = () => (controlled ? onClose?.() : setOpenLocal(false));
 
 	const [sending, setSending] = useState(false);
@@ -196,4 +191,12 @@ function resultStatus(res: BugReportResult): BugReportStatus {
 	if (res.error === 'payload_too_large') return 'PAYLOAD_LARGE';
 	if (res.error === 'network')           return 'NETWORK';
 	return 'SERVER';
+}
+
+function getBrowserInfo(): string {
+	const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+	const m = ua.match(/(Firefox|Edg|OPR|Chrome|Safari)\/(\d+(?:\.\d+)?)/);
+	if (!m) return 'неизвестно';
+	const name = m[1] === 'Edg' ? 'Edge' : m[1] === 'OPR' ? 'Opera' : m[1];
+	return `${name} ${m[2]}`;
 }
