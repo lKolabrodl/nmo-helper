@@ -7,6 +7,7 @@ import {
 	extractRosmedH3BrPlus,
 	extractRosmedNumberedPInlineBr,
 	extractRosmedNumberedPPerParagraph,
+	extractRosmedFlatBr,
 	type QaCaseRaw,
 } from './extractors';
 
@@ -45,6 +46,7 @@ export function extractCases(source: ISourceKey, div: HTMLElement): QaCaseModel[
 			...extractRosmedH3BrPlus(div),
 			...extractRosmedNumberedPInlineBr(div),
 			...extractRosmedNumberedPPerParagraph(div),
+			...extractRosmedFlatBr(div),
 		];
 	}
 

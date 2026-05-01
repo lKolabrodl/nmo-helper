@@ -207,6 +207,17 @@ describe('pickResult — фильтр по source и пограничные', ()
 		expect(res?.source).toBe('rosmedicinfo');
 		expect(res?.title).toBe('Лечение гипертонии у взрослых');
 	});
+
+	it('сложный тест с одинаковыми названиями', () => {
+		const topic = 'Сперматоцеле (по утвержденным клиническим рекомендациям) - 2025';
+		const results = [
+			mk('rosmedicinfo', 'Гидроцеле, сперматоцеле (по утвержденным клиническим рекомендациям) - 2025'),
+			mk('rosmedicinfo', 'Сперматоцеле (по утвержденным клиническим рекомендациям) - 2025'),
+		];
+		const res = pickResult(results, 'rosmedicinfo', topic);
+		expect(res?.title).toBe('Сперматоцеле (по утвержденным клиническим рекомендациям) - 2025');
+	});
+
 });
 
 describe('pickResult — fallback на последний', () => {

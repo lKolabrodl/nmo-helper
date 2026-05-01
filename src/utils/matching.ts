@@ -168,9 +168,17 @@ export function pickResult<T extends IPickResultItem>(results: readonly T[], sou
 	if (topic) {
 		let bestIdx = -1;
 		let bestScore = 0;
+		let bestDiff = Infinity;
+		const nt = normForMatch(topic);
 		filtered.forEach((r, i) => {
-			const s = variantScore(r.title.replace(TITLE_PREFIX_RE, ''), topic);
-			if (s > bestScore) { bestScore = s; bestIdx = i; }
+			const stripped = r.title.replace(TITLE_PREFIX_RE, '');
+			const s = variantScore(stripped, topic);
+			const diff = Math.abs(normForMatch(stripped).length - nt.length);
+			if (s > bestScore || (s === bestScore && diff < bestDiff)) {
+				bestScore = s;
+				bestIdx = i;
+				bestDiff = diff;
+			}
 		});
 		if (bestIdx >= 0 && bestScore >= MIN_TITLE_SCORE) return filtered[bestIdx];
 	}

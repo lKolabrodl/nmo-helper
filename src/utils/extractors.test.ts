@@ -6,6 +6,7 @@ import {
 	extractRosmedH3BrPlus,
 	extractRosmedNumberedPInlineBr,
 	extractRosmedNumberedPPerParagraph,
+	extractRosmedFlatBr,
 } from './extractors';
 
 /**
@@ -440,6 +441,166 @@ describe('extractRosmedNumberedPPerParagraph', () => {
 
 	it('пустой div → []', () => {
 		expect(extractRosmedNumberedPPerParagraph(createDiv(''))).toEqual([]);
+	});
+});
+
+describe('extractRosmedFlatBr', () => {
+	it('находит вопрос + варианты в плоской <br>-раскладке', () => {
+		const div = createDiv(`
+			<b>1. Вопрос?</b><br>
+			1) первый<br>
+			<b>2) второй;+</b><br>
+			3) третий
+		`);
+		const out = extractRosmedFlatBr(div);
+		expect(out).toHaveLength(1);
+		expect(out[0].question).toBe('Вопрос?');
+		expect(out[0].variants).toEqual(['первый', 'второй', 'третий']);
+		expect(out[0].answers).toEqual(['второй']);
+	});
+
+	it('детектит правильный по <b>, по «+», и по <strong>', () => {
+		const div = createDiv(`
+			<b>1. Q</b><br>
+			1) a;+<br>
+			<b>2) b</b><br>
+			<strong>3) c</strong><br>
+			4) d
+		`);
+		const [c] = extractRosmedFlatBr(div);
+		expect(c.answers).toEqual(['a', 'b', 'c']);
+	});
+
+	it('несколько вопросов в одном контейнере, разделены <br>', () => {
+		const div = createDiv(`
+			<b>1. Первый?</b><br>
+			1) a<br>
+			<b>2) b;+</b><br>
+			<br>
+			<b>2. Второй?</b><br>
+			1) x;+<br>
+			2) y
+		`);
+		const out = extractRosmedFlatBr(div);
+		expect(out).toHaveLength(2);
+		expect(out[0].question).toBe('Первый?');
+		expect(out[0].answers).toEqual(['b']);
+		expect(out[1].question).toBe('Второй?');
+		expect(out[1].answers).toEqual(['x']);
+	});
+
+	it('склеивает кейс, разорванный между <p> через «</p>» → <br>', () => {
+		// Реальная раскладка с rosmedicinfo: последний вопрос на странице
+		// часто разносится по нескольким <p> (артефакт CMS).
+		const div = createDiv(`
+			<p><b>1. Вопрос?</b></p>
+			<p>1) первый;<br><b>2) второй;+</b><br><b>3) третий;+</b></p>
+			<p><b>4) четвёртый;+</b></p>
+		`);
+		const [c] = extractRosmedFlatBr(div);
+		expect(c.question).toBe('Вопрос?');
+		expect(c.variants).toEqual(['первый', 'второй', 'третий', 'четвёртый']);
+		expect(c.answers).toEqual(['второй', 'третий', 'четвёртый']);
+	});
+
+	it('реальная раскладка rosmedicinfo: один <p> с вложенными <span>', () => {
+		// Один <p class="MsoNormal"> со вложенными <span> для шрифта/размера,
+		// все вопросы и варианты разделены <br>. Сжатая версия настоящей
+		// страницы «Переломы диафиза костей предплечья».
+		const div = createDiv(`
+			<p class="MsoNormal" style="margin-bottom:0cm;">
+				<b><span style="font-family:Arial;font-size:14px;">1. Большие операции</span></b>
+				<span style="font-size:14px;"><span style="font-family:Arial;"><br>
+				1) менее 1%;<br>
+				2) менее 10%;<br>
+				<b>3) 1-5%;+</b><br>
+				4) 5-10%.<br>
+				<br>
+				<b>2. В результате</b><br>
+				<b>1) к достижению;+</b><br>
+				2) к костному;<br>
+				<b>3) к прямому;+</b><br>
+				4) к относительной.<br>
+				</span></span>
+			</p>
+		`);
+		const out = extractRosmedFlatBr(div);
+		expect(out).toHaveLength(2);
+		expect(out[0].question).toBe('Большие операции');
+		expect(out[0].variants).toEqual(['менее 1%', 'менее 10%', '1-5%', '5-10%']);
+		expect(out[0].answers).toEqual(['1-5%']);
+		expect(out[1].question).toBe('В результате');
+		expect(out[1].answers).toEqual(['к достижению', 'к прямому']);
+	});
+
+	it('игнорирует не-нумерованные строки между вариантами', () => {
+		const div = createDiv(`
+			<b>1. Q</b><br>
+			какой-то комментарий без нумерации<br>
+			1) a<br>
+			ещё текст<br>
+			<b>2) b;+</b>
+		`);
+		const [c] = extractRosmedFlatBr(div);
+		expect(c.variants).toEqual(['a', 'b']);
+		expect(c.answers).toEqual(['b']);
+	});
+
+	it('возвращает [] если у вопроса нет правильных вариантов', () => {
+		const div = createDiv(`
+			<b>1. Q</b><br>
+			1) a<br>
+			2) b<br>
+			3) c
+		`);
+		expect(extractRosmedFlatBr(div)).toEqual([]);
+	});
+
+	it('игнорирует <b> без префикса «N. »', () => {
+		const div = createDiv(`
+			<b>Заголовок без номера</b><br>
+			1) a;+<br>
+			2) b
+		`);
+		expect(extractRosmedFlatBr(div)).toEqual([]);
+	});
+
+	it('игнорирует «N.» без обёртки <b>/<strong>', () => {
+		// Простой текст «1. ...» без <b> — это не вопрос, а часть варианта.
+		const div = createDiv(`
+			1. Какой-то текст<br>
+			1) a;+<br>
+			2) b
+		`);
+		expect(extractRosmedFlatBr(div)).toEqual([]);
+	});
+
+	it('пустой div → []', () => {
+		expect(extractRosmedFlatBr(createDiv(''))).toEqual([]);
+	});
+
+	it('много правильных вариантов в одном вопросе', () => {
+		const div = createDiv(`
+			<b>1. Делятся на</b><br>
+			<b>1) клиновидные;+</b><br>
+			<b>2) простые;+</b><br>
+			<b>3) многооскольчатые;+</b><br>
+			4) иррегулярные.
+		`);
+		const [c] = extractRosmedFlatBr(div);
+		expect(c.answers).toEqual(['клиновидные', 'простые', 'многооскольчатые']);
+	});
+
+	it('многострочный текст варианта внутри <b> схлопывает пробелы через cleanAnswer', () => {
+		const div = createDiv(`
+			<b>1. Q</b><br>
+			<b>1) длинный ответ
+			с переносом
+			строки;+</b><br>
+			2) короткий
+		`);
+		const [c] = extractRosmedFlatBr(div);
+		expect(c.answers).toEqual(['длинный ответ с переносом строки']);
 	});
 });
 

@@ -326,6 +326,73 @@ export function extractRosmedNumberedPPerParagraph(div: HTMLElement): QaCaseRaw[
 	return out;
 }
 
+/**
+ * rosmedicinfo — Case E: «плоская» раскладка. Все вопросы и варианты лежат
+ * в одном контейнере (обычно `<p class="MsoNormal">` с вложенными `<span>`),
+ * разделены `<br>`. Граница cases — следующая нумерованная `<b>N. ...</b>`.
+ *
+ * Пример:
+ * ```html
+ * <p>
+ *   <b>1. Вопрос?</b><br>
+ *   1) неверный<br>
+ *   <b>2) правильный;+</b><br>
+ *   3) ещё один<br>
+ *   <br>
+ *   <b>2. Следующий?</b><br>
+ *   1) ...
+ * </p>
+ * ```
+ *
+ * Препроцессинг `</p>` → `<br>` склеивает абзацы в один поток lines —
+ * нужен для случаев, когда последний вопрос на странице разорван между
+ * несколькими `<p>` (типичный артефакт CMS rosmedicinfo).
+ *
+ * Сигнал правильного ответа — `<b>`/`<strong>` вокруг строки ИЛИ хвостовой
+ * `+` в тексте; первого достаточно (на реальных страницах часто оба).
+ *
+ * Эта раскладка пересекается с Case C/D и часто даёт дублирующиеся cases —
+ * это ок, `findAnswers` ранжирует по overlap и берёт лучший.
+ *
+ * @param div Распарсенный HTML источника.
+ * @returns Массив case'ов.
+ */
+export function extractRosmedFlatBr(div: HTMLElement): QaCaseRaw[] {
+	const out: QaCaseRaw[] = [];
+
+	const html = div.innerHTML.replace(/<\/p\s*>/gi, '<br>');
+	const lines = splitBrLines(html);
+
+	const isQuestion = (l: RawLine) =>
+		/^\d+\.\s/.test(l.text) && /<(?:b|strong)[\s>]/i.test(l.html);
+	const isVariant = (l: RawLine) => /^\d+\)/.test(l.text);
+
+	let i = 0;
+	while (i < lines.length) {
+		if (!isQuestion(lines[i])) { i++; continue; }
+
+		const question = lines[i].text.replace(/^\d+\.\s*/, '').trim();
+		const candidates: ICandidate[] = [];
+
+		let j = i + 1;
+		while (j < lines.length) {
+			const next = lines[j];
+			if (isQuestion(next)) break;
+			if (isVariant(next)) {
+				const correct = /<(?:b|strong)[\s>]/i.test(next.html) || next.text.includes('+');
+				candidates.push({ text: next.text, correct });
+			}
+			j++;
+		}
+
+		const result = finalize(question, candidates);
+		if (result) out.push(result);
+		i = j;
+	}
+
+	return out;
+}
+
 
 //──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 //─────────────────────────────────────────────────── Общие хелперы ────────────────────────────────────────────────
