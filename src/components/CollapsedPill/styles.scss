@@ -1,0 +1,63 @@
+@use '../../vars' as *;
+
+.nmo-pill {
+  font-family: $font-ui;
+  font-size: $fs-base;
+  cursor: move;
+}
+
+.nmo-pill-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.nmo-pill-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: $r-sm + 2px;
+  background: $accent-soft;
+  color: $accent;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  &.warning {
+    background: $warning-soft;
+    color: $warning;
+  }
+}
+
+.nmo-pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.nmo-pill-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nmo-pill-title {
+  font-size: $fs-md;
+  font-weight: 600;
+  color: $text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nmo-pill-meta {
+  font-size: 10.5px;
+  color: $text-3;
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+
+  .sep { color: $text-disabled; }
+  .ok { color: $success; }
+  .warn { color: $warning; }
+}
+

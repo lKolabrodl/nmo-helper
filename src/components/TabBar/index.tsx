@@ -1,31 +1,33 @@
+import React from 'react';
 import './styles.scss';
-import { usePanelUi } from '../../contexts/PanelUiContext';
-import type { UiMode } from '../../contexts/PanelUiContext';
+import {usePanelUi} from '../../contexts/PanelUiContext';
+import type {UiMode} from '../../contexts/PanelUiContext';
+import {IconBolt, IconBrain, IconGlobe} from '../icons';
 
-const TABS: { mode: UiMode; label: string }[] = [
-	{ mode: 'auto', label: 'Авто' },
-	{ mode: 'sites', label: 'Сайты' },
-	{ mode: 'ai', label: 'AI' },
+const TABS: {mode: UiMode; label: string; Icon: React.FC<{size?: number}>}[] = [
+	{mode: 'auto',  label: 'Авто',  Icon: IconBolt},
+	{mode: 'sites', label: 'Сайты', Icon: IconGlobe},
+	{mode: 'ai',    label: 'AI',    Icon: IconBrain},
 ];
 
-const TabBar = () => {
-	const { mode, setMode } = usePanelUi();
+const TabBar: React.FC = () => {
+	const {mode, setMode} = usePanelUi();
 
-	// AI-Pro считается подрежимом AI — таб AI активен для обоих
-	const handleClick = (next: UiMode) => setMode(next);
-
-	const activeTab = (mode === 'ai' || mode === 'ai-pro') ? 'ai' : mode;
+	const activeTab: UiMode = (mode === 'ai' || mode === 'ai-pro') ? 'ai' : mode;
 
 	return (
-		<div className="nmo-tabs">
-			{TABS.map(tab => (
-				<button
-					key={tab.mode}
-					className={`nmo-tab ${activeTab === tab.mode ? 'active' : ''}`}
-					onClick={() => handleClick(tab.mode)}>
-					{tab.label}
-				</button>
-			))}
+		<div className="nmo-tabs-wrap">
+			<div className="nmo-seg">
+				{TABS.map(({mode: m, label, Icon}) => (
+					<button key={m}
+						type="button"
+						className={activeTab === m ? 'active' : ''}
+						onClick={() => setMode(m)}>
+						<Icon size={12}/>
+						<span>{label}</span>
+					</button>
+				))}
+			</div>
 		</div>
 	);
 };

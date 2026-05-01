@@ -1,0 +1,41 @@
+@use '../../vars' as *;
+
+.nmo-auto-hero {
+  padding: 12px;
+  background: $bg-input;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.nmo-auto-hero-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: $r-sm + 2px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: $accent-soft;
+  color: $accent;
+}
+
+.nmo-auto-hero-body { flex: 1; }
+
+.nmo-auto-hero-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text;
+}
+
+.nmo-auto-hero-sub {
+  font-size: $fs-sm;
+  color: $text-3;
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+.nmo-section-trailing {
+  padding-top: 10px;
+}

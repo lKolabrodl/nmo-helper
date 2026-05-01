@@ -1,0 +1,57 @@
+@use '../../vars' as *;
+
+.nmo-version-wrap {
+  position: relative;
+}
+
+.nmo-version-chip {
+  // унаследовано от .nmo-chip
+  &:disabled { cursor: default; }
+
+  &.uptodate {
+    background: $success-soft;
+    border-color: rgba(74, 222, 155, 0.32);
+    color: $success;
+  }
+
+  &.outdated {
+    background: $warning-soft;
+    border-color: rgba(245, 193, 75, 0.35);
+    color: $warning;
+  }
+}
+
+.nmo-version-icon {
+  width: 12px;
+  height: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+
+  svg { transition: transform .25s; }
+  svg.rot { transform: rotate(60deg); }
+}
+
+.nmo-version-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $warning;
+  box-shadow: 0 0 0 3px rgba(245, 193, 75, 0.18);
+}
+
+.nmo-version-tip {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  padding: 5px 8px;
+  background: $bg-frame-2;
+  border: 1px solid $border-strong;
+  border-radius: $r-sm;
+  font-size: 10.5px;
+  color: $text-2;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px -6px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 30;
+}

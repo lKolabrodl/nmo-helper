@@ -9,8 +9,8 @@ export interface IExtensionState {
   readonly savedUrl: string;
   /** Панель свёрнута */
   readonly savedCollapsed: boolean;
-  /** Позиция панели X (px) */
-  readonly savedLeft: number | null;
+  /** Позиция панели: отступ правого края от правого края viewport (px). Якорим по правому краю, чтобы при сворачивании двигался левый край. */
+  readonly savedRight: number | null;
   /** Позиция панели Y (px) */
   readonly savedTop: number | null;
   /** Активный режим */

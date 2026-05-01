@@ -17,7 +17,7 @@ function initExportListener() {
 	const state: IExtensionState = {
 		savedUrl: await storageGet('customUrl', ''),
 		savedCollapsed: await storageGet('panelCollapsed', true),
-		savedLeft: await storageGet('panelLeft', null),
+		savedRight: await storageGet('panelRight', null),
 		savedTop: await storageGet('panelTop', null),
 		savedMode: await storageGet('mode', 'auto'),
 		savedApiKey: await storageGet('apiKey', ''),

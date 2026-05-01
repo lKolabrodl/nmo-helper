@@ -1,51 +1,114 @@
-// ─── Цвета ───────────────────────────────────────
-$bg-panel:      #141420;
-$bg-card:       #1c1c2e;
-$bg-input:      #12121f;
-$bg-header:     #181830;
+// ─── Surfaces ────────────────────────────────────
+$bg-canvas:        #0c1018;
+$bg-frame:         #131826;     // основной фон панели
+$bg-frame-2:       #181d2c;     // raised
+$bg-input:         #0e1320;
+$bg-input-hover:   #131826;
+$bg-chip:          #1d2335;
+$bg-chip-hover:    #252b41;
 
-$accent:        #4ecca3;
-$accent-hover:  #3db890;
-$error:         #e94560;
-$warn:          #f0a040;
-$loading:       #f0c040;
+// ─── Borders ─────────────────────────────────────
+$border:           #232a3f;
+$border-soft:      #1b2132;
+$border-strong:    #2d3552;
 
-$text:          #e8eaf0;
-$text-muted:    #8892a4;
-$text-dim:      #555e6e;
+// ─── Text ────────────────────────────────────────
+$text:             #e7eaf3;
+$text-2:           #a4abc1;
+$text-3:           #6b7390;
+$text-disabled:    #4a5070;
 
-$border:        rgba(255, 255, 255, 0.08);
-$border-hover:  rgba(255, 255, 255, 0.16);
-$border-focus:  $accent;
+// ─── Accent (warm mint) ──────────────────────────
+$accent:           #4ade9b;
+$accent-2:         #2cc485;
+$accent-soft:      rgba(74, 222, 155, 0.14);
+$accent-ring:      rgba(74, 222, 155, 0.28);
+$accent-text:      #06231a;     // текст поверх accent-fill (контрастно)
 
-// ─── Размеры ─────────────────────────────────────
-$panel-width:   280px;
-$radius:        10px;
-$radius-sm:     6px;
-$gap:           8px;
-$padding:       12px;
+// ─── Semantic states ─────────────────────────────
+$success:          #4ade9b;
+$success-soft:     rgba(74, 222, 155, 0.12);
+$success-border:   rgba(74, 222, 155, 0.28);
+$success-text:     #b3f1d2;
 
-// ─── Шрифты ──────────────────────────────────────
-$font-ui:       'Inter', -apple-system, 'Segoe UI', sans-serif;
-$font-mono:     'JetBrains Mono', monospace;
-$font-size:     12px;
-$font-size-sm:  10px;
-$font-size-xs:  9px;
+$warning:          #f5c14b;
+$warning-soft:     rgba(245, 193, 75, 0.12);
+$warning-border:   rgba(245, 193, 75, 0.28);
+$warning-text:     #f5dba0;
 
-// ─── Тени ────────────────────────────────────────
-$shadow-panel:  0 8px 32px rgba(0, 0, 0, 0.5);
-$shadow-btn:    0 4px 12px rgba(78, 204, 163, 0.3);
+$danger:           #ff7a7a;
+$danger-soft:      rgba(255, 122, 122, 0.12);
+$danger-border:    rgba(255, 122, 122, 0.28);
+$danger-text:      #ffc4c4;
 
-// ─── Tier цвета (модели AI) ──────────────────────
-$tier-low-bg:      #2d6a4f;
-$tier-low-text:    #95d5b2;
-$tier-medium-bg:   #5a4a1e;
-$tier-medium-text: #f0c040;
-$tier-high-bg:     #5a2d1e;
-$tier-high-text:   #f08040;
-$tier-ultra-bg:    #4a1e5a;
-$tier-ultra-text:  #d090f0;
+$info:             #7aa9ff;
+$info-soft:        rgba(122, 169, 255, 0.12);
+$info-border:      rgba(122, 169, 255, 0.28);
+$info-text:        #c4d6ff;
 
-// ─── Source бейджи ───────────────────────────────
-$src-24fc:    #2d6a9f;
-$src-rosmed:  #9f2d6a;
+// ─── Tier badges (AI models) ─────────────────────
+$tier-low-bg:      $success-soft;
+$tier-low-text:    #86e8b6;
+$tier-low-border:  rgba(74, 222, 155, 0.30);
+
+$tier-medium-bg:   $warning-soft;
+$tier-medium-text: $warning-text;
+$tier-medium-border: rgba(245, 193, 75, 0.32);
+
+$tier-high-bg:     rgba(255, 165, 122, 0.12);
+$tier-high-text:   #ffc89d;
+$tier-high-border: rgba(255, 165, 122, 0.32);
+
+$tier-ultra-bg:    rgba(208, 144, 240, 0.12);
+$tier-ultra-text:  #d8a8ec;
+$tier-ultra-border: rgba(208, 144, 240, 0.32);
+
+// ─── Source badges ───────────────────────────────
+$src-rosmed:       $accent;
+$src-rosmed-text:  $accent-text;
+$src-24fc:         $text-2;
+$src-24fc-text:    $bg-frame;
+
+// ─── Sizes ───────────────────────────────────────
+$panel-width:      360px;
+$pill-width:       280px;
+
+$r-sm:             6px;
+$r-md:             10px;
+$r-lg:             14px;
+$r-xl:             18px;
+
+$gap-2:            2px;
+$gap-4:            4px;
+$gap-6:            6px;
+$gap-8:            8px;
+$gap-10:           10px;
+$gap-12:           12px;
+$gap-14:           14px;
+
+// legacy (не удаляем сразу — некоторые старые файлы могут ссылаться)
+$gap:              $gap-8;
+$padding:          14px;
+$radius:           $r-xl;
+$radius-sm:        $r-sm;
+
+// ─── Fonts ───────────────────────────────────────
+$font-ui:          'Inter Tight', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$font-mono:        'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+$fs-xs:            10px;
+$fs-sm:            11px;
+$fs-md:            12px;
+$fs-base:          13px;
+$fs-lg:            14px;
+
+// legacy
+$font-size:        $fs-base;
+$font-size-sm:     $fs-sm;
+$font-size-xs:     $fs-xs;
+
+// ─── Shadow ──────────────────────────────────────
+$shadow-pop:       0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 20px 40px -20px rgba(0, 0, 0, 0.6);
+$shadow-pill:      0 8px 24px -8px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+$shadow-cta:       0 6px 18px -8px rgba(74, 222, 155, 0.5);
+$shadow-dropdown:  0 18px 40px -10px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;

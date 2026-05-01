@@ -1,17 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import './styles.scss';
-import { usePanelUi } from '../../contexts/PanelUiContext';
-import { usePanelStatus } from '../../contexts/PanelStatusContext';
-import { validateApiKey } from '../../api/fetch';
-import { storageSet, storageGet } from '../../utils';
-import { Status } from '../../types';
-import { StatusTitle } from '../../utils/constants';
+import {usePanelUi} from '../../contexts/PanelUiContext';
+import {usePanelStatus} from '../../contexts/PanelStatusContext';
+import {validateApiKey} from '../../api/fetch';
+import {storageSet, storageGet} from '../../utils';
+import {Status} from '../../types';
+import {StatusTitle} from '../../utils/constants';
 import ModelDropdown from '../ModelDropdown';
 import AIProxyLoader from '../Loader/AIProxyLoader';
+import {IconPlay} from '../icons';
+import InlineToast, {type IToast} from '../ui/InlineToast';
+import RunningStrip, {type IProgress} from '../ui/RunningStrip';
+import ThinkingStrip from '../ui/ThinkingStrip';
+
+const ZERO_PROGRESS: IProgress = {current: 0, total: 0, found: 0, missed: 0};
 
 const AiSection: React.FC = () => {
-	const { mode, setMode } = usePanelUi();
-	const { status, setStatus } = usePanelStatus();
+	const {mode, setMode} = usePanelUi();
+	const {status, setStatus} = usePanelStatus();
 
 	const isCustom = mode === 'ai-pro';
 
@@ -25,7 +31,9 @@ const AiSection: React.FC = () => {
 	const [aiRunning, setAiRunning] = useState(false);
 	const [aiDisabled, setAiDisabled] = useState(false);
 
-	// Читаем актуальные значения из storage при монтировании
+	// прогресс — заглушка, наполняется логикой позже
+	const [progress] = useState<IProgress>(ZERO_PROGRESS);
+
 	useEffect(() => {
 		storageGet('apiKey', '').then(v => setApiKeyRaw(v || null));
 		storageGet('aiModel', 'gpt-4o-mini').then(setModelRaw);
@@ -42,9 +50,8 @@ const AiSection: React.FC = () => {
 
 	const validateProxy = async () => {
 		if (!apiKey) throw new Error(StatusTitle.ENTER_KEY);
-
 		setAiDisabled(true);
-		setStatus({ title: StatusTitle.CHECKING_KEY, status: Status.LOADING });
+		setStatus({title: StatusTitle.CHECKING_KEY, status: Status.LOADING});
 		await validateApiKey(apiKey, model);
 	};
 
@@ -52,9 +59,8 @@ const AiSection: React.FC = () => {
 		if (!customUrl?.trim()) throw new Error('введите API endpoint');
 		if (!customToken) throw new Error('введите API токен');
 		if (!customModel?.trim()) throw new Error('введите название модели');
-
 		setAiDisabled(true);
-		setStatus({ title: StatusTitle.CHECKING_KEY, status: Status.LOADING });
+		setStatus({title: StatusTitle.CHECKING_KEY, status: Status.LOADING});
 		await validateApiKey(customToken, customModel.trim(), customUrl.trim());
 	};
 
@@ -62,22 +68,25 @@ const AiSection: React.FC = () => {
 		try {
 			if (isCustom) await validateCustom();
 			else await validateProxy();
-		}
-		catch (err) {
-			setStatus({ title: (err as Error).message, status: Status.ERR });
+		} catch (err) {
+			setStatus({title: (err as Error).message, status: Status.ERR});
 			setAiDisabled(false);
 			return;
 		}
 
 		setAiDisabled(false);
 		setAiRunning(true);
-		setStatus({ title: StatusTitle.RUNNING, status: Status.OK });
+		setStatus({title: StatusTitle.RUNNING, status: Status.OK});
 	};
 
 	const _stop = () => {
 		setAiRunning(false);
-		setStatus({ title: StatusTitle.STOPPED, status: Status.IDLE });
+		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
 	};
+
+	const isLoading = status.status === Status.LOADING;
+	const isError = status.status === Status.ERR;
+	const isOk = status.status === Status.OK;
 
 	return (
 		<div className="nmo-section">
@@ -86,35 +95,65 @@ const AiSection: React.FC = () => {
 				apiKey={isCustom ? (customToken ?? '') : (apiKey ?? '')}
 				model={isCustom ? (customModel ?? '').trim() : model}
 				aiUrl={isCustom ? (customUrl ?? '').trim() : undefined}
-				onChange={({ running, disabled }) => { if (!running) setAiRunning(false); setAiDisabled(disabled); }}
+				onChange={({running, disabled}) => { if (!running) setAiRunning(false); setAiDisabled(disabled); }}
 			/>
 
-			<label className="nmo-switch">
-				<input type="checkbox" checked={isCustom} onChange={() => setMode(isCustom ? 'ai' : 'ai-pro')} />
-				<span>Свой endpoint</span>
-			</label>
+			<div className="nmo-section-inner">
+				<label className={`nmo-switch ${isCustom ? 'on' : ''} ${aiRunning ? 'disabled' : ''}`}>
+					<button type="button"
+						className="nmo-switch-track"
+						disabled={aiRunning}
+						onClick={() => setMode(isCustom ? 'ai' : 'ai-pro')}>
+						<span className="nmo-switch-thumb"/>
+					</button>
+					<span className="nmo-switch-label">Свой endpoint</span>
+				</label>
 
-
-			{!isCustom && <ProxyFields apiKey={apiKey} setApiKey={setApiKey} model={model} setModel={setModel}/>}
-
-			{isCustom &&
-				<CustomFields
-					url={customUrl}
-					setUrl={setCustomUrl}
-					token={customToken} setToken={setCustomToken}
-					model={customModel} setModel={setCustomModel}
-				/>
-			}
-
-			<div className="nmo-btn-row">
-				{!aiRunning &&
-					<button className="nmo-btn nmo-btn-primary" onClick={_run} disabled={aiDisabled}>Запуск AI</button>
-
-				}
-				{aiRunning && <button className="nmo-btn nmo-btn-stop" onClick={_stop}>Стоп</button>}
+				<div className="nmo-ai-fields nmo-fade-up">
+					{!isCustom ? (
+						<ProxyFields
+							apiKey={apiKey}
+							setApiKey={setApiKey}
+							model={model}
+							setModel={setModel}
+							disabled={aiRunning}/>
+					) : (
+						<CustomFields
+							url={customUrl}
+							setUrl={setCustomUrl}
+							token={customToken}
+							setToken={setCustomToken}
+							model={customModel}
+							setModel={setCustomModel}
+							disabled={aiRunning}/>
+					)}
+				</div>
 			</div>
 
-			<div className={`nmo-status ${status.status}`}>{status.title}</div>
+			{isLoading && <ThinkingStrip title={status.title} steps={['Проверяю ключ…', 'Готовлю запрос…']}/>}
+
+			{aiRunning && <RunningStrip progress={progress}/>}
+
+			{!aiRunning && !isLoading && (isOk || isError) && status.title && (
+				<InlineToast toast={statusToToast(status.title, status.status)}/>
+			)}
+
+			<div className="nmo-footer">
+				{!aiRunning ? (
+					<button type="button"
+						className="nmo-btn nmo-btn-primary nmo-btn-cta"
+						disabled={aiDisabled}
+						onClick={_run}>
+						<IconPlay size={14}/>Запустить AI
+					</button>
+				) : (
+					<button type="button"
+						className="nmo-btn nmo-btn-stop nmo-btn-cta"
+						onClick={_stop}>
+						Остановить
+					</button>
+				)}
+			</div>
 		</div>
 	);
 };
@@ -127,32 +166,32 @@ interface IProxyFieldsProps {
 	readonly setApiKey: (v: string) => void;
 	readonly model: string;
 	readonly setModel: (v: string) => void;
+	readonly disabled?: boolean;
 }
 
-/** Поля ProxyAPI-режима */
-const ProxyFields: React.FC<IProxyFieldsProps> = ({apiKey, setApiKey, model, setModel}) => (
+const ProxyFields: React.FC<IProxyFieldsProps> = ({apiKey, setApiKey, model, setModel, disabled}) => (
 	<>
-		<div className="nmo-field">
-			<label>API-ключ ProxyAPI</label>
-			<input
-				type="password"
-				placeholder="вставьте ключ..."
+		<div className="nmo-ai-field">
+			<label className="nmo-label">API-ключ ProxyAPI</label>
+			<input type="password"
+				className="nmo-input"
+				placeholder="вставьте ключ…"
+				disabled={disabled}
 				value={apiKey ?? ''}
-				onChange={(e) => setApiKey(e.target.value.trim())}
-			/>
+				onChange={e => setApiKey(e.target.value.trim())}/>
 			{!apiKey && (
-				<a className="nmo-key-hint" href="https://console.proxyapi.ru/keys" target="_blank" rel="noreferrer">
-					Получить ключ API
-				</a>
+				<a className="nmo-hint"
+					href="https://console.proxyapi.ru/keys"
+					target="_blank"
+					rel="noreferrer">Получить ключ API →</a>
 			)}
 		</div>
-		<div className="nmo-field">
-			<label>Модель</label>
-			<ModelDropdown model={model} setModel={setModel}/>
+		<div className="nmo-ai-field">
+			<label className="nmo-label">Модель</label>
+			<ModelDropdown model={model} setModel={setModel} disabled={disabled}/>
 		</div>
 	</>
 );
-
 
 
 interface ICustomFieldsProps {
@@ -162,37 +201,43 @@ interface ICustomFieldsProps {
 	readonly setToken: (v: string) => void;
 	readonly model: string | null;
 	readonly setModel: (v: string) => void;
+	readonly disabled?: boolean;
 }
 
-/** Поля Custom endpoint режима */
-const CustomFields: React.FC<ICustomFieldsProps> = ({url, setUrl, token, setToken, model, setModel}) => (
+const CustomFields: React.FC<ICustomFieldsProps> = ({url, setUrl, token, setToken, model, setModel, disabled}) => (
 	<>
-		<div className="nmo-field">
-			<label>API Endpoint</label>
-			<input
-				type="text"
+		<div className="nmo-ai-field">
+			<label className="nmo-label">API Endpoint</label>
+			<input type="text"
+				className="nmo-input mono"
 				placeholder="https://api.example.com/v1/chat/completions"
+				disabled={disabled}
 				value={url ?? ''}
-				onChange={(e) => setUrl(e.target.value.trim())}
-			/>
+				onChange={e => setUrl(e.target.value.trim())}/>
 		</div>
-		<div className="nmo-field">
-			<label>API Token</label>
-			<input
-				type="password"
-				placeholder="токен..."
+		<div className="nmo-ai-field">
+			<label className="nmo-label">API Token</label>
+			<input type="password"
+				className="nmo-input"
+				placeholder="токен…"
+				disabled={disabled}
 				value={token ?? ''}
-				onChange={(e) => setToken(e.target.value.trim())}
-			/>
+				onChange={e => setToken(e.target.value.trim())}/>
 		</div>
-		<div className="nmo-field">
-			<label>Модель</label>
-			<input
-				type="text"
-				placeholder="gpt-4o, llama3, mistral..."
+		<div className="nmo-ai-field">
+			<label className="nmo-label">Модель</label>
+			<input type="text"
+				className="nmo-input mono"
+				placeholder="gpt-4o, llama3, mistral…"
+				disabled={disabled}
 				value={model ?? ''}
-				onChange={(e) => setModel(e.target.value)}
-			/>
+				onChange={e => setModel(e.target.value)}/>
 		</div>
 	</>
 );
+
+function statusToToast(title: string, status: typeof Status[keyof typeof Status]): IToast {
+	if (status === Status.OK)   return {kind: 'success', title};
+	if (status === Status.ERR)  return {kind: 'danger',  title};
+	return {kind: 'warning', title};
+}

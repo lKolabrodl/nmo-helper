@@ -1,79 +1,118 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
+import {createPortal} from 'react-dom';
 import './styles.scss';
-import { AI_MODELS } from '../../utils/constants';
-import type { IAiModel } from '../../types';
+import {AI_MODELS} from '../../utils/constants';
+import type {IAiModel} from '../../types';
+import {IconChevronDown, IconStar} from '../icons';
 
-const ModelDropdown = ({ model, setModel }: { model: string; setModel: (v: string) => void }) => {
+interface IProps {
+	readonly model: string;
+	readonly setModel: (v: string) => void;
+	readonly disabled?: boolean;
+}
+
+interface IPos {
+	readonly left: number;
+	readonly top: number;
+	readonly width: number;
+}
+
+const ZERO: IPos = {left: 0, top: 0, width: 0};
+
+const ModelDropdown: React.FC<IProps> = ({model, setModel, disabled}) => {
 	const [open, setOpen] = useState(false);
-	const selectedRef = useRef<HTMLDivElement>(null);
+	const [pos, setPos] = useState<IPos>(ZERO);
+	const wrapRef = useRef<HTMLDivElement>(null);
 	const listRef = useRef<HTMLDivElement>(null);
 
 	const current = AI_MODELS.find(m => m.id === model);
 
-	useEffect(() => {
-		const close = () => setOpen(false);
-		document.addEventListener('click', close);
-		return () => document.removeEventListener('click', close);
-	}, []);
-
-	useEffect(() => {
-		if (open && selectedRef.current && listRef.current) {
-			const rect = selectedRef.current.getBoundingClientRect();
-			listRef.current.style.left = rect.left + 'px';
-			listRef.current.style.top = rect.bottom + 'px';
-			listRef.current.style.width = rect.width + 'px';
-		}
-	}, [open]);
-
-	const handleToggle = (e: React.MouseEvent) => {
-		e.stopPropagation();
-		setOpen(!open);
+	const recalc = () => {
+		if (!wrapRef.current) return;
+		const rect = wrapRef.current.getBoundingClientRect();
+		setPos({left: rect.left, top: rect.bottom + 4, width: rect.width});
 	};
+
+	const toggle = () => {
+		if (disabled) return;
+		if (!open) recalc();
+		setOpen(o => !o);
+	};
+
+	// клик вне закрывает; resize пересчитывает позицию
+	useEffect(() => {
+		if (!open) return;
+		const close = (e: MouseEvent) => {
+			const t = e.target as Node;
+			if (wrapRef.current?.contains(t)) return;
+			if (listRef.current?.contains(t)) return;
+			setOpen(false);
+		};
+		// откладываем подписку, чтобы тот же click, который открыл список, не закрыл его
+		const id = setTimeout(() => document.addEventListener('mousedown', close), 0);
+		window.addEventListener('resize', recalc);
+		return () => {
+			clearTimeout(id);
+			document.removeEventListener('mousedown', close);
+			window.removeEventListener('resize', recalc);
+		};
+	}, [open]);
 
 	const handleSelect = (m: IAiModel) => {
 		setModel(m.id);
 		setOpen(false);
 	};
 
+	const list = open ? (
+		<div className="nmo-md-list nmo-fade-up"
+			ref={listRef}
+			style={{left: pos.left, top: pos.top, width: pos.width}}>
+			{AI_MODELS.map(m => (
+				<button key={m.id} type="button"
+					className={`nmo-md-item ${m.id === model ? 'selected' : ''}`}
+					onClick={() => handleSelect(m)}>
+					<span className="nmo-md-item-name">
+						<span>{m.name}</span>
+						{m.tag === 'rec' && <IconStar size={9} className="nmo-md-rec"/>}
+						{m.tag === 'pricey' && <span className="nmo-md-pricey">$$$</span>}
+					</span>
+					<Tier tier={m.tier}/>
+				</button>
+			))}
+		</div>
+	) : null;
+
 	return (
-		<div className={`nmo-dropdown ${open ? 'open' : ''}`}>
-			<div className="nmo-dropdown-selected" ref={selectedRef} onClick={handleToggle}>
-				{current && (
-					<>
-						<span className="nmo-model-name">{current.name}</span>
-						<SelectedTag tag={current.tag} />
-						<span className={`nmo-tier nmo-tier-${current.tier}`}>{current.tier}</span>
-					</>
-				)}
-			</div>
-			<div className="nmo-dropdown-list" ref={listRef}>
-				{AI_MODELS.map(m => (
-					<div
-						key={m.id}
-						className="nmo-dropdown-item"
-						data-tag={m.tag || undefined}
-						onClick={() => handleSelect(m)}>
-						<span className="nmo-di-name">{m.name}</span>
-						<ModelTag tag={m.tag} />
-						<span className={`nmo-di-tier nmo-di-tier-${m.tier}`}>{m.tier}</span>
-					</div>
-				))}
-			</div>
+		<div className={`nmo-md ${open ? 'open' : ''}`} ref={wrapRef}>
+			<button type="button"
+				className="nmo-md-selected"
+				disabled={disabled}
+				onClick={toggle}>
+				<span className="nmo-md-name">
+					<span>{current?.name ?? model}</span>
+					{current?.tag === 'rec' && <IconStar size={10} className="nmo-md-rec"/>}
+					{current?.tag === 'pricey' && <span className="nmo-md-pricey">$$$</span>}
+				</span>
+				<span className="nmo-md-meta">
+					{current && <Tier tier={current.tier}/>}
+					<IconChevronDown size={14} className="nmo-md-chev"/>
+				</span>
+			</button>
+
+			{list && createPortal(list, document.body)}
 		</div>
 	);
 };
 
 export default ModelDropdown;
 
-
-const ModelTag = ({ tag }: { tag?: string }) => {
-	if (tag === 'rec') return <span className="nmo-di-tag nmo-di-tag-rec">{'\u2605'}</span>;
-	if (tag === 'pricey') return <span className="nmo-di-tag nmo-di-tag-pricey">$$$</span>;
-	return null;
+const TIER_LABEL: Record<string, string> = {
+	low:    'LOW',
+	medium: 'MED',
+	high:   'HIGH',
+	ultra:  'ULTRA',
 };
 
-const SelectedTag = ({ tag }: { tag?: string }) => {
-	if (tag === 'rec') return <span className="nmo-tag nmo-tag-rec">{'\u2605'}</span>;
-	if (tag === 'pricey') return <span className="nmo-tag nmo-tag-pricey">$$$</span>;
-	return null;
-};
+const Tier: React.FC<{tier: IAiModel['tier']}> = ({tier}) => (
+	<span className={`nmo-tier ${tier}`}>{TIER_LABEL[tier] ?? tier.toUpperCase()}</span>
+);

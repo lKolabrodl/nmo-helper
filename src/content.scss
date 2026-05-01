@@ -1,146 +1,543 @@
 @use 'vars' as *;
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
-// --- Panel container ---
+// ─── Panel container ─────────────────────────────
 #nmo-panel {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 99999;
   width: $panel-width;
-  background: $bg-panel;
+  background: $bg-frame;
   border: 1px solid $border;
-  border-radius: $radius;
-  box-shadow: $shadow-panel;
+  border-radius: $r-xl;
+  box-shadow: $shadow-pop;
   font-family: $font-ui;
-  font-size: $font-size;
+  font-size: $fs-base;
+  letter-spacing: -0.005em;
   color: $text;
+  overflow: hidden;
 
-  &.collapsed .nmo-body { display: none; }
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01', 'cv11';
+
+  &.collapsed {
+    width: $pill-width;
+    border-radius: $r-lg;
+    box-shadow: $shadow-pill;
+  }
 }
 
-// --- Body ---
+* { box-sizing: border-box; }
+
+#nmo-panel,
+#nmo-panel * {
+  font-family: $font-ui;
+}
+
+#nmo-panel input,
+#nmo-panel textarea,
+#nmo-panel button {
+  font-family: inherit;
+  letter-spacing: inherit;
+}
+
+// ─── Body ────────────────────────────────────────
 .nmo-body {
-  padding: $padding;
   display: flex;
   flex-direction: column;
-  gap: $gap;
 }
 
-// --- Shared fields ---
-.nmo-field {
-  label {
-    display: block;
-    margin-bottom: 3px;
-    color: $text-muted;
-    font-size: $font-size-sm;
-    font-weight: 500;
-  }
+// FullPanel всегда монтирован (чтобы loaders продолжали работать),
+// при свёртывании просто скрываем его, а CollapsedPill рисуем сверху.
+.nmo-fullpanel.hidden { display: none; }
 
-  input, select {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 7px 10px;
-    background: $bg-input;
-    border: 1px solid $border;
-    border-radius: $radius-sm;
-    color: $text;
-    font-family: $font-mono;
-    font-size: $font-size;
-    outline: none;
-    transition: border-color 0.2s;
-
-    &:focus { border-color: $border-focus; }
-    &::placeholder { color: $text-dim; }
-  }
-}
-
-// --- Buttons ---
-.nmo-btn {
-  padding: 8px;
-  border: none;
-  border-radius: $radius-sm;
-  font-family: $font-ui;
-  font-size: $font-size;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.nmo-btn-row {
+// ─── Section (container for one tab body) ────────
+.nmo-section {
   display: flex;
-  gap: $gap;
+  flex-direction: column;
+  padding-bottom: 14px;
 
-  .nmo-btn { flex: 1; }
+  // секции с собственным footer не нуждаются в нижнем отступе
+  &:has(.nmo-footer) { padding-bottom: 0; }
+}
+
+.nmo-section-inner {
+  padding: 0 14px;
+}
+
+// ─── Buttons ─────────────────────────────────────
+.nmo-btn {
+  font-family: inherit;
+  font-size: $fs-base;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  border-radius: $r-md;
+  border: 1px solid transparent;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s, transform .1s, box-shadow .15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  user-select: none;
+  background: transparent;
+  color: $text;
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 1;
+  }
 }
 
 .nmo-btn-primary {
   background: $accent;
-  color: #fff;
+  color: $accent-text;
+  box-shadow: $shadow-cta;
 
-  &:hover {
-    background: $accent-hover;
-    box-shadow: $shadow-btn;
+  &:hover:not(:disabled) {
+    background: $accent-2;
+    transform: translateY(-1px);
   }
 
+  &:active:not(:disabled) { transform: translateY(0); }
+
   &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    background: $bg-chip;
+    color: $text-disabled;
     box-shadow: none;
   }
 }
 
 .nmo-btn-ghost {
+  background: $bg-chip;
+  color: $text;
+  border-color: $border;
+
+  &:hover:not(:disabled) { background: $bg-chip-hover; }
+  &:disabled { color: $text-disabled; }
+}
+
+.nmo-btn-quiet {
   background: transparent;
-  border: 1px solid $border-hover;
-  color: $text-muted;
+  color: $text-2;
 
-  &:hover {
-    border-color: $text-muted;
+  &:hover:not(:disabled) {
     color: $text;
+    background: $bg-chip;
   }
+}
 
+.nmo-btn-warning {
+  background: $warning;
+  color: #3b2700;
+
+  &:hover:not(:disabled) { filter: brightness(1.05); }
   &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    background: $bg-chip;
+    color: $text-disabled;
   }
 }
 
 .nmo-btn-stop {
-  background: rgba(255, 255, 255, 0.06);
-  color: $text-muted;
+  background: $bg-chip;
+  color: $text-2;
+  border-color: $border;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
+  &:hover:not(:disabled) {
+    background: $bg-chip-hover;
     color: $text;
   }
 }
 
-// --- Status ---
+// CTA — большая «Запустить»
+.nmo-btn-cta {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 13.5px;
+}
+
+// row helper для двух соседних кнопок
+.nmo-btn-row {
+  display: flex;
+  gap: $gap-8;
+
+  .nmo-btn { flex: 1; }
+}
+
+// иконка-кнопка (квадратная, в title-bar)
+.nmo-icon-btn {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: $r-sm;
+  color: $text-3;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:hover {
+    background: $bg-chip;
+    color: $text;
+  }
+}
+
+// ─── Inputs ──────────────────────────────────────
+.nmo-input {
+  width: 100%;
+  background: $bg-input;
+  border: 1px solid $border;
+  color: $text;
+  font-family: inherit;
+  font-size: $fs-base;
+  padding: 10px 12px;
+  border-radius: $r-md;
+  outline: none;
+  transition: border-color .15s, background .15s;
+
+  &:focus { border-color: $accent; background: $bg-input-hover; }
+  &::placeholder { color: $text-3; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &.mono {
+    font-family: $font-mono;
+    font-size: 11.5px;
+  }
+}
+
+textarea.nmo-input {
+  resize: none;
+  line-height: 1.4;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: $border-strong;
+    border-radius: 2px;
+
+    &:hover { background: $text-3; }
+  }
+  scrollbar-width: thin;
+  scrollbar-color: $border-strong transparent;
+}
+
+.nmo-label {
+  font-size: $fs-sm;
+  font-weight: 500;
+  color: $text-2;
+  letter-spacing: 0.02em;
+  margin-bottom: 6px;
+  display: block;
+}
+
+// маленькая подсказка под полем
+.nmo-hint {
+  font-size: 10.5px;
+  color: $text-3;
+  margin-top: 4px;
+  text-decoration: none;
+  display: inline-block;
+
+  &:hover { color: $text-2; }
+}
+
+// ─── Segmented control ───────────────────────────
+.nmo-seg {
+  display: flex;
+  background: $bg-input;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+  padding: 3px;
+  gap: 2px;
+
+  button {
+    flex: 1;
+    background: transparent;
+    border: 0;
+    color: $text-3;
+    font-family: inherit;
+    font-size: $fs-md;
+    font-weight: 500;
+    padding: 7px 8px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+
+    &:hover:not(.active) { color: $text-2; }
+
+    &.active {
+      background: $bg-chip;
+      color: $text;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    }
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+// ─── Banners / inline toasts ─────────────────────
+.nmo-banner {
+  display: flex;
+  align-items: center;
+  gap: $gap-10;
+  padding: 10px 12px;
+  border-radius: $r-md;
+  font-size: $fs-md;
+  line-height: 1.4;
+  border: 1px solid $border;
+
+  .nmo-banner-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+  }
+
+  .nmo-banner-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .nmo-banner-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .nmo-banner-sub {
+    font-size: $fs-sm;
+    margin-top: 2px;
+    line-height: 1.45;
+  }
+}
+
+.nmo-banner-success {
+  background: $success-soft;
+  border-color: $success-border;
+
+  .nmo-banner-title { color: $text; }
+  .nmo-banner-sub { color: $success-text; }
+  .nmo-banner-icon { background: rgba(74, 222, 155, 0.18); color: $success; }
+}
+
+.nmo-banner-warning {
+  background: $warning-soft;
+  border-color: $warning-border;
+
+  .nmo-banner-title { color: $text; }
+  .nmo-banner-sub { color: $warning-text; }
+  .nmo-banner-icon { background: rgba(245, 193, 75, 0.18); color: $warning; }
+}
+
+.nmo-banner-danger {
+  background: $danger-soft;
+  border-color: $danger-border;
+
+  .nmo-banner-title { color: $text; }
+  .nmo-banner-sub { color: $danger-text; }
+  .nmo-banner-icon { background: rgba(255, 122, 122, 0.18); color: $danger; }
+}
+
+.nmo-banner-info {
+  background: $info-soft;
+  border-color: $info-border;
+
+  .nmo-banner-title { color: $text; }
+  .nmo-banner-sub { color: $info-text; }
+  .nmo-banner-icon { background: rgba(122, 169, 255, 0.18); color: $info; }
+}
+
+// ─── Tier badge (LOW / MED / HIGH / ULTRA) ──────
+.nmo-tier {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  flex-shrink: 0;
+
+  &.low    { background: $tier-low-bg;    color: $tier-low-text;    border: 1px solid $tier-low-border; }
+  &.medium { background: $tier-medium-bg; color: $tier-medium-text; border: 1px solid $tier-medium-border; }
+  &.high   { background: $tier-high-bg;   color: $tier-high-text;   border: 1px solid $tier-high-border; }
+  &.ultra  { background: $tier-ultra-bg;  color: $tier-ultra-text;  border: 1px solid $tier-ultra-border; }
+}
+
+// ─── Progress bar ────────────────────────────────
+.nmo-progress {
+  height: 4px;
+  background: $border-soft;
+  border-radius: 2px;
+  overflow: hidden;
+
+  > div {
+    height: 100%;
+    background: $accent;
+    transition: width .4s ease;
+    border-radius: 2px;
+  }
+
+  &.warning > div { background: $warning; }
+}
+
+// ─── Status row (inline текст) ───────────────────
 .nmo-status {
   text-align: center;
-  font-size: 11px;
-  color: $text-dim;
+  font-size: $fs-sm;
+  color: $text-3;
 
   &:empty { display: none; }
 
   &.ok      { color: $accent; }
-  &.err     { color: $error; }
-  &.warn    { color: $warn; }
-  &.loading { color: $loading; }
+  &.err     { color: $danger; }
+  &.warn    { color: $warning; }
+  &.loading { color: $text-2; }
 }
 
-// --- Error boundary ---
-.nmo-error-boundary {
-  padding: 8px;
-  text-align: center;
-  font-size: $font-size-sm;
-  color: $error;
+// ─── Chip (pill для версии и тп) ─────────────────
+.nmo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px 2px 5px;
+  background: $bg-input;
+  border: 1px solid $border-soft;
+  border-radius: 999px;
+  color: $text-3;
+  font-family: $font-mono;
+  font-size: $fs-xs;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+
+  &:hover {
+    background: $bg-chip;
+    border-color: $border;
+    color: $text-2;
+  }
+
+  &.success {
+    background: $success-soft;
+    border-color: rgba(74, 222, 155, 0.32);
+    color: $success;
+  }
+
+  &.warning {
+    background: $warning-soft;
+    border-color: rgba(245, 193, 75, 0.35);
+    color: $warning;
+  }
 }
 
-// --- Sections ---
-.nmo-section {
+// ─── Switch (toggle) ─────────────────────────────
+.nmo-switch {
   display: flex;
-  flex-direction: column;
-  gap: $gap;
+  align-items: center;
+  gap: $gap-10;
+  padding: 8px 10px;
+  background: $bg-input;
+  border: 1px solid $border-soft;
+  border-radius: $r-sm + 2px;
+  user-select: none;
+
+  &.disabled { opacity: 0.6; }
+
+  .nmo-switch-track {
+    width: 30px;
+    height: 18px;
+    border-radius: 9px;
+    background: $border-strong;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    position: relative;
+    transition: background .15s;
+    flex-shrink: 0;
+
+    .nmo-switch-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      transition: left .15s;
+    }
+  }
+
+  &.on .nmo-switch-track {
+    background: $accent;
+
+    .nmo-switch-thumb { left: 14px; }
+  }
+
+  .nmo-switch-label {
+    font-size: $fs-md;
+    color: $text;
+    font-weight: 500;
+  }
 }
+
+// ─── Error boundary ──────────────────────────────
+.nmo-error-boundary {
+  padding: 12px 14px;
+  text-align: center;
+  font-size: $fs-sm;
+  color: $danger;
+}
+
+// ─── Animations ──────────────────────────────────
+@keyframes nmo-fade-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.nmo-fade-up { animation: nmo-fade-up .25s ease both; }
+
+@keyframes nmo-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+.nmo-pulse { animation: nmo-pulse-soft 1.4s ease-in-out infinite; }
+
+@keyframes nmo-spin {
+  to { transform: rotate(360deg); }
+}
+
+.nmo-spin {
+  animation: nmo-spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+// reusable spinner ring
+.nmo-spinner {
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  display: inline-block;
+  animation: nmo-spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+// ─── Layout helpers ──────────────────────────────
+.nmo-row { display: flex; align-items: center; }
+.nmo-col { display: flex; flex-direction: column; }
+.nmo-between { justify-content: space-between; }
+.nmo-grow { flex: 1; min-width: 0; }

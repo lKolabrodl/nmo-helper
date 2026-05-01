@@ -1,114 +1,126 @@
 @use '../../vars' as *;
 
-.nmo-dropdown { position: relative; }
+.nmo-md { position: relative; }
 
-.nmo-dropdown-selected {
+.nmo-md-selected {
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 10px;
+  padding: 9px 12px;
   background: $bg-input;
   border: 1px solid $border;
-  border-radius: $radius-sm;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  font-size: $font-size;
+  border-radius: $r-md;
   color: $text;
+  font-family: inherit;
+  font-size: $fs-base;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
 
-  &:hover { border-color: $border-hover; }
+  &:hover:not(:disabled) {
+    border-color: $border-strong;
+    background: $bg-input-hover;
+  }
+
+  &:disabled { cursor: not-allowed; opacity: 0.5; }
 }
 
-.nmo-dropdown.open .nmo-dropdown-selected {
+.nmo-md.open .nmo-md-selected {
   border-color: $accent;
-  border-radius: $radius-sm $radius-sm 0 0;
 }
 
-.nmo-model-name { flex: 1; }
+.nmo-md-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
 
-.nmo-dropdown-list {
-  display: none;
+.nmo-md-rec { color: $warning; flex-shrink: 0; }
+.nmo-md-pricey {
+  color: $danger;
+  font-weight: 700;
+  font-size: 8.5px;
+  flex-shrink: 0;
+}
+
+.nmo-md-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.nmo-md-chev {
+  color: $text-3;
+  transition: transform .15s;
+}
+
+.nmo-md.open .nmo-md-chev {
+  transform: rotate(180deg);
+  color: $text-2;
+}
+
+.nmo-md-list {
   position: fixed;
+  background: $bg-frame-2;
+  border: 1px solid $border-strong;
+  border-radius: $r-md;
   z-index: 100000;
-  background: $bg-card;
-  border: 1px solid $accent;
-  border-top: none;
-  border-radius: 0 0 $radius-sm $radius-sm;
-  max-height: 200px;
+  box-shadow: $shadow-dropdown;
+  max-height: 240px;
   overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  // dropdown в document.body, не наследует от #nmo-panel
+  font-family: $font-ui;
+  font-size: $fs-base;
+  letter-spacing: -0.005em;
+  color: $text;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'ss01', 'cv11';
 
-  &::-webkit-scrollbar { width: 3px; }
+  *, button { font-family: inherit; letter-spacing: inherit; }
+
+  &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 2px;
   }
 }
 
-.nmo-dropdown.open .nmo-dropdown-list { display: block; }
-
-.nmo-dropdown-item {
+.nmo-md-item {
+  width: 100%;
   display: flex;
   align-items: center;
-  padding: 5px 10px;
-  font-size: 11px;
-  color: #ccc;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
   cursor: pointer;
-  transition: background 0.15s;
+  font-family: inherit;
+  color: $text;
+  font-size: $fs-md;
+  text-align: left;
+  transition: background .15s;
+
+  &:last-child { border-bottom: 0; }
+
+  &:hover { background: $bg-chip-hover; }
+
+  &.selected { background: $bg-chip; }
+}
+
+.nmo-md-item-name {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-
-  &:hover {
-    background: rgba(78, 204, 163, 0.1);
-    color: #fff;
-  }
-
-  &[data-tag="rec"] .nmo-di-name { color: $accent; }
-
-  .nmo-di-name { flex: 1; min-width: 0; }
-
-  .nmo-di-tag {
-    flex-shrink: 0;
-    font-size: $font-size-xs;
-  }
-
-  .nmo-di-tag-rec { color: $accent; }
-  .nmo-di-tag-pricey { color: $error; font-weight: 700; font-size: 8px; }
-
-  .nmo-di-tier {
-    flex-shrink: 0;
-    font-size: $font-size-xs;
-    font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 3px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-  }
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
-.nmo-di-tier-low    { background: $tier-low-bg; color: $tier-low-text; }
-.nmo-di-tier-medium { background: $tier-medium-bg; color: $tier-medium-text; }
-.nmo-di-tier-high   { background: $tier-high-bg; color: $tier-high-text; }
-.nmo-di-tier-ultra  { background: $tier-ultra-bg; color: $tier-ultra-text; }
-
-.nmo-tier {
-  font-size: $font-size-xs;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  flex-shrink: 0;
-}
-
-.nmo-tier-low    { background: $tier-low-bg; color: $tier-low-text; }
-.nmo-tier-medium { background: $tier-medium-bg; color: $tier-medium-text; }
-.nmo-tier-high   { background: $tier-high-bg; color: $tier-high-text; }
-.nmo-tier-ultra  { background: $tier-ultra-bg; color: $tier-ultra-text; }
-
-.nmo-tag {
-  flex-shrink: 0;
-  margin-right: 4px;
-  font-size: $font-size-sm;
-}
-
-.nmo-tag-rec    { color: $accent; }
-.nmo-tag-pricey { color: $error; font-size: 8px; font-weight: 700; }

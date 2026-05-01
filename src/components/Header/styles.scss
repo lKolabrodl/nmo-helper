@@ -1,76 +1,244 @@
 @use '../../vars' as *;
 
-.nmo-header {
+// ─── Title-bar ───────────────────────────────────
+.nmo-titlebar {
   display: flex;
   align-items: center;
-  gap: $gap;
-  padding: 10px $padding;
-  background: $bg-header;
-  border-radius: $radius $radius 0 0;
+  justify-content: space-between;
+  padding: 11px 14px 10px;
+  border-bottom: 1px solid $border-soft;
   cursor: move;
   user-select: none;
 }
 
-#nmo-panel.collapsed .nmo-header {
-  border-radius: $radius;
-}
-
-.nmo-indicator {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: $text-dim;
-  flex-shrink: 0;
-  transition: background 0.3s;
-
-  &.ok      { background: $accent; }
-  &.err     { background: $error; }
-  &.warn    { background: $warn; }
-  &.loading { background: $loading; animation: nmo-pulse 1.2s ease-in-out infinite; }
-}
-
-@keyframes nmo-pulse {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0.4; }
-}
-
-.nmo-header-title {
+.nmo-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
-  font-size: 13px;
+  font-size: $fs-base;
+  letter-spacing: -0.01em;
   color: $text;
-  letter-spacing: 0.5px;
-  flex: 1;
 }
 
-.nmo-header-status {
-  display: none;
-  font-size: $font-size-sm;
-  color: $text-muted;
-  flex: 1;
-  text-align: right;
+.nmo-brand-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: background .25s ease;
+  --dot-color: #{$text-3};
+  --dot-soft: rgba(107, 115, 144, 0.18);
+  background: var(--dot-color);
+  box-shadow: 0 0 0 3px var(--dot-soft);
+
+  &.idle {
+    --dot-color: #{$text-3};
+    --dot-soft: rgba(107, 115, 144, 0.18);
+  }
+  &.ok {
+    --dot-color: #{$accent};
+    --dot-soft: #{$accent-soft};
+    animation: nmo-dot-glow 1.6s ease-in-out infinite;
+  }
+  &.warn,
+  &.loading {
+    --dot-color: #{$warning};
+    --dot-soft: #{$warning-soft};
+    animation: nmo-dot-glow 1.2s ease-in-out infinite;
+  }
+  &.err {
+    --dot-color: #{$danger};
+    --dot-soft: #{$danger-soft};
+    animation: nmo-dot-glow 0.9s ease-in-out infinite;
+  }
+}
+
+@keyframes nmo-dot-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 3px var(--dot-soft);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 5px var(--dot-soft), 0 0 6px var(--dot-color);
+    opacity: 0.85;
+  }
+}
+
+.nmo-brand-name { line-height: 1; }
+
+.nmo-titlebar-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// ─── Topic block ─────────────────────────────────
+.nmo-topic {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid $border-soft;
+}
+
+.nmo-topic-overline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: $accent;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+
+  &.nmo-topic-overline-muted {
+    color: $text-3;
+
+    .nmo-topic-overline-dot {
+      background: $text-3;
+      box-shadow: 0 0 0 3px rgba(107, 115, 144, 0.12);
+    }
+  }
+}
+
+.nmo-topic-overline-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $accent;
+  box-shadow: 0 0 0 3px $accent-soft;
+  flex-shrink: 0;
+}
+
+.nmo-topic-title {
+  font-size: $fs-lg;
+  font-weight: 600;
+  line-height: 1.3;
+  color: $text;
+  text-wrap: pretty;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 
-  &.ok      { color: $accent; }
-  &.err     { color: $error; }
-  &.warn    { color: $warn; }
-  &.loading { color: $loading; }
+  &.expanded {
+    -webkit-line-clamp: unset;
+    cursor: pointer;
+  }
 }
 
-#nmo-panel.collapsed .nmo-header-status {
-  display: block;
-}
-
-.nmo-toggle-btn {
-  background: none;
-  border: none;
-  color: $text-muted;
-  cursor: pointer;
-  font-size: 18px;
+.nmo-topic-toggle {
+  background: transparent;
+  border: 0;
   padding: 0;
-  line-height: 1;
-  transition: color 0.2s;
+  margin-top: 3px;
+  color: $text-3;
+  font-size: 10.5px;
+  cursor: pointer;
+  font-family: inherit;
 
-  &:hover { color: $text; }
+  &:hover { color: $text-2; }
+}
+
+.nmo-topic-hint {
+  font-size: $fs-sm;
+  color: $text-3;
+  margin-top: 4px;
+}
+
+// ─── Update banner ───────────────────────────────
+.nmo-update-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  background: $warning-soft;
+  border-bottom: 1px solid rgba(245, 193, 75, 0.25);
+  border-top: 1px solid rgba(245, 193, 75, 0.25);
+}
+
+.nmo-update-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: $r-sm;
+  flex-shrink: 0;
+  background: rgba(245, 193, 75, 0.18);
+  color: $warning;
+  display: grid;
+  place-items: center;
+}
+
+.nmo-update-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nmo-update-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $warning-text;
+  line-height: 1.3;
+}
+
+.nmo-update-sub {
+  font-size: 10.5px;
+  color: $warning-text;
+  opacity: 0.8;
+  margin-top: 1px;
+  font-family: $font-mono;
+}
+
+.nmo-update-cta {
+  padding: 5px 10px;
+  font-size: 11px;
+  border-radius: $r-sm;
+  text-decoration: none;
+}
+
+.nmo-titlebar-bug {
+  color: $warning;
+  --bug-soft: #{$warning-soft};
+
+  &:hover {
+    background: $warning-soft;
+    color: $warning;
+  }
+
+  &.warn {
+    animation: nmo-bug-pulse 1.2s ease-in-out infinite;
+  }
+
+  &.err {
+    color: $danger;
+    --bug-soft: #{$danger-soft};
+    animation: nmo-bug-pulse 0.9s ease-in-out infinite;
+
+    &:hover {
+      background: $danger-soft;
+      color: $danger;
+    }
+  }
+}
+
+@keyframes nmo-bug-pulse {
+  0%, 100% {
+    background: transparent;
+    filter: drop-shadow(0 0 0 currentColor);
+    opacity: 1;
+  }
+  50% {
+    background: var(--bug-soft);
+    filter: drop-shadow(0 0 4px currentColor);
+    opacity: 0.85;
+  }
+}
+
+.nmo-update-close {
+  width: 22px;
+  height: 22px;
+  color: $warning-text;
+
+  &:hover {
+    background: rgba(245, 193, 75, 0.18);
+    color: $warning;
+  }
 }

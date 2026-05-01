@@ -1,0 +1,111 @@
+@use '../../vars' as *;
+
+// ─── Footer (CTA-кнопка снизу секции) ────────────
+.nmo-footer {
+  padding: 14px 14px 16px;
+  border-top: 1px solid $border-soft;
+}
+
+.nmo-footer-hint {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: $text-3;
+  line-height: 1.4;
+}
+
+// ─── Inline toast (notice внутри секции) ─────────
+.nmo-toast {
+  margin: 10px 14px 0;
+}
+
+.nmo-toast-close {
+  width: 20px;
+  height: 20px;
+
+  &:hover { background: $bg-chip; }
+}
+
+// ─── Strip (Thinking / Running) ──────────────────
+.nmo-strip {
+  margin: 10px 14px 0;
+  padding: 12px;
+  background: $bg-input;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nmo-strip-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nmo-strip-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: $text;
+}
+
+.nmo-strip-sub {
+  font-size: $fs-sm;
+  color: $text-3;
+  margin-top: 2px;
+  font-family: $font-mono;
+}
+
+.nmo-spinner-md {
+  width: 18px;
+  height: 18px;
+  color: $accent;
+}
+
+// running variant
+.nmo-strip-running {
+  display: block;
+  border-color: $accent-ring;
+  padding: 10px 12px;
+
+  &.warning { border-color: $warning-border; }
+}
+
+.nmo-strip-running-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.nmo-strip-running-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: $text;
+}
+
+.nmo-strip-running-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: $accent;
+  box-shadow: 0 0 0 3px $accent-soft;
+  flex-shrink: 0;
+}
+
+.nmo-strip-running.warning .nmo-strip-running-dot {
+  background: $warning;
+  box-shadow: 0 0 0 3px rgba(245, 193, 75, 0.18);
+}
+
+.nmo-strip-running-counts {
+  font-size: $fs-sm;
+  font-variant-numeric: tabular-nums;
+
+  .ok { color: $success; }
+  .warn { color: $warning; }
+  .sep { color: $text-3; padding: 0 4px; }
+}
