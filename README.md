@@ -201,6 +201,7 @@ npm test            # Запустить тесты (352 теста, покры�
 Проект создан на альтруистических началах — просто чтобы помочь. Если расширение оказалось полезным:
 
 [![Support on Boosty](https://img.shields.io/badge/Boosty-Поддержать-orange?style=for-the-badge)](https://boosty.to/kolabrod/donate)
+[![Support on CloudTips](https://img.shields.io/badge/CloudTips-Поддержать-blue?style=for-the-badge)](https://pay.cloudtips.ru/p/181ccc33)
 
 ## Предыдущие версии
 
