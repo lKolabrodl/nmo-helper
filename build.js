@@ -42,8 +42,16 @@ async function build() {
       target: 'es2020',
       charset: 'utf8',
       define: { __DEV__: WATCH ? 'true' : 'false' },
+      inject: [path.join(SRC, 'shims/globals.js')],
       jsx: 'automatic',
       jsxImportSource: 'react',
+      alias: {
+        'node:fs':          path.join(SRC, 'shims/node-fs.js'),
+        'node:fs/promises': path.join(SRC, 'shims/node-fs-promises.js'),
+        'node:crypto':      path.join(SRC, 'shims/node-crypto.js'),
+        'node:path':        path.join(SRC, 'shims/node-path.js'),
+        'node:url':         path.join(SRC, 'shims/node-path.js'),
+      },
     };
 
     if (WATCH) {
@@ -115,6 +123,12 @@ async function build() {
     fs.copyFileSync(path.join(SRC, 'popup.html'), path.join(outDir, 'popup.html'));
     fs.copyFileSync(path.join(SRC, 'popup.css'), path.join(outDir, 'popup.css'));
     fs.copyFileSync(path.join(SRC, 'popup.js'), path.join(outDir, 'popup.js'));
+
+    // Copy pdfjs worker for PDF tab
+    fs.copyFileSync(
+      path.join(__dirname, 'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs'),
+      path.join(outDir, 'pdf.worker.min.mjs')
+    );
 
     // Подписанный .xpi (firefox_nmo_helper.xpi) лежит в корне репо и
     // распространяется как отдельный артефакт релиза. В dist/ не копируем —

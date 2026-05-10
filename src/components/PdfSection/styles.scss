@@ -1,0 +1,56 @@
+@use '../../vars' as *;
+
+.nmo-pdf-icon {
+	background: $info-soft !important;
+	color: $info !important;
+}
+
+.nmo-pdf-upload {
+	margin-top: 12px;
+}
+
+.nmo-pdf-dropzone {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 16px;
+	border: 1.5px dashed $border-strong;
+	border-radius: $r-md;
+	background: $bg-input;
+	color: $text-2;
+	font-size: $fs-md;
+	cursor: pointer;
+	transition: border-color 0.15s, background 0.15s;
+
+	&:hover {
+		border-color: $info;
+		background: $bg-input-hover;
+		color: $text;
+	}
+}
+
+.nmo-pdf-file-input {
+	display: none;
+}
+
+.nmo-pdf-loaded {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	background: $info-soft;
+	border: 1px solid $info-border;
+	border-radius: $r-md;
+	color: $info-text;
+	font-size: $fs-sm;
+}
+
+.nmo-pdf-name {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-family: $font-mono;
+	font-size: $fs-xs;
+}

@@ -71,7 +71,7 @@ export const StatusTitle = {
 export const AI_URL = 'https://openai.api.proxyapi.ru/v1/chat/completions';
 
 /** Эндпоинт серверного приёма баг-репортов (проксируется nginx'ом в Python-бот).
- *  v2: поддерживает поле message и блокирует старые версии (HTTP 426). */
+ *  v2: поддерживает поле message. */
 export const BUG_REPORT_ENDPOINT = 'https://nmo-helper.ru/api/v2/bug-report';
 
 /** Ключ chrome.storage.local для клиентского состояния баг-репортов (дедуп/кулдаун/дневной лимит) */

@@ -9,6 +9,7 @@ import TabBar from './components/TabBar';
 import AutoSection from './components/AutoSection';
 import SitesSection from './components/SitesSection';
 import AiSection from './components/AiSection';
+import PdfSection from './components/PdfSection';
 import CollapsedPill from './components/CollapsedPill';
 import AnswerHighlighter from './components/Loader/AnswerHighlighter';
 
@@ -24,6 +25,7 @@ const FullPanel: React.FC<{initialState: IExtensionState}> = ({initialState}) =>
 					{mode === 'auto' && <AutoSection/>}
 					{mode === 'sites' && <SitesSection initialUrl={initialState.savedUrl}/>}
 					{(mode === 'ai' || mode === 'ai-pro') && <AiSection/>}
+					{mode === 'pdf' && <PdfSection/>}
 				</ErrorBoundary>
 			</div>
 		</>
