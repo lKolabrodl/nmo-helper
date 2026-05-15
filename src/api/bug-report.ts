@@ -27,6 +27,10 @@ const DEDUP_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * Повторяет контракт с `/opt/nmo-feedback/server.py::_handle_bug_report`.
  */
 export interface IBugReportPayload {
+	/** Активный верхний таб панели: auto / sites / ai / ai-pro / pdf */
+	readonly panelMode?: string;
+	/** Детализация внутри таба: auto / sites:url / sites:search / ai:proxy / etc. */
+	readonly panelTab?: string;
 	/** URL страницы-источника ответов (rosmedicinfo.ru / 24forcare.com) */
 	readonly activeUrl: string;
 	/** Ключ источника: `rosmedicinfo` / `24forcare` / '' если не определён */

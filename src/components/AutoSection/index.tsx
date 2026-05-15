@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import './styles.scss';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
+import {useBugReportContext} from '../../contexts/BugReportContext';
 import {answerCache} from '../../utils/answer-cache';
 import {Status} from '../../types';
 import VariantLoader from '../Loader/VariantLoader';
@@ -18,6 +19,7 @@ import ThinkingStrip from '../ui/ThinkingStrip';
 const AutoSection: React.FC = () => {
 	const {status, setStatus} = usePanelStatus();
 	const {topic, rawTopic, question, variants} = useQuestionFinder();
+	const {setBugReportContext} = useBugReportContext();
 
 	const [rosmedUrl, setRosmedUrl] = useState('');
 	const [forcareUrl, setForcareUrl] = useState('');
@@ -42,6 +44,10 @@ const AutoSection: React.FC = () => {
 
 	const _updateHtml = (state: IAnswerModel): void => {
 		setHtml(state.data);
+
+		// в баг репортик отправляем
+		if (activeUrl) setBugReportContext({panelMode: 'auto', panelTab: 'auto', activeUrl});
+
 		if (state.loading) return setStatus({title: StatusTitle.LOADING_ANSWERS, status: Status.LOADING});
 
 		if (state.error) {

@@ -3,6 +3,7 @@ import type {IExtensionState} from './types';
 import {PanelUiProvider, usePanelUi} from './contexts/PanelUiContext';
 import {PanelStatusProvider} from './contexts/PanelStatusContext';
 import {QuestionFinderProvider} from './contexts/QuestionFinderContext';
+import {BugReportProvider} from './contexts/BugReportContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import TabBar from './components/TabBar';
@@ -50,14 +51,16 @@ const App: React.FC<{initialState: IExtensionState}> = ({initialState}) => (
 	<PanelUiProvider
 		initialCollapsed={initialState.savedCollapsed}
 		initialMode={initialState.savedMode}>
-		<PanelStatusProvider>
-			<QuestionFinderProvider>
-				<ErrorBoundary>
-					<AnswerHighlighter/>
-					<PanelShell initialState={initialState}/>
-				</ErrorBoundary>
-			</QuestionFinderProvider>
-		</PanelStatusProvider>
+		<BugReportProvider>
+			<PanelStatusProvider>
+				<QuestionFinderProvider>
+					<ErrorBoundary>
+						<AnswerHighlighter/>
+						<PanelShell initialState={initialState}/>
+					</ErrorBoundary>
+				</QuestionFinderProvider>
+			</PanelStatusProvider>
+		</BugReportProvider>
 	</PanelUiProvider>
 );
 

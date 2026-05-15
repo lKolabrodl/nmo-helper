@@ -1,6 +1,8 @@
 import React, {useEffect, useState} from 'react';
 import './styles.scss';
 import {STATUSES, type BugReportStatus} from './status';
+import {usePanelUi} from '../../contexts/PanelUiContext';
+import {useBugReportContext} from '../../contexts/BugReportContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {getQuestionHtml} from '../../utils';
 import {detectSource} from '../../utils/matching';
@@ -28,8 +30,13 @@ interface IProps {
 	readonly hideTrigger?: boolean;
 }
 
-const BugReportButton: React.FC<IProps> = ({activeUrl = '', isOpen: openProp, onClose, hideTrigger}) => {
+const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: openProp, onClose, hideTrigger}) => {
+	const {mode} = usePanelUi();
+	const reportContext = useBugReportContext();
 	const {rawTopic, question, variants} = useQuestionFinder();
+	const contextMatchesMode = reportContext.panelMode === mode;
+	const activeUrl = activeUrlProp ?? (contextMatchesMode ? reportContext.activeUrl : '');
+	const panelTab = contextMatchesMode ? reportContext.panelTab : mode;
 	const source = detectSource(activeUrl) ?? '';
 
 	const controlled = openProp !== undefined;
@@ -76,6 +83,8 @@ const BugReportButton: React.FC<IProps> = ({activeUrl = '', isOpen: openProp, on
 		setSending(true);
 
 		const res = await submitBugReport({
+			panelMode: mode,
+			panelTab,
 			activeUrl,
 			source,
 			topic: rawTopic ?? '',
@@ -139,7 +148,9 @@ const BugReportButton: React.FC<IProps> = ({activeUrl = '', isOpen: openProp, on
 					<div>• Тема: <span>{rawTopic || '—'}</span></div>
 					<div>• Вопрос: <span>{question}</span></div>
 					<div>• Вариантов: <span>{variants.length}</span></div>
+					<div>• Таб: <span>{formatPanelTab(mode, panelTab)}</span></div>
 					<div>• Источник: <span>{source || '—'}</span></div>
+					<div>• Ссылка: <span>{activeUrl || '—'}</span></div>
 					<div>• Версия: <span>{EXT_VERSION} · {getBrowserInfo()}</span></div>
 				</div>
 			</div>
@@ -193,6 +204,16 @@ function resultStatus(res: BugReportResult): BugReportStatus {
 	if (res.error === 'payload_too_large') return 'PAYLOAD_LARGE';
 	if (res.error === 'network')           return 'NETWORK';
 	return 'SERVER';
+}
+
+function formatPanelTab(mode: string, panelTab: string): string {
+	if (mode === 'auto') return 'Авто';
+	if (mode === 'sites' && panelTab === 'sites:search') return 'Сайты / поиск';
+	if (mode === 'sites') return 'Сайты / URL';
+	if (mode === 'ai-pro') return 'AI / свой endpoint';
+	if (mode === 'ai') return 'AI / ProxyAPI';
+	if (mode === 'pdf') return 'PDF';
+	return panelTab || mode || '—';
 }
 
 function getBrowserInfo(): string {

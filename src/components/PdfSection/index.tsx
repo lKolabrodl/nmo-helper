@@ -1,31 +1,21 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useRef, useState} from 'react';
 import './styles.scss';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
-import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
-import {answerCache} from '../../utils/answer-cache';
 import {Status} from '../../types';
-import {StatusTitle} from '../../utils/constants';
-import {GlobalWorkerOptions} from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {IconFile, IconClose} from '../icons';
 import InlineToast, {type IToast} from '../ui/InlineToast';
 import ThinkingStrip from '../ui/ThinkingStrip';
-
-let workerReady = false;
-function ensureWorker() {
-	if (workerReady) return;
-	GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('pdf.worker.min.mjs');
-	workerReady = true;
-}
+import PdfLoader, {type IPdfLoaderState} from '../Loader/PdfLoader';
 
 const PdfSection: React.FC = () => {
 	const {status, setStatus} = usePanelStatus();
-	const {topic, question, variants, isSingle} = useQuestionFinder();
 
 	const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
 	const [fileName, setFileName] = useState<string | null>(null);
 	const [processing, setProcessing] = useState(false);
 	const fileRef = useRef<HTMLInputElement>(null);
-	const abortRef = useRef(false);
+
+	const _updateLoader = (state: IPdfLoaderState) => setProcessing(state.processing);
 
 	const _handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -47,60 +37,10 @@ const PdfSection: React.FC = () => {
 	const _clearPdf = () => {
 		setPdfData(null);
 		setFileName(null);
-		abortRef.current = true;
+		setProcessing(false);
 		if (fileRef.current) fileRef.current.value = '';
 		setStatus({title: '', status: Status.IDLE});
 	};
-
-	useEffect(() => {
-		if (!pdfData || !question || !variants.length) return;
-		if (answerCache.has(topic, question, variants)) return;
-
-		let cancelled = false;
-		abortRef.current = false;
-
-		const run = async () => {
-			setProcessing(true);
-			setStatus({title: 'анализирую PDF...', status: Status.LOADING});
-
-			try {
-				ensureWorker();
-				const {answerQuestion} = await import('nmo-pdf');
-				if (cancelled || abortRef.current) return;
-
-				const result = await answerQuestion(new Uint8Array(pdfData.slice(0)), {
-					question,
-					variants,
-					type: isSingle ? 'single' : 'multi',
-				});
-				if (cancelled || abortRef.current) return;
-
-				if (!result.selected.length) {
-					setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
-					return;
-				}
-
-				answerCache.set(topic ?? '', question, variants, result.selected);
-
-				const conf = Math.round(result.confidence * 100);
-				if (result.confidence < 0.3) {
-					setStatus({title: `низкая уверенность (${conf}%) • PDF`, status: Status.WARN});
-				} else {
-					setStatus({title: `найдено (${conf}%) • PDF`, status: Status.OK});
-				}
-			} catch (err) {
-				if (!cancelled && !abortRef.current) {
-					console.error('[nmo-pdf]', err);
-					setStatus({title: 'ошибка анализа PDF', status: Status.ERR});
-				}
-			} finally {
-				if (!cancelled) setProcessing(false);
-			}
-		};
-
-		run();
-		return () => { cancelled = true; };
-	}, [pdfData, question, variants, topic, isSingle]);
 
 	const isLoading = status.status === Status.LOADING;
 	const isWarning = status.status === Status.WARN;
@@ -109,6 +49,8 @@ const PdfSection: React.FC = () => {
 
 	return (
 		<div className="nmo-section">
+			<PdfLoader pdfData={pdfData} onChange={_updateLoader}/>
+
 			<div className="nmo-section-inner">
 				<div className="nmo-auto-hero nmo-fade-up">
 					<div className="nmo-auto-hero-icon nmo-pdf-icon"><IconFile size={16}/></div>

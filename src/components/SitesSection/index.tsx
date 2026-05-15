@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import './styles.scss';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
+import {useBugReportContext} from '../../contexts/BugReportContext';
 import {storageSet} from '../../utils';
 import {answerCache} from '../../utils/answer-cache';
 import {detectSource} from '../../utils/matching';
@@ -20,6 +21,7 @@ type Tab = 'url' | 'search';
 const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const {status, setStatus} = usePanelStatus();
 	const {question, variants, topic} = useQuestionFinder();
+	const {setBugReportContext} = useBugReportContext();
 
 	const [tab, setTab] = useState<Tab>('url');
 	const [url, setUrlRaw] = useState(initialUrl);
@@ -34,6 +36,12 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 	const _updateHtml = (state: IAnswerModel) => {
 		setAnswerModel(state);
+		
+		// баг лог
+		if (activeUrl) {
+			setBugReportContext({panelMode: 'sites', panelTab: tab === 'search' ? 'sites:search' : 'sites:url',	activeUrl});
+		}
+
 		if (state.loading) setStatus({title: StatusTitle.LOADING_ANSWERS, status: Status.LOADING});
 		else if (state.error) setStatus({title: state.error, status: Status.ERR});
 		else if (state.data) setStatus({title: StatusTitle.RUNNING, status: Status.OK});
