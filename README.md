@@ -1,8 +1,8 @@
-# NMO Helper v4.0.0
+# NMO Helper v4.1.0
 
 > Умный помощник в прохождении тестов НМО на портале [edu.rosminzdrav.ru](https://a.edu.rosminzdrav.ru) — бесплатное расширение для браузера с открытым исходным кодом.
 
-Авто-поиск ответов на `rosmedicinfo.ru` и `24forcare.com`, AI-режим (GPT, Gemini, Claude, DeepSeek), работает из коробки.
+Авто-поиск ответов на `rosmedicinfo.ru` и `24forcare.com`, AI-режим (GPT, Gemini, Claude, DeepSeek), PDF-режим: поиск по клиническим рекомендациям, работает из коробки.
 
 [![Firefox Add-ons](https://img.shields.io/amo/v/nmo-helper?style=flat-square&label=Firefox%20Add-ons&color=ff9500&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/)
 [![Downloads](https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper/releases)
@@ -18,21 +18,22 @@
 
 ## Возможности
 
-| | Функция | Описание |
-|---|---|---|
-| 🔍 | **Авто-поиск** | Автоматически находит тему теста и ищет ответы на двух сайтах |
-| 🤖 | **AI-режим** | Решает тесты с помощью GPT, Gemini, Claude, DeepSeek через ProxyAPI или свой endpoint |
-| 🔎 | **Ручной поиск** | Поиск ответов по названию теста на `rosmedicinfo.ru` и `24forcare.com` |
-| ✨ | **Автоподсветка** | Правильные ответы подсвечиваются при переходе между вопросами |
-| 💾 | **Кеширование** | Ответы кешируются — при навигации назад/вперёд повторных запросов нет |
-| 🎯 | **Умное сопоставление** | Нормализация тире, смешанных кириллица/латиница, нечёткий поиск |
-| 📌 | **Плавающая панель** | Перетаскивание, сворачивание, сохранение позиции между сессиями |
-| 🌐 | **Обход CORS** | Работает без дополнительных плагинов |
+| Функция | Описание |
+|---|---|
+| **Авто-поиск** | Автоматически находит тему теста и ищет ответы на двух сайтах |
+| **AI-режим** | Решает тесты с помощью GPT, Gemini, Claude, DeepSeek через ProxyAPI или свой endpoint |
+| **PDF-режим** | Поиск по клиническим рекомендациям из локального PDF, со score для вариантов |
+| **Ручной поиск** | Поиск ответов по названию теста на `rosmedicinfo.ru` и `24forcare.com` |
+| **Автоподсветка** | Правильные ответы подсвечиваются при переходе между вопросами |
+| **Кеширование** | Ответы кешируются — при навигации назад/вперёд повторных запросов нет |
+| **Умное сопоставление** | Нормализация тире, смешанных кириллица/латиница, нечёткий поиск |
+| **Плавающая панель** | Перетаскивание, сворачивание, сохранение позиции между сессиями |
+| **Обход CORS** | Работает без дополнительных плагинов |
 
 ## Требования
 
 - **Google Chrome** / Яндекс Браузер / Edge / Brave / Opera (любой Chromium-браузер)
-- **Mozilla Firefox**
+- **Mozilla Firefox 109+**
 
 ---
 
@@ -40,12 +41,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-chrome-4.0.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.0.0/nmo-helper-chrome-4.0.0.zip)
+1. Скачайте [`nmo-helper-chrome-4.1.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.1.0/nmo-helper-chrome-4.1.0.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-chrome-4.0.0`
+6. Выберите папку `nmo-helper-chrome-4.1.0`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
@@ -61,7 +62,7 @@
 
 **Способ 2 — прямая установка `.xpi`:**
 
-1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.0.0/firefox_nmo_helper.xpi)
+1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.1.0/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
 3. Подтвердите установку
 
@@ -83,7 +84,7 @@
 
 ### Режимы работы
 
-Переключение между режимами через таб-бар в панели: **Авто** / **Сайты** / **AI**.
+Переключение между режимами через таб-бар в панели: **Авто** / **Сайты** / **AI** / **PDF**.
 
 ### Авто
 
@@ -98,6 +99,14 @@
 1. Введите название теста в поиск
 2. Выберите источник (**rosmed** / **24forcare**) или вставьте ссылку
 3. Нажмите **Запуск**
+
+### PDF
+
+Загрузите PDF с клиническими рекомендациями — расширение выполнит поиск по документу и покажет score рядом с вариантами.
+
+- PDF обрабатывается локально в браузере и не загружается на сервер
+- Score отображается перед radio/checkbox, не сдвигая текст варианта
+- Режим экспериментальный: примерно 56-80% ответов могут быть правильными
 
 ### AI
 
@@ -138,32 +147,44 @@ src/
 ├── Panel.tsx                   # Создание панели + drag
 ├── background.ts               # Service worker (CORS proxy)
 ├── types.ts                    # Типы и интерфейсы
-├── popup.html / popup.css      # Popup при клике на иконку
+├── popup.html / popup.css / popup.js # Popup при клике на иконку
+├── manifest.*.json             # Манифесты Chrome / Firefox / AMO
 │
 ├── components/
 │   ├── Header/                 # Хедер с индикатором статуса
-│   ├── TabBar/                 # Таб-бар (Авто / Сайты / AI)
+│   ├── VersionCheck/           # Проверка доступной версии
+│   ├── TabBar/                 # Таб-бар (Авто / Сайты / AI / PDF)
+│   ├── CollapsedPill/          # Свернутая плавающая панель
 │   ├── AutoSection/            # Авто-режим
 │   ├── SitesSection/           # Ручной режим
 │   ├── AiSection/              # AI-режим (ProxyAPI + свой endpoint)
+│   ├── PdfSection/             # PDF-режим: поиск по клиническим рекомендациям
 │   ├── ModelDropdown/          # Выбор AI-модели
 │   ├── BugReportButton/        # Кнопка отправки баг-репорта
 │   ├── ErrorBoundary/          # Перехват ошибок рендера
-│   └── Loader/                 # Headless-компоненты (загрузка, подсветка)
+│   ├── Loader/                 # Headless-компоненты (загрузка, подсветка)
+│   ├── ui/                     # Общие UI-компоненты панели
+│   └── icons.tsx               # SVG-иконки интерфейса
 │
 ├── contexts/
 │   ├── PanelUiContext.tsx       # UI-состояние (режим, свёрнутость)
 │   ├── PanelStatusContext.tsx   # Статус per-mode
+│   ├── PdfScoreContext.tsx      # Score вариантов в PDF-режиме (только в памяти)
+│   ├── BugReportContext.tsx     # Контекст текущего tab/mode для баг-репортов
 │   └── QuestionFinderContext.tsx # Отслеживание вопроса на странице
 │
 ├── api/                         # Обёртки над браузерными API и сетью
 │   ├── dom.ts                   # DOM-запросы с fallback-цепочками селекторов
 │   ├── fetch.ts                 # Fetch через background (CORS bypass)
 │   ├── storage.ts               # Обёртки chrome.storage
+│   ├── version-check.ts         # Проверка новых релизов
 │   └── bug-report.ts            # Отправка баг-репортов на сервер
 │
 ├── libs/                        # Локальные мини-утилиты (замена npm-зависимостям)
-│   └── debounce.ts              # debounce без lodash — обходим CSP в Firefox MV3
+│   ├── debounce.ts              # debounce без lodash — обходим CSP в Firefox MV3
+│   └── index.ts                 # Реэкспорты локальных библиотек
+│
+├── icons/                       # Иконки расширения для manifest/action
 │
 └── utils/                       # Чистые функции без сайд-эффектов
     ├── answer-cache.ts          # Кеш ответов (topic, question, variants) → answers
@@ -182,7 +203,7 @@ src/
 npm install
 npm run build       # Собрать dist/chrome, dist/firefox, dist/firefox-store
 npm run dev         # Сборка в watch-режиме
-npm test            # Запустить тесты (352 теста, покрытие utils + api + components)
+npm test            # Запустить тесты (312 тестов, покрытие utils + api + components)
 ```
 
 ---
@@ -194,6 +215,8 @@ npm test            # Запустить тесты (352 теста, покры�
 - Исходный код открыт на GitHub
 - Проверено через [VirusTotal](https://www.virustotal.com/gui/file/9da2c493686713029dd7339ad49647343599f0399c38108e73e81abb421b2a4f?nocache=1)
 - Подписано и опубликовано в [Firefox Add-ons](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/)
+- PDF-файлы обрабатываются локально в браузере и не отправляются на сервер
+- Баг-репорт отправляется только вручную после подтверждения пользователя
 - Политика конфиденциальности: [nmo-helper.ru/privacy](https://nmo-helper.ru/privacy)
 
 ## Поддержать проект
@@ -205,6 +228,7 @@ npm test            # Запустить тесты (352 теста, покры�
 
 ## Предыдущие версии
 
+- [v4.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.0.0) — крупное обновление панели и подготовка к релизам 4.x
 - [v3.1.5](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.5) — мелкие правки extractor'ов и баг-репорта
 - [v3.1.4](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.4) — локальный debounce вместо lodash-es (фикс CSP в Firefox MV3)
 - [v3.1.3](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.3) — пересборка dist, подписанный xpi после одобрения AMO

@@ -57,11 +57,11 @@ export interface IBugReportPayload {
  */
 interface IBugReportState {
 	/** `fingerprint → ts отправки`. TTL = {@link DEDUP_TTL_MS}, старые чистятся в {@link prune} */
-	readonly sent: Record<string, number>;
+	sent: Record<string, number>;
 	/** Таймстемпы успешных отправок за последние 24 часа — для {@link DAILY_CAP} */
-	readonly history: number[];
+	history: number[];
 	/** Время последней отправки — для кулдауна {@link COOLDOWN_MS} */
-	readonly lastSentAt: number;
+	lastSentAt: number;
 }
 
 const EMPTY_STATE: IBugReportState = { sent: {}, history: [], lastSentAt: 0 };

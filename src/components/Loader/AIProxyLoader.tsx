@@ -34,6 +34,7 @@ const AIProxyLoader = ({ active, apiKey, model, aiUrl, onChange }: IAiSolverProp
 		if (answerCache.has(topic, question, variants)) return;
 		if (pendingRef.current) return;
 
+		const q = question;
 		const t = topic ?? '';
 
 		async function solve() {
@@ -42,7 +43,7 @@ const AIProxyLoader = ({ active, apiKey, model, aiUrl, onChange }: IAiSolverProp
 			setStatus({ title: StatusTitle.AI_THINKING, status: Status.LOADING });
 
 			try {
-				const correctIndexes = await askAI(apiKey, question, variants, isSingle, t, model, aiUrl);
+				const correctIndexes = await askAI(apiKey, q, variants, isSingle, t, model, aiUrl);
 
 				if (correctIndexes.length === 0) {
 					setStatus({ title: StatusTitle.AI_NO_ANSWER, status: Status.WARN });
@@ -51,7 +52,7 @@ const AIProxyLoader = ({ active, apiKey, model, aiUrl, onChange }: IAiSolverProp
 				}
 
 				const answers = correctIndexes.map(i => variants[i]);
-				answerCache.set(t, question, variants, answers);
+				answerCache.set(t, q, variants, answers);
 
 				setStatus({ title: `AI: вариант${correctIndexes.length > 1 ? 'ы' : ''} ${correctIndexes.map(i => i + 1).join(', ')}`, status: Status.OK });
 			} catch (err) {
