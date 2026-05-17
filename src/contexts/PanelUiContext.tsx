@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storageSet } from '../utils';
 
-export type UiMode = 'sites' | 'ai' | 'auto' | 'ai-pro';
+export type UiMode = 'sites' | 'ai' | 'auto' | 'ai-pro' | 'pdf';
 
 interface IPanelUiState {
 	readonly collapsed: boolean;
@@ -17,7 +17,7 @@ interface IPanelUiProviderProps {
 
 const PanelUiContext = createContext<IPanelUiState>(null!);
 
-const VALID_MODES: UiMode[] = ['sites', 'ai', 'auto', 'ai-pro'];
+const VALID_MODES: UiMode[] = ['sites', 'ai', 'auto', 'ai-pro', 'pdf'];
 
 export const PanelUiProvider: React.FC<React.PropsWithChildren<IPanelUiProviderProps>> = ({ initialCollapsed, initialMode, children }) => {
 	const [collapsed, setCollapsedRaw] = useState(initialCollapsed);

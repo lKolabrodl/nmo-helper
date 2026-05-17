@@ -25,6 +25,12 @@
   "background": {
     "scripts": ["background.js"]
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["pdf.worker.min.mjs"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": [

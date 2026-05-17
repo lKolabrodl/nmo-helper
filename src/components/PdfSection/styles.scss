@@ -1,0 +1,103 @@
+@use '../../vars' as *;
+
+.nmo-pdf-icon {
+	background: $info-soft !important;
+	color: $info !important;
+}
+
+.nmo-pdf-upload {
+	margin-top: 12px;
+}
+
+.nmo-pdf-accuracy {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin-top: 12px;
+	padding: 9px 10px;
+	max-height: 72px;
+	overflow: hidden;
+	border: 1px solid $warning-border;
+	border-radius: $r-md;
+	background: $warning-soft;
+	color: $warning-text;
+	font-size: $fs-sm;
+	line-height: 1.35;
+	animation: nmo-pdf-accuracy-hide 0.25s ease 5s forwards;
+}
+
+.nmo-pdf-accuracy-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 20px;
+	width: 20px;
+	height: 20px;
+	border-radius: $r-sm;
+	background: rgba(245, 193, 75, 0.16);
+	color: $warning;
+}
+
+.nmo-pdf-accuracy-text {
+	flex: 1;
+	min-width: 0;
+}
+
+@keyframes nmo-pdf-accuracy-hide {
+	to {
+		visibility: hidden;
+		opacity: 0;
+		max-height: 0;
+		margin-top: 0;
+		padding-top: 0;
+		padding-bottom: 0;
+		border-width: 0;
+		transform: translateY(-4px);
+	}
+}
+
+.nmo-pdf-dropzone {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 16px;
+	border: 1.5px dashed $border-strong;
+	border-radius: $r-md;
+	background: $bg-input;
+	color: $text-2;
+	font-size: $fs-md;
+	cursor: pointer;
+	transition: border-color 0.15s, background 0.15s;
+
+	&:hover {
+		border-color: $info;
+		background: $bg-input-hover;
+		color: $text;
+	}
+}
+
+.nmo-pdf-file-input {
+	display: none;
+}
+
+.nmo-pdf-loaded {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 10px;
+	background: $info-soft;
+	border: 1px solid $info-border;
+	border-radius: $r-md;
+	color: $info-text;
+	font-size: $fs-sm;
+}
+
+.nmo-pdf-name {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-family: $font-mono;
+	font-size: $fs-xs;
+}

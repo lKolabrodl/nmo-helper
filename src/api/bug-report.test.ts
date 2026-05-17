@@ -23,6 +23,8 @@ function resetStorage(state: unknown = { sent: {}, history: [], lastSentAt: 0 })
 
 function makePayload(overrides: Partial<IBugReportPayload> = {}): IBugReportPayload {
 	return {
+		panelMode: 'auto',
+		panelTab: 'auto',
 		activeUrl: 'https://example.com/test',
 		source: 'rosmedicinfo',
 		topic: 'Кардиология - 2024',

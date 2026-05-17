@@ -2,12 +2,13 @@ import React from 'react';
 import './styles.scss';
 import {usePanelUi} from '../../contexts/PanelUiContext';
 import type {UiMode} from '../../contexts/PanelUiContext';
-import {IconBolt, IconBrain, IconGlobe} from '../icons';
+import {IconBolt, IconBrain, IconGlobe, IconFile} from '../icons';
 
 const TABS: {mode: UiMode; label: string; Icon: React.FC<{size?: number}>}[] = [
 	{mode: 'auto',  label: 'Авто',  Icon: IconBolt},
 	{mode: 'sites', label: 'Сайты', Icon: IconGlobe},
 	{mode: 'ai',    label: 'AI',    Icon: IconBrain},
+	{mode: 'pdf',   label: 'PDF',   Icon: IconFile},
 ];
 
 const TabBar: React.FC = () => {

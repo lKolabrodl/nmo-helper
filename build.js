@@ -116,6 +116,12 @@ async function build() {
     fs.copyFileSync(path.join(SRC, 'popup.css'), path.join(outDir, 'popup.css'));
     fs.copyFileSync(path.join(SRC, 'popup.js'), path.join(outDir, 'popup.js'));
 
+    // Copy pdfjs worker for nmo-pdf browser runtime.
+    fs.copyFileSync(
+      path.join(__dirname, 'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs'),
+      path.join(outDir, 'pdf.worker.min.mjs')
+    );
+
     // Подписанный .xpi (firefox_nmo_helper.xpi) лежит в корне репо и
     // распространяется как отдельный артефакт релиза. В dist/ не копируем —
     // иначе при упаковке firefox-зипа он попадает внутрь и раздувает его.
