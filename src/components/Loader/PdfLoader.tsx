@@ -2,6 +2,7 @@ import {useEffect} from 'react';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
+import {usePdfScore, type IPdfScoreVariant} from '../../contexts/PdfScoreContext';
 import {answerCache} from '../../utils/answer-cache';
 import {Status} from '../../types';
 import {StatusTitle} from '../../utils/constants';
@@ -25,6 +26,7 @@ function ensurePdfWorker() {
 const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
 	const {topic, question, variants, isSingle} = useQuestionFinder();
 	const {setStatus} = usePanelStatus();
+	const {setPdfScore} = usePdfScore();
 
 	useEffect(() => {
 		if (!pdfData || !question || !variants.length) {
@@ -56,6 +58,8 @@ const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
 
 				if (cancelled) return;
 
+				setPdfScore(topic ?? '', question, variants, toPdfScoreVariants(variants, result.scores, result.selected));
+
 				if (!result.selected.length) {
 					setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
 					return;
@@ -80,9 +84,31 @@ const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
 
 		run();
 		return () => { cancelled = true; };
-	}, [pdfData, question, variants, topic, isSingle, onChange, setStatus]);
+	}, [pdfData, question, variants, topic, isSingle, onChange, setStatus, setPdfScore]);
 
 	return null;
 };
 
 export default PdfLoader;
+
+function toPdfScoreVariants(variants: string[], scores: Array<{readonly id: string; readonly variant: string; readonly score: number; readonly raw: number}>, selected: string[]): IPdfScoreVariant[] {
+	const scoreByTitle = new Map(scores.map(score => [norm(score.variant), score]));
+	const selectedTitles = new Set(selected.map(norm));
+
+	return variants.map((title, index) => {
+		const indexedScore = scores[index];
+		const score = indexedScore && norm(indexedScore.variant) === norm(title)
+			? indexedScore
+			: scoreByTitle.get(norm(title)) ?? indexedScore;
+
+		return {
+			id: score?.id ?? String(index),
+			title,
+			score: score?.score ?? 0,
+			raw: score?.raw,
+			selected: selectedTitles.has(norm(title)),
+		};
+	});
+}
+
+const norm = (value: string): string => value.trim().toLowerCase();

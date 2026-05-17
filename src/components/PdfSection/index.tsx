@@ -1,6 +1,8 @@
 import React, {useCallback, useRef, useState} from 'react';
 import './styles.scss';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
+import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
+import {usePdfScore} from '../../contexts/PdfScoreContext';
 import {Status} from '../../types';
 import {IconFile, IconClose, IconWarn} from '../icons';
 import InlineToast, {type IToast} from '../ui/InlineToast';
@@ -9,6 +11,8 @@ import PdfLoader, {type IPdfLoaderState} from '../Loader/PdfLoader';
 
 const PdfSection: React.FC = () => {
 	const {status, setStatus} = usePanelStatus();
+	const {topic, question, variants} = useQuestionFinder();
+	const {clearPdfScore} = usePdfScore();
 
 	const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
 	const [fileName, setFileName] = useState<string | null>(null);
@@ -37,6 +41,7 @@ const PdfSection: React.FC = () => {
 	};
 
 	const _clearPdf = (): void => {
+		clearPdfScore(topic, question, variants);
 		setPdfData(null);
 		setFileName(null);
 		setProcessing(false);
@@ -64,12 +69,12 @@ const PdfSection: React.FC = () => {
 					</div>
 				</div>
 
-				<div className="nmo-pdf-accuracy nmo-fade-up">
+				{!fileName && <div className="nmo-pdf-accuracy nmo-fade-up">
 					<div className="nmo-pdf-accuracy-icon"><IconWarn size={13}/></div>
 					<div className="nmo-pdf-accuracy-text">
 						PDF-режим экспериментальный: примерно 56-80% ответов могут быть правильными.
 					</div>
-				</div>
+				</div>}
 
 				<div className="nmo-pdf-upload nmo-fade-up">
 					{!fileName ? (

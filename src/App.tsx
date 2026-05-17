@@ -4,6 +4,7 @@ import {PanelUiProvider, usePanelUi} from './contexts/PanelUiContext';
 import {PanelStatusProvider} from './contexts/PanelStatusContext';
 import {QuestionFinderProvider} from './contexts/QuestionFinderContext';
 import {BugReportProvider} from './contexts/BugReportContext';
+import {PdfScoreProvider} from './contexts/PdfScoreContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import TabBar from './components/TabBar';
@@ -13,6 +14,7 @@ import AiSection from './components/AiSection';
 import PdfSection from './components/PdfSection';
 import CollapsedPill from './components/CollapsedPill';
 import AnswerHighlighter from './components/Loader/AnswerHighlighter';
+import AnswerScoreHighlighter from './components/Loader/AnswerScoreHighlighter';
 
 const FullPanel: React.FC<{initialState: IExtensionState}> = ({initialState}) => {
 	const {mode} = usePanelUi();
@@ -54,10 +56,13 @@ const App: React.FC<{initialState: IExtensionState}> = ({initialState}) => (
 		<BugReportProvider>
 			<PanelStatusProvider>
 				<QuestionFinderProvider>
-					<ErrorBoundary>
-						<AnswerHighlighter/>
-						<PanelShell initialState={initialState}/>
-					</ErrorBoundary>
+					<PdfScoreProvider>
+						<ErrorBoundary>
+							<AnswerHighlighter/>
+							<AnswerScoreHighlighter/>
+							<PanelShell initialState={initialState}/>
+						</ErrorBoundary>
+					</PdfScoreProvider>
 				</QuestionFinderProvider>
 			</PanelStatusProvider>
 		</BugReportProvider>

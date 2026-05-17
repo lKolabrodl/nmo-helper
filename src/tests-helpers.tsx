@@ -4,6 +4,7 @@ import type { RenderOptions } from '@testing-library/react';
 import { PanelUiProvider } from '../src/contexts/PanelUiContext';
 import { PanelStatusProvider } from '../src/contexts/PanelStatusContext';
 import { QuestionFinderProvider } from '../src/contexts/QuestionFinderContext';
+import { PdfScoreProvider } from '../src/contexts/PdfScoreContext';
 
 interface IProviderOptions {
 	readonly initialMode?: string;
@@ -18,7 +19,9 @@ const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({
 	<PanelUiProvider initialCollapsed={initialCollapsed} initialMode={initialMode}>
 		<PanelStatusProvider>
 			<QuestionFinderProvider>
-				{children}
+				<PdfScoreProvider>
+					{children}
+				</PdfScoreProvider>
 			</QuestionFinderProvider>
 		</PanelStatusProvider>
 	</PanelUiProvider>
