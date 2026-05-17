@@ -56,6 +56,7 @@ const AnswerHighlighter = () => {
 
 			// Вернулись к ранее закешированному вопросу
 			setStatus({ title: 'найдено в памяти', status: Status.OK });
+
 		}, 200);
 
 		return () => clearInterval(timer);

@@ -51,7 +51,7 @@ const VersionCheck: React.FC<IProps> = ({onOutdated}) => {
 			? 'Проверяю на сервере…'
 		 : state === 'uptodate'
 				? 'У вас последняя версия'
-		 : 'Доступно обновление';
+		 : 'Доступна новая версия';
 
 	const cls = `nmo-chip nmo-version-chip ${state}`;
 

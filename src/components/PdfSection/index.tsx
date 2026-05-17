@@ -2,7 +2,7 @@ import React, {useCallback, useRef, useState} from 'react';
 import './styles.scss';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {Status} from '../../types';
-import {IconFile, IconClose} from '../icons';
+import {IconFile, IconClose, IconWarn} from '../icons';
 import InlineToast, {type IToast} from '../ui/InlineToast';
 import ThinkingStrip from '../ui/ThinkingStrip';
 import PdfLoader, {type IPdfLoaderState} from '../Loader/PdfLoader';
@@ -15,7 +15,9 @@ const PdfSection: React.FC = () => {
 	const [processing, setProcessing] = useState(false);
 	const fileRef = useRef<HTMLInputElement>(null);
 
-	const _updateLoader = (state: IPdfLoaderState) => setProcessing(state.processing);
+	const _updateLoader = useCallback((state: IPdfLoaderState) => {
+		setProcessing(state.processing);
+	}, []);
 
 	const _handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -34,7 +36,7 @@ const PdfSection: React.FC = () => {
 		reader.readAsArrayBuffer(file);
 	};
 
-	const _clearPdf = () => {
+	const _clearPdf = (): void => {
 		setPdfData(null);
 		setFileName(null);
 		setProcessing(false);
@@ -59,6 +61,13 @@ const PdfSection: React.FC = () => {
 						<div className="nmo-auto-hero-sub">
 							Загрузите PDF с клиническими рекомендациями — ответы найдутся автоматически
 						</div>
+					</div>
+				</div>
+
+				<div className="nmo-pdf-accuracy nmo-fade-up">
+					<div className="nmo-pdf-accuracy-icon"><IconWarn size={13}/></div>
+					<div className="nmo-pdf-accuracy-text">
+						PDF-режим экспериментальный: примерно 56-80% ответов могут быть правильными.
 					</div>
 				</div>
 

@@ -1,5 +1,5 @@
 import {useEffect} from 'react';
-import {GlobalWorkerOptions} from 'pdfjs-dist/legacy/build/pdf.mjs';
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {answerCache} from '../../utils/answer-cache';
@@ -15,12 +15,11 @@ interface IPdfLoaderProps {
 	readonly onChange: (state: IPdfLoaderState) => void;
 }
 
-let workerReady = false;
-
-function ensureWorker() {
-	if (workerReady) return;
-	GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('pdf.worker.min.mjs');
-	workerReady = true;
+function ensurePdfWorker() {
+	const workerSrc = chrome.runtime.getURL('pdf.worker.min.mjs');
+	if (pdfjsLib.GlobalWorkerOptions.workerSrc !== workerSrc) {
+		pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
+	}
 }
 
 const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
@@ -44,14 +43,15 @@ const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
 			setStatus({title: 'анализирую PDF...', status: Status.LOADING});
 
 			try {
-				ensureWorker();
 				const {answerQuestion} = await import('nmo-pdf');
+				ensurePdfWorker();
 				if (cancelled) return;
 
 				const result = await answerQuestion(new Uint8Array(pdfData.slice(0)), {
 					question,
 					variants,
 					type: isSingle ? 'single' : 'multi',
+					pdfjsLib,
 				});
 
 				if (cancelled) return;

@@ -1982,12 +1982,11 @@ natural-compare@^1.4.0:
   resolved "https://registry.npmjs.org/natural-compare/-/natural-compare-1.4.0.tgz"
   integrity sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==
 
-"nmo-pdf@github:lKolabrodl/nmo-helper-pdf":
-  version "1.1.0"
-  resolved "git+ssh://git@github.com/lKolabrodl/nmo-helper-pdf.git#8db22edc9c1f4e16d7da42a23b5a18533c6282a0"
+"nmo-pdf@git+https://github.com/lKolabrodl/nmo-helper-pdf.git":
+  version "0.1.0"
+  resolved "git+ssh://git@github.com/lKolabrodl/nmo-helper-pdf.git#0b480c0ca5ad9c1bda9ab97c903adeaf107aa56f"
   dependencies:
     pdfjs-dist "^5.7.284"
-    snowball-stemmers "^0.6.0"
 
 node-addon-api@^7.0.0:
   version "7.1.1"
@@ -2156,9 +2155,9 @@ possible-typed-array-names@^1.0.0:
   integrity sha512-/+5VFTchJDoVj3bhoqi6UeymcD00DAwb1nJwamzPvHEszJ4FpF6SNNbUbOS8yI56qHzdV8eK0qEfOSiodkTdxg==
 
 postcss@^8.5.8:
-  version "8.5.9"
-  resolved "https://registry.npmjs.org/postcss/-/postcss-8.5.9.tgz"
-  integrity sha512-7a70Nsot+EMX9fFU3064K/kdHWZqGVY+BADLyXc8Dfv+mTLLVl6JzJpPaCZ2kQL9gIJvKXSLMHhqdRRjwQeFtw==
+  version "8.5.14"
+  resolved "https://registry.npmjs.org/postcss/-/postcss-8.5.14.tgz"
+  integrity sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==
   dependencies:
     nanoid "^3.3.11"
     picocolors "^1.1.1"
@@ -2451,11 +2450,6 @@ siginfo@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/siginfo/-/siginfo-2.0.0.tgz"
   integrity sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==
-
-snowball-stemmers@^0.6.0:
-  version "0.6.0"
-  resolved "https://registry.npmjs.org/snowball-stemmers/-/snowball-stemmers-0.6.0.tgz"
-  integrity sha512-47VTJvsZzEme3VxhbUFc9wR0CX8fYKNMgL7AiBdJcHUrwbmN7htFroeX+8ESIAaoNgwEgwI2wnv1HIcqQqAdcA==
 
 source-map-js@^1.2.1, "source-map-js@>=0.6.2 <2.0.0":
   version "1.2.1"
