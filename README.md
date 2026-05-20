@@ -8,7 +8,7 @@
 [![Downloads](https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper/releases)
 [![Stars](https://img.shields.io/github/stars/lKolabrodl/nmo-helper?style=flat-square&color=fbbf24&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/lKolabrodl/nmo-helper/blob/main/LICENSE)
-[![VirusTotal](https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/9da2c493686713029dd7339ad49647343599f0399c38108e73e81abb421b2a4f?nocache=1)
+[![VirusTotal](https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/fb6bee3d7fe89b5d6f69d5d4e1353f793f43aba5970573b1906ed87db2908721?nocache=1)
 
 🌐 **Сайт:** [nmo-helper.ru](https://nmo-helper.ru)<br>
 📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)<br>
@@ -203,7 +203,7 @@ src/
 npm install
 npm run build       # Собрать dist/chrome, dist/firefox, dist/firefox-store
 npm run dev         # Сборка в watch-режиме
-npm test            # Запустить тесты (312 тестов, покрытие utils + api + components)
+npm test            # Запустить тесты
 ```
 
 ---
@@ -213,7 +213,7 @@ npm test            # Запустить тесты (312 тестов, покр�
 Расширение **не собирает данные**, **не требует регистрации**, **не отправляет аналитику** и **не подсовывает реферальные ссылки**. Но не верьте на слово — проверьте сами:
 
 - Исходный код открыт на GitHub
-- Проверено через [VirusTotal](https://www.virustotal.com/gui/file/9da2c493686713029dd7339ad49647343599f0399c38108e73e81abb421b2a4f?nocache=1)
+- Проверено через [VirusTotal](https://www.virustotal.com/gui/file/fb6bee3d7fe89b5d6f69d5d4e1353f793f43aba5970573b1906ed87db2908721?nocache=1)
 - Подписано и опубликовано в [Firefox Add-ons](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/)
 - PDF-файлы обрабатываются локально в браузере и не отправляются на сервер
 - Баг-репорт отправляется только вручную после подтверждения пользователя
