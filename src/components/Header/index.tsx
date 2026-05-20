@@ -8,6 +8,8 @@ import VersionCheck from '../VersionCheck';
 import BugReportButton from '../BugReportButton';
 import type {IVersionInfo} from '../../api/version-check';
 
+const UPDATE_URL = 'https://nmo-helper.ru/instruction#update';
+
 const Header: React.FC = (): React.JSX.Element => {
 	const {setCollapsed} = usePanelUi();
 	const {topic, question, variants} = useQuestionFinder();
@@ -121,6 +123,12 @@ const UpdateBanner: React.FC<{info: IVersionInfo; onClose: () => void}> = ({info
 			<div className="nmo-update-title">Доступна v{info.latest}</div>
 			<div className="nmo-update-sub">у вас v{info.current} — обновите расширение</div>
 		</div>
+		<a className="nmo-update-cta"
+			href={UPDATE_URL}
+			target="_blank"
+			rel="noreferrer">
+			Обновить
+		</a>
 		<button type="button" className="nmo-icon-btn nmo-update-close" onClick={onClose}>
 			<IconClose size={12}/>
 		</button>
