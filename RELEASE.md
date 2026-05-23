@@ -32,6 +32,7 @@ Then make sure the same version is present in:
 - `src/manifest.chrome.json`
 - `src/manifest.firefox.json`
 - `src/manifest.firefox-store.json`
+- `src/popup.html`
 - `README.md`
 
 After the version bump, rebuild `dist/`:

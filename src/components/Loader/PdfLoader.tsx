@@ -1,5 +1,4 @@
 import {useEffect} from 'react';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {usePdfScore, type IPdfScoreVariant} from '../../contexts/PdfScoreContext';
@@ -16,11 +15,29 @@ interface IPdfLoaderProps {
 	readonly onChange: (state: IPdfLoaderState) => void;
 }
 
-function ensurePdfWorker() {
-	const workerSrc = chrome.runtime.getURL('pdf.worker.min.mjs');
-	if (pdfjsLib.GlobalWorkerOptions.workerSrc !== workerSrc) {
-		pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
+interface IPdfJsRuntime {
+	readonly getDocument?: unknown;
+	readonly GlobalWorkerOptions?: {
+		workerSrc: string;
+	};
+}
+
+interface IMedPdfGlobal {
+	readonly pdfjsLib?: IPdfJsRuntime;
+}
+
+async function loadMedPdfNmo() {
+	const medPdfNmo = await import('med-pdf-nmo/browser');
+	const pdfjsLib = (globalThis as typeof globalThis & IMedPdfGlobal).pdfjsLib;
+
+	if (!pdfjsLib?.GlobalWorkerOptions) {
+		throw new Error('PDF.js browser runtime is not available.');
 	}
+
+	pdfjsLib.GlobalWorkerOptions.workerSrc = chrome.runtime.getURL('pdf.worker.min.mjs');
+	medPdfNmo.setPdfJsLib(pdfjsLib);
+
+	return medPdfNmo;
 }
 
 const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
@@ -45,15 +62,13 @@ const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
 			setStatus({title: 'анализирую PDF...', status: Status.LOADING});
 
 			try {
-				const {answerQuestion} = await import('nmo-pdf');
-				ensurePdfWorker();
+				const {answerQuestion} = await loadMedPdfNmo();
 				if (cancelled) return;
 
 				const result = await answerQuestion(new Uint8Array(pdfData.slice(0)), {
 					question,
 					variants,
 					type: isSingle ? 'single' : 'multi',
-					pdfjsLib,
 				});
 
 				if (cancelled) return;
@@ -69,12 +84,12 @@ const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
 
 				const conf = Math.round(result.confidence * 100);
 
-				if (result.confidence < 0.5) setStatus({title: `низкая уверенность (${conf}%) • PDF`, status: Status.WARN});
-				else setStatus({title: `найдено (${conf}%) • PDF`, status: Status.OK});
+				if (result.confidence < 0.5) setStatus({title: `низкая уверенность ${conf}%`, status: Status.WARN});
+				else setStatus({title: `найдено, уверенность ${conf}%`, status: Status.OK});
 
 			} catch (err) {
 				if (!cancelled) {
-					console.error('[nmo-pdf]', err);
+					console.error('[med-pdf-nmo]', err);
 					setStatus({title: 'ошибка анализа PDF', status: Status.ERR});
 				}
 			} finally {

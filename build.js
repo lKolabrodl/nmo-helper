@@ -116,7 +116,7 @@ async function build() {
     fs.copyFileSync(path.join(SRC, 'popup.css'), path.join(outDir, 'popup.css'));
     fs.copyFileSync(path.join(SRC, 'popup.js'), path.join(outDir, 'popup.js'));
 
-    // Copy pdfjs worker for nmo-pdf browser runtime.
+    // Copy pdfjs worker for med-pdf-nmo browser runtime.
     fs.copyFileSync(
       path.join(__dirname, 'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs'),
       path.join(outDir, 'pdf.worker.min.mjs')
