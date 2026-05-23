@@ -53,21 +53,22 @@ npx tsc --noEmit --pretty false
 Create archives with Python `zipfile`, not PowerShell `Compress-Archive`.
 The generated zip files are ignored by git.
 
-Expected local artifacts for a release:
+Prepare all four zip archives for every release:
 
 - `nmo-helper-chrome-<version>.zip`
-  - Public GitHub Release asset.
-  - Contains a top-level folder like `nmo-helper-chrome-4.1.0/`.
+  - Chromium build for Chrome / Yandex Browser / Edge / Brave / Opera.
+- `nmo-helper-firefox-<version>.zip`
+  - Firefox build for signing/private distribution.
 - `nmo-helper-firefox-store-<version>.zip`
-  - Upload to Firefox Add-ons / AMO.
+  - Firefox Add-ons / AMO store build.
   - `manifest.json` is at archive root.
 - `nmo-helper-source-<version>.zip`
-  - Source archive for AMO reviewers.
+  - Source archive for Firefox Add-ons / AMO reviewers.
   - Include source files, configs, lock files, `README.md`, and `BUILD.md`.
   - Do not include `dist/`, `node_modules/`, `.git/`, zip files, or xpi files.
-- `nmo-helper-firefox-<version>.zip`
-  - Local/private Firefox build artifact if needed.
-  - Do not attach this to the public GitHub Release by default.
+
+After AMO approval, also keep the signed package:
+
 - `firefox_nmo_helper.xpi`
   - Signed Firefox package after AMO approval.
   - Public GitHub Release asset.
