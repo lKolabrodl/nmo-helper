@@ -1,0 +1,156 @@
+@use '../../vars' as *;
+
+.nmo-settings {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.nmo-settings-trigger.active {
+  background: $bg-chip;
+  color: $text;
+}
+
+.nmo-settings-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: 244px;
+  padding: 6px;
+  background: $bg-frame-2;
+  border: 1px solid $border;
+  border-radius: $r-md;
+  box-shadow: $shadow-dropdown;
+  cursor: default;
+}
+
+.nmo-settings-option {
+  min-height: 34px;
+  padding: 7px 8px;
+  border-radius: $r-sm;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: $text-2;
+  cursor: pointer;
+  user-select: none;
+  transition: background .15s, color .15s;
+
+  &:hover {
+    background: $bg-chip;
+    color: $text;
+  }
+}
+
+.nmo-settings-option-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+
+  &:focus-visible ~ .nmo-settings-option-check {
+    box-shadow: 0 0 0 3px $accent-ring;
+  }
+}
+
+.nmo-settings-option-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.nmo-settings-option-check {
+  width: 18px;
+  height: 18px;
+  border-radius: $r-sm;
+  border: 1px solid $border-strong;
+  background: $bg-input;
+  color: $accent-text;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  transition: background .15s, border-color .15s, box-shadow .15s;
+
+  svg {
+    opacity: 0;
+    transform: scale(0.75);
+    transition: opacity .15s, transform .15s;
+  }
+}
+
+.nmo-settings-option.on .nmo-settings-option-check {
+  background: $accent;
+  border-color: $accent;
+
+  svg {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.nmo-settings-section {
+  margin-top: 6px;
+  padding: 9px 8px 8px;
+  border-top: 1px solid $border-soft;
+
+  &.disabled {
+    .nmo-settings-section-title,
+    .nmo-settings-number-field {
+      color: $text-disabled;
+    }
+  }
+}
+
+.nmo-settings-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: $text;
+}
+
+.nmo-settings-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.nmo-settings-number-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: $text-3;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  input {
+    width: 100%;
+    height: 30px;
+    padding: 6px 7px;
+    border: 1px solid $border;
+    border-radius: $r-sm;
+    outline: none;
+    background: $bg-input;
+    color: $text;
+    font-family: $font-mono;
+    font-size: 11px;
+    transition: background .15s, border-color .15s;
+
+    &:focus {
+      background: $bg-input-hover;
+      border-color: $accent;
+    }
+
+    &:disabled {
+      color: $text-disabled;
+      background: rgba(14, 19, 32, 0.55);
+      border-color: $border-soft;
+      cursor: not-allowed;
+    }
+  }
+}

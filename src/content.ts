@@ -2,6 +2,13 @@ import './content.scss';
 import type { IExtensionState } from './types';
 import { storageGet } from './utils';
 import { createPanel, initPanelBehavior } from './Panel';
+import {
+	AUTO_SOLVE_DELAY_MAX_STORAGE_KEY,
+	AUTO_SOLVE_DELAY_MIN_STORAGE_KEY,
+	AUTO_SOLVE_STORAGE_KEY,
+	DEFAULT_AUTO_SOLVE_DELAY_MAX_SECONDS,
+	DEFAULT_AUTO_SOLVE_DELAY_MIN_SECONDS,
+} from './contexts/SettingsContext';
 
 /** Слушает сообщения от popup для экспорта кеша */
 function initExportListener() {
@@ -25,6 +32,15 @@ function initExportListener() {
 		savedCustomAiUrl: await storageGet('customAiUrl', ''),
 		savedCustomAiToken: await storageGet('customAiToken', ''),
 		savedCustomAiModel: await storageGet('customAiModel', ''),
+		savedAutoSolveEnabled: await storageGet(AUTO_SOLVE_STORAGE_KEY, false),
+		savedAutoSolveDelayMinSeconds: await storageGet(
+			AUTO_SOLVE_DELAY_MIN_STORAGE_KEY,
+			DEFAULT_AUTO_SOLVE_DELAY_MIN_SECONDS
+		),
+		savedAutoSolveDelayMaxSeconds: await storageGet(
+			AUTO_SOLVE_DELAY_MAX_STORAGE_KEY,
+			DEFAULT_AUTO_SOLVE_DELAY_MAX_SECONDS
+		),
 	};
 
 	const panel = createPanel(state);

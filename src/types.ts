@@ -25,6 +25,12 @@ export interface IExtensionState {
   readonly savedCustomAiToken: string;
   /** Модель для кастомного AI endpoint */
   readonly savedCustomAiModel: string;
+  /** Автоматически отмечать найденные ответы */
+  readonly savedAutoSolveEnabled: boolean;
+  /** Минимальный интервал автопрохождения вопроса, секунды */
+  readonly savedAutoSolveDelayMinSeconds: number;
+  /** Максимальный интервал автопрохождения вопроса, секунды */
+  readonly savedAutoSolveDelayMaxSeconds: number;
 }
 
 /** Описание AI-модели для выбора в панели */
