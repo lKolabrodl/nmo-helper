@@ -41,9 +41,41 @@ export const SELECTORS = {
 	variant: [
 		'.mdc-form-field span',
 	],
+	/** Нативный input внутри варианта ответа */
+	answerInput: [
+		'input[type="radio"], input[type="checkbox"]',
+	],
+	/** Интерактивная область варианта ответа */
+	answerTouchTarget: [
+		'.mat-mdc-radio-touch-target',
+		'.mat-mdc-checkbox-touch-target',
+	],
 	/** Radio-инпут для определения типа «один ответ» */
 	radioInput: [
 		'input[type="radio"]',
+	],
+	/** Кнопка перехода после ответа: следующий вопрос или финальное завершение */
+	nextQuestionButton: [
+		'.question-buttons-primary',
+		'.question-buttons button',
+		'button',
+	],
+	/** Блок действий теста: список вопросов + завершение тестирования */
+	quizActions: [
+		'mat-card-actions.mat-mdc-card-actions',
+		'.mat-mdc-card-actions.mdc-card__actions',
+		'.mat-mdc-card-actions',
+	],
+	/** Кнопка завершения тестирования */
+	finishQuizButton: [
+		'.quiz-buttons-primary',
+		'button',
+	],
+	/** Кнопки в модалке подтверждения завершения тестирования */
+	finishQuizConfirmButton: [
+		'lib-quiz-finishing-confirm-dialog button',
+		'.mat-mdc-dialog-surface button',
+		'.mat-mdc-dialog-actions button',
 	],
 } as const;
 

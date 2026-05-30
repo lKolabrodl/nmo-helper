@@ -137,3 +137,110 @@ export function isSingleAnswer(): boolean {
 	const anchor = getQuestionAnchor();
 	return !!anchor && !!queryFirst('radioInput', anchor);
 }
+
+/**
+ * Нативный radio/checkbox input для DOM-элемента варианта.
+ *
+ * В Material-разметке текст варианта лежит внутри label, а input — соседним
+ * элементом в `.mdc-form-field`. Этот helper инкапсулирует обход разметки,
+ * чтобы loader'ы не дублировали селекторы.
+ */
+export function getAnswerInput(variantElement: HTMLElement): HTMLInputElement | null {
+	const field = variantElement.closest<HTMLElement>('.mdc-form-field');
+	const fieldInput = field ? queryFirst<HTMLInputElement>('answerInput', field) : null;
+	if (fieldInput) return fieldInput;
+
+	const label = variantElement.closest<HTMLLabelElement>('label');
+	if (label?.htmlFor) {
+		const input = document.getElementById(label.htmlFor);
+		if (isAnswerInput(input)) return input;
+	}
+
+	const root = variantElement.closest<HTMLElement>(
+		'mat-radio-button, mat-checkbox, mat-list-item, .radio-button_answer, .checkbox-button_answer'
+	);
+	return root ? queryFirst<HTMLInputElement>('answerInput', root) : null;
+}
+
+/**
+ * Лучший кликабельный элемент для выбора варианта.
+ */
+export function getAnswerClickTarget(variantElement: HTMLElement): HTMLElement {
+	const field = variantElement.closest<HTMLElement>('.mdc-form-field');
+	const input = getAnswerInput(variantElement);
+	return input?.labels?.[0]
+		?? field?.querySelector<HTMLElement>('label')
+		?? (field ? queryFirst<HTMLElement>('answerTouchTarget', field) : null)
+		?? input
+		?? variantElement;
+}
+
+/**
+ * Кнопка перехода после ответа: «Следующий вопрос» или финальная «Завершить тестирование».
+ */
+export function getNextQuestionButton(): HTMLButtonElement | null {
+	return queryAll<HTMLButtonElement>('nextQuestionButton')
+		.find(isQuestionForwardButton) ?? null;
+}
+
+/**
+ * Блок действий теста рядом с кнопкой «Завершить тестирование».
+ */
+export function getQuizActionsElement(): HTMLElement | null {
+	const finishButton = getFinishQuizButton();
+	return finishButton?.closest<HTMLElement>('mat-card-actions, .mat-mdc-card-actions, .mdc-card__actions')
+		?? queryFirst('quizActions');
+}
+
+/**
+ * Кнопка «Завершить тестирование».
+ */
+export function getFinishQuizButton(root: ParentNode = document): HTMLButtonElement | null {
+	return queryAll<HTMLButtonElement>('finishQuizButton', root)
+		.find(isFinishQuizButton) ?? null;
+}
+
+/**
+ * Кнопка «Да» в модалке подтверждения завершения тестирования.
+ */
+export function getFinishQuizConfirmButton(root: ParentNode = document): HTMLButtonElement | null {
+	return queryAll<HTMLButtonElement>('finishQuizConfirmButton', root)
+		.find(isFinishQuizConfirmButton) ?? null;
+}
+
+function isAnswerInput(element: HTMLElement | null): element is HTMLInputElement {
+	return element instanceof HTMLInputElement && (element.type === 'radio' || element.type === 'checkbox');
+}
+
+function isNextQuestionButton(button: HTMLButtonElement): boolean {
+	const text = button.textContent?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
+	if (text.includes('следующий вопрос')) return true;
+	return !!button.querySelector('[svgicon="arrow-right"]');
+}
+
+function isQuestionForwardButton(button: HTMLButtonElement): boolean {
+	return isNextQuestionButton(button) || isQuestionFinishButton(button);
+}
+
+function isQuestionFinishButton(button: HTMLButtonElement): boolean {
+	const text = button.textContent?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
+	return text.includes('завершить тестирование')
+		&& !!button.closest('.question-buttons');
+}
+
+function isFinishQuizButton(button: HTMLButtonElement): boolean {
+	const text = button.textContent?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
+	if (text.includes('завершить тестирование')) return true;
+	return button.classList.contains('quiz-buttons-primary')
+		&& !!button.closest('mat-card-actions, .mat-mdc-card-actions, .mdc-card__actions');
+}
+
+function isFinishQuizConfirmButton(button: HTMLButtonElement): boolean {
+	const text = button.textContent?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
+	if (text !== 'да') return false;
+
+	const dialog = button.closest<HTMLElement>('lib-quiz-finishing-confirm-dialog, .mat-mdc-dialog-surface');
+	const dialogText = dialog?.textContent?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
+
+	return dialogText.includes('выйти из тестирования');
+}

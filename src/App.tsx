@@ -17,6 +17,7 @@ import CollapsedPill from './components/CollapsedPill';
 import AnswerHighlighter from './components/Loader/AnswerHighlighter';
 import AnswerScoreHighlighter from './components/Loader/AnswerScoreHighlighter';
 import AutoSolveLoader from './components/Loader/AutoSolveLoader';
+import QuizActionsStatus from './components/QuizActionsStatus';
 
 const FullPanel: React.FC<{initialState: IExtensionState}> = ({initialState}) => {
 	const {mode} = usePanelUi();
@@ -62,6 +63,7 @@ const App: React.FC<{initialState: IExtensionState}> = ({initialState}) => (
 								<AnswerHighlighter/>
 								<AnswerScoreHighlighter/>
 								<AutoSolveLoader/>
+								<QuizActionsStatus/>
 								<PanelShell initialState={initialState}/>
 							</ErrorBoundary>
 						</PdfScoreProvider>
