@@ -195,7 +195,7 @@ function clickSingleAnswerIndex(index: number | undefined): void {
 
 	const target = getAnswerTargetAt(index);
 	const control = target?.control ?? null;
-	if (control && !control.disabled && !control.checked) {
+	if (target && control && !control.disabled && !control.checked) {
 		clickAnswerControl(control, target.variantElement);
 		return;
 	}

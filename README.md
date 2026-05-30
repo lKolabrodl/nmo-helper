@@ -1,8 +1,8 @@
-# NMO Helper v4.1.1
+# NMO Helper v4.2.0
 
 > Умный помощник в прохождении тестов НМО на портале [edu.rosminzdrav.ru](https://a.edu.rosminzdrav.ru) — бесплатное расширение для браузера с открытым исходным кодом.
 
-Авто-поиск ответов на `rosmedicinfo.ru` и `24forcare.com`, AI-режим (GPT, Gemini, Claude, DeepSeek), PDF-режим: поиск по клиническим рекомендациям, работает из коробки.
+Авто-поиск ответов на `rosmedicinfo.ru` и `24forcare.com`, автоответ с настраиваемым интервалом, AI-режим (GPT, Gemini, Claude, DeepSeek), PDF-режим: поиск по клиническим рекомендациям, работает из коробки.
 
 [![Firefox Add-ons](https://img.shields.io/amo/v/nmo-helper?style=flat-square&label=Firefox%20Add-ons&color=ff9500&logo=firefox-browser&logoColor=white)](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/)
 [![Downloads](https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper/releases)
@@ -25,6 +25,7 @@
 | **PDF-режим** | Поиск по клиническим рекомендациям из локального PDF, со score для вариантов |
 | **Ручной поиск** | Поиск ответов по названию теста на `rosmedicinfo.ru` и `24forcare.com` |
 | **Автоподсветка** | Правильные ответы подсвечиваются при переходе между вопросами |
+| **Автоответ** | Может автоматически отмечать найденные ответы и переходить дальше с заданным интервалом |
 | **Кеширование** | Ответы кешируются — при навигации назад/вперёд повторных запросов нет |
 | **Умное сопоставление** | Нормализация тире, смешанных кириллица/латиница, нечёткий поиск |
 | **Плавающая панель** | Перетаскивание, сворачивание, сохранение позиции между сессиями |
@@ -41,12 +42,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-chrome-4.1.1.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.1.1/nmo-helper-chrome-4.1.1.zip)
+1. Скачайте [`nmo-helper-chrome-4.2.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.2.0/nmo-helper-chrome-4.2.0.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-chrome-4.1.1`
+6. Выберите папку `nmo-helper-chrome-4.2.0`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
@@ -62,7 +63,7 @@
 
 **Способ 2 — прямая установка `.xpi`:**
 
-1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.1.1/firefox_nmo_helper.xpi)
+1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.2.0/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
 3. Подтвердите установку
 
@@ -129,8 +130,8 @@
 |---------|--------|----------|
 | 🟢 low | gpt-4o-mini, gemini-2.0-flash, claude-haiku-4.5 | Быстрые и дешёвые |
 | 🔵 medium | gpt-4.1-mini, gemini-2.5-flash | Баланс цена/качество |
-| 🟡 high | o3-mini, o4-mini, claude-sonnet-4.6 | Высокая точность |
-| 🟣 ultra | claude-opus-4.6, gemini-3.1-pro | Максимальная точность |
+| 🟡 high | gpt-5.3-chat-latest, o3-mini, o4-mini, claude-sonnet-4.6 | Высокая точность |
+| 🟣 ultra | claude-opus-4.8, gemini-3.1-pro, gpt-5.5-pro | Максимальная точность |
 
 > **Disclaimer:** AI-модели решают медицинские тесты НМО в среднем на оценку 3 — вопросы основаны на специфических клинических рекомендациях РФ. Рекомендуем использовать AI как вспомогательный инструмент, а основной упор делать на **авто-поиск**.
 
