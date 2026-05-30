@@ -17,6 +17,9 @@ export const LOW_CONFIDENCE_THRESHOLD = 0.5;
 /** Максимальное количество тем в кеше ответов (LRU — старые вытесняются) */
 export const CACHE_MAX_TOPICS = 10;
 
+/** Ссылка на инструкцию по обновлению расширения */
+export const UPDATE_URL = 'https://nmo-helper.ru/instruction#update';
+
 /**
  * DOM-селекторы страницы НМО.
  * Каждый ключ — массив CSS-селекторов в порядке приоритета (fallback-цепочка).
@@ -115,7 +118,7 @@ export const BUG_REPORT_STORAGE_KEY = 'bugReports';
  * - tag: 'rec' — рекомендованная, 'pricey' — дорогая (ставится на флагманов).
  *
  * id — точный идентификатор у ProxyAPI; name — отображаемое имя в дропдауне.
- * Anthropic id с дефисами (`claude-opus-4-7`), name с точкой (`claude-opus-4.7`).
+ * Anthropic id с дефисами (`claude-opus-4-8`), name с точкой (`claude-opus-4.8`).
  */
 export const AI_MODELS: IAiModel[] = [
 	// low — быстрые / дешёвые для простых задач
@@ -124,7 +127,9 @@ export const AI_MODELS: IAiModel[] = [
 	{ id: 'gpt-5-nano',             name: 'gpt-5-nano',             tier: 'low' },
 	{ id: 'gpt-5.4-nano',           name: 'gpt-5.4-nano',           tier: 'low' },
 	{ id: 'gemini-2.0-flash',       name: 'gemini-2.0-flash',       tier: 'low' },
+	{ id: 'gemini-2.0-flash-lite',  name: 'gemini-2.0-flash-lite',  tier: 'low' },
 	{ id: 'gemini-2.5-flash-lite',  name: 'gemini-2.5-flash-lite',  tier: 'low' },
+	{ id: 'gemini-3.1-flash-lite',  name: 'gemini-3.1-flash-lite',  tier: 'low' },
 	{ id: 'claude-haiku-4-5',       name: 'claude-haiku-4.5',       tier: 'low' },
 
 	// medium — баланс цены и качества
@@ -139,15 +144,22 @@ export const AI_MODELS: IAiModel[] = [
 	// high — флагманы для точности
 	{ id: 'gpt-4.1',                name: 'gpt-4.1',                tier: 'high' },
 	{ id: 'gpt-5',                  name: 'gpt-5',                  tier: 'high' },
+	{ id: 'gpt-5.1',                name: 'gpt-5.1',                tier: 'high' },
+	{ id: 'gpt-5.2',                name: 'gpt-5.2',                tier: 'high' },
+	{ id: 'gpt-5.3-chat-latest',    name: 'gpt-5.3-chat-latest',    tier: 'high' },
 	{ id: 'gpt-5.4',                name: 'gpt-5.4',                tier: 'high',   tag: 'pricey' },
 	{ id: 'o3-mini',                name: 'o3-mini',                tier: 'high',   tag: 'rec' },
 	{ id: 'o4-mini',                name: 'o4-mini',                tier: 'high',   tag: 'rec' },
 	{ id: 'gemini-2.5-pro',         name: 'gemini-2.5-pro',         tier: 'high' },
+	{ id: 'gemini-3.5-flash',       name: 'gemini-3.5-flash',       tier: 'high' },
 	{ id: 'claude-sonnet-4-6',      name: 'claude-sonnet-4.6',      tier: 'high',   tag: 'rec' },
 
 	// ultra — премиум reasoning / pro-модели
 	{ id: 'gpt-5.5',                name: 'gpt-5.5',                tier: 'ultra',  tag: 'pricey' },
+	{ id: 'gpt-5.4-pro',            name: 'gpt-5.4-pro',            tier: 'ultra',  tag: 'pricey' },
+	{ id: 'gpt-5.5-pro',            name: 'gpt-5.5-pro',            tier: 'ultra',  tag: 'pricey' },
 	{ id: 'o3',                     name: 'o3',                     tier: 'ultra',  tag: 'pricey' },
 	{ id: 'gemini-3.1-pro-preview', name: 'gemini-3.1-pro',         tier: 'ultra' },
-	{ id: 'claude-opus-4-7',        name: 'claude-opus-4.7',        tier: 'ultra',  tag: 'rec' },
+	{ id: 'claude-opus-4-7',        name: 'claude-opus-4.7',        tier: 'ultra' },
+	{ id: 'claude-opus-4-8',        name: 'claude-opus-4.8',        tier: 'ultra',  tag: 'rec' },
 ];

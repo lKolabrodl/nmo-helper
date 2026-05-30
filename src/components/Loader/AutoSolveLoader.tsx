@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useRef} from 'react';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {useSettings} from '../../contexts/SettingsContext';
@@ -14,10 +14,16 @@ import {answerCache} from '../../utils/answer-cache';
 
 const MOUSE_IDLE_DELAY_MS = 1500;
 const NEXT_CLICK_DELAY_MS = 300;
-const CACHE_POLL_INTERVAL_MS = 300;
+const AUTO_SOLVE_CHECK_INTERVAL_MS = 300;
 const MULTI_ANSWER_DOM_REFRESH_TIMEOUT_MS = 700;
 const MULTI_ANSWER_DOM_SETTLE_MS = 500;
 const FINISH_CONFIRM_TIMEOUT_MS = 5000;
+
+interface IPlannedAutoSolve {
+	readonly id: string;
+	readonly idx: number[];
+	readonly runAt: number;
+}
 
 /**
  * Заготовка автопрохождения.
@@ -31,20 +37,22 @@ const AutoSolveLoader = () => {
 	const {autoSolveEnabled, autoSolveDelayMinSeconds, autoSolveDelayMaxSeconds} = useSettings();
 	const {status} = usePanelStatus();
 	const {topic, question, variants, isSingle} = useQuestionFinder();
-	const scheduledAnswerIdRef = useRef('');
-	const mouseIdleTimerRef = useRef<number | null>(null);
 
-	const [mouseActive, setMouseActive] = useState(false);
-	const [cacheWake, setCacheWake] = useState(0);
+	const completedAnswerIdRef = useRef('');
+	const plannedAnswerRef = useRef<IPlannedAutoSolve | null>(null);
+	const mouseIdleTimerRef = useRef<number | null>(null);
+	const mouseActiveRef = useRef(false);
+	const runningRef = useRef(false);
 
 	useEffect(() => {
 		const markMouseActive = (): void => {
-			setMouseActive(true);
+			mouseActiveRef.current = true;
+			plannedAnswerRef.current = null;
 
 			if (mouseIdleTimerRef.current !== null) window.clearTimeout(mouseIdleTimerRef.current);
 
 			mouseIdleTimerRef.current = window.setTimeout(() => {
-				setMouseActive(false);
+				mouseActiveRef.current = false;
 				mouseIdleTimerRef.current = null;
 			}, MOUSE_IDLE_DELAY_MS);
 
@@ -59,61 +67,64 @@ const AutoSolveLoader = () => {
 	}, []);
 
 	useEffect(() => {
-		if (!autoSolveEnabled) return;
-		if (!canAutoSolveWithStatus(status.status)) return;
-		if (mouseActive) return;
-		if (!question || !variants.length) return;
-		if (answerCache.get(topic ?? '', question, variants)?.idx.length) return;
 
 		const timer = window.setInterval(() => {
-			if (!answerCache.get(topic ?? '', question, variants)?.idx.length) return;
 
-			window.clearInterval(timer);
-			setCacheWake(value => value + 1);
-		}, CACHE_POLL_INTERVAL_MS);
+			if (!autoSolveEnabled) {
+				completedAnswerIdRef.current = '';
+				plannedAnswerRef.current = null;
+				return;
+			}
 
-		return () => window.clearInterval(timer);
-	}, [
-		autoSolveEnabled,
-		status.status,
-		status.title,
-		mouseActive,
-		topic,
-		question,
-		variants,
-	]);
+			if (!canAutoSolveWithStatus(status.status)) {
+				plannedAnswerRef.current = null;
+				return;
+			}
 
-	useEffect(() => {
-		if (!autoSolveEnabled) {
-			scheduledAnswerIdRef.current = '';
-			return;
-		}
-		if (!canAutoSolveWithStatus(status.status)) return;
-		if (mouseActive) return;
+			if (mouseActiveRef.current) {
+				plannedAnswerRef.current = null;
+				return;
+			}
 
-		if (!question || !variants.length) return;
+			if (runningRef.current) return;
+			if (!question || !variants.length) {
+				plannedAnswerRef.current = null;
+				return;
+			}
 
-		const cached = answerCache.get(topic ?? '', question, variants);
-		if (!cached?.idx.length) return;
+			const cached = answerCache.get(topic ?? '', question, variants);
+			if (!cached?.idx.length) {
+				plannedAnswerRef.current = null;
+				return;
+			}
 
-		const scheduledAnswerId = `${cached.id}::${isSingle ? 'single' : 'multi'}`;
-		if (scheduledAnswerIdRef.current === scheduledAnswerId) return;
+			const answerId = `${cached.id}::${isSingle ? 'single' : 'multi'}`;
+			if (completedAnswerIdRef.current === answerId) return;
 
-		scheduledAnswerIdRef.current = scheduledAnswerId;
+			const planned = plannedAnswerRef.current;
+			if (!planned || planned.id !== answerId) {
+				plannedAnswerRef.current = {
+					id: answerId,
+					idx: [...cached.idx],
+					runAt: Date.now() + getRandomDelayMs(autoSolveDelayMinSeconds, autoSolveDelayMaxSeconds),
+				};
+				return;
+			}
 
-		let fired = false;
-		const timer = window.setTimeout(() => {
-			fired = true;
-			void clickAnswerIndexes(cached.idx).then(() => {
-				window.setTimeout(() => {
-					void clickNextQuestionButton();
-				}, NEXT_CLICK_DELAY_MS);
+			if (Date.now() < planned.runAt) return;
+
+			plannedAnswerRef.current = null;
+			completedAnswerIdRef.current = answerId;
+			runningRef.current = true;
+
+			void runAutoSolve(planned.idx).finally(() => {
+				runningRef.current = false;
 			});
-		}, getRandomDelayMs(autoSolveDelayMinSeconds, autoSolveDelayMaxSeconds));
+		}, AUTO_SOLVE_CHECK_INTERVAL_MS);
 
 		return () => {
-			window.clearTimeout(timer);
-			if (!fired) scheduledAnswerIdRef.current = '';
+			window.clearInterval(timer);
+			plannedAnswerRef.current = null;
 		};
 	}, [
 		autoSolveEnabled,
@@ -121,12 +132,10 @@ const AutoSolveLoader = () => {
 		autoSolveDelayMaxSeconds,
 		status.status,
 		status.title,
-		mouseActive,
 		topic,
 		question,
 		variants,
 		isSingle,
-		cacheWake,
 	]);
 
 	return null;
@@ -142,6 +151,12 @@ function getRandomDelayMs(minSeconds: number, maxSeconds: number): number {
 
 function canAutoSolveWithStatus(status: typeof Status[keyof typeof Status]): boolean {
 	return status === Status.OK || status === Status.WARN;
+}
+
+async function runAutoSolve(correctIndexes: number[]): Promise<void> {
+	await clickAnswerIndexes(correctIndexes);
+	await wait(NEXT_CLICK_DELAY_MS);
+	await clickNextQuestionButton();
 }
 
 async function clickAnswerIndexes(correctIndexes: number[]): Promise<void> {

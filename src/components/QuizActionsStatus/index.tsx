@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {createPortal} from 'react-dom';
-import {usePanelUi} from '../../contexts/PanelUiContext';
 import {useSettings} from '../../contexts/SettingsContext';
 import {getFinishQuizButton, getQuizActionsElement} from '../../utils';
 import './styles.scss';
@@ -8,7 +7,6 @@ import './styles.scss';
 const STATUS_HOST_ID = 'nmo-quiz-actions-status-host';
 
 const QuizActionsStatus: React.FC = () => {
-	const {mode} = usePanelUi();
 	const {autoSolveEnabled} = useSettings();
 	const [host, setHost] = useState<HTMLElement | null>(null);
 
@@ -16,7 +14,7 @@ const QuizActionsStatus: React.FC = () => {
 		let disposed = false;
 
 		const syncHost = (): void => {
-			if (mode !== 'auto') {
+			if (!autoSolveEnabled) {
 				setHostIfChanged(setHost, null);
 				document.getElementById(STATUS_HOST_ID)?.remove();
 				return;
@@ -57,16 +55,16 @@ const QuizActionsStatus: React.FC = () => {
 			const currentHost = document.getElementById(STATUS_HOST_ID);
 			currentHost?.remove();
 		};
-	}, [mode]);
+	}, [autoSolveEnabled]);
 
-	if (!host || mode !== 'auto') return null;
+	if (!host || !autoSolveEnabled) return null;
 
 	return createPortal(
 		<div className="nmo-quiz-actions-status" aria-live="polite">
-			<span className={`nmo-quiz-actions-status-item ${autoSolveEnabled ? 'on' : 'off'}`}>
+			<span className="nmo-quiz-actions-status-item on">
 				<span className="nmo-quiz-actions-status-dot"/>
 				<span className="nmo-quiz-actions-status-label">Автоответ</span>
-				<span className="nmo-quiz-actions-status-value">{autoSolveEnabled ? 'вкл' : 'выкл'}</span>
+				<span className="nmo-quiz-actions-status-value">вкл</span>
 			</span>
 		</div>,
 		host
