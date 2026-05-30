@@ -227,21 +227,17 @@ npm test            # Запустить тесты
 [![Support on Boosty](https://img.shields.io/badge/Boosty-Поддержать-orange?style=for-the-badge)](https://boosty.to/kolabrod/donate)
 [![Support on CloudTips](https://img.shields.io/badge/CloudTips-Поддержать-blue?style=for-the-badge)](https://pay.cloudtips.ru/p/181ccc33)
 
-## Предыдущие версии
+## Предыдущие минорные версии
 
+Ниже только последние релизы минорных веток. Полная история доступна в [GitHub Releases](https://github.com/lKolabrodl/nmo-helper/releases).
+
+- [v4.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v4.1.1) — обновление подписанного Firefox-пакета
 - [v4.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.0.0) — крупное обновление панели и подготовка к релизам 4.x
 - [v3.1.5](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.5) — мелкие правки extractor'ов и баг-репорта
-- [v3.1.4](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.4) — локальный debounce вместо lodash-es (фикс CSP в Firefox MV3)
-- [v3.1.3](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.3) — пересборка dist, подписанный xpi после одобрения AMO
-- [v3.1.2](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.2) — top-1 assignment в matcher, полное покрытие utils тестами, раскладка src/ на api + utils
-- [v3.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.1) — фикс парсера rosmedicinfo для новых разметок + рефакторинг
-- [v3.1.0](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.0) — встроенный баг-репорт, ErrorBoundary, фикс cleanTopic
 - [v3.0.1](https://github.com/lKolabrodl/nmo-helper/tree/v3.0.1) — публикация в Firefox Add-ons
-- [v3.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v3.0.0) — публичный релиз на React, приватный `.xpi` (`NMO Helper`)
 - [v2.3.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.3.0) — новые AI-модели, обновлённый парсинг
 - [v2.2.2](https://github.com/lKolabrodl/nmo-helper/tree/v2.2.2) — миграция на TypeScript, тесты, JSDoc
 - [v2.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.1) — реструктуризация, esbuild сборка
-- [v2.1.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.0) — поддержка Firefox
 - [v2.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.0.0) — AI-режим, авто-поиск
 - [v1.4.2](https://github.com/lKolabrodl/nmo-helper/tree/v1.4.2) — только поиск по сайтам, без AI
 
