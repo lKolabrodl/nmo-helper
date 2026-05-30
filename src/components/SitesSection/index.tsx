@@ -23,7 +23,7 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const {question, variants, topic} = useQuestionFinder();
 	const {setBugReportContext} = useBugReportContext();
 
-	const [tab, setTab] = useState<Tab>('url');
+	const [tab, setTab] = useState<Tab>('search');
 	const [url, setUrlRaw] = useState(initialUrl);
 	const [activeUrl, setActiveUrl] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
@@ -128,11 +128,11 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 			<div className="nmo-section-inner">
 				<div className="nmo-sub-tabs">
 					<button type="button"
-						className={tab === 'url' ? 'active' : ''}
-						onClick={() => setTab('url')}>URL базы</button>
-					<button type="button"
 						className={tab === 'search' ? 'active' : ''}
 						onClick={() => setTab('search')}>Найти тест</button>
+					<button type="button"
+						className={tab === 'url' ? 'active' : ''}
+						onClick={() => setTab('url')}>URL</button>
 				</div>
 
 				{tab === 'url' ? (

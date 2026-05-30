@@ -17,6 +17,8 @@ const QuestionFinderContext = createContext<IQuestionState>(INIT_STATE);
 interface IPrevQuestion {
     readonly topic: string | null;
     readonly question: string | null;
+    readonly variantsKey: string;
+    readonly isSingle: boolean;
 }
 
 /**
@@ -38,7 +40,7 @@ interface IPrevQuestion {
  */
 export const QuestionFinderProvider: React.FC<React.PropsWithChildren> = ({children}) => {
 	const [state, setState] = useState<IQuestionState>(INIT_STATE);
-	const prevRef = useRef<IPrevQuestion>({topic: null, question: null});
+	const prevRef = useRef<IPrevQuestion>({topic: null, question: null, variantsKey: '', isSingle: false});
 
 	useEffect(() => {
 		const _scan = () => {
@@ -51,16 +53,22 @@ export const QuestionFinderProvider: React.FC<React.PropsWithChildren> = ({child
 			// Текст вопроса
 			const question = getQuestionText();
 
-			// Не обновляем если ничего не изменилось
-			if (topic === prevRef.current.topic && question === prevRef.current.question) return;
-
 			// Тексты вариантов ответов
 			const variants = getVariantTexts();
 
 			// Тип вопроса: radio = один ответ, checkbox = несколько
 			const isSingle = isSingleAnswer();
+			const variantsKey = variants.join('\n');
 
-			prevRef.current = {topic, question};
+			// Не обновляем если ничего не изменилось
+			if (
+				topic === prevRef.current.topic
+				&& question === prevRef.current.question
+				&& variantsKey === prevRef.current.variantsKey
+				&& isSingle === prevRef.current.isSingle
+			) return;
+
+			prevRef.current = {topic, question, variantsKey, isSingle};
 			setState({topic, rawTopic, question, variants, isSingle});
 		};
 

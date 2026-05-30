@@ -5,6 +5,7 @@ import {PanelStatusProvider} from './contexts/PanelStatusContext';
 import {QuestionFinderProvider} from './contexts/QuestionFinderContext';
 import {BugReportProvider} from './contexts/BugReportContext';
 import {PdfScoreProvider} from './contexts/PdfScoreContext';
+import {SettingsProvider} from './contexts/SettingsContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import TabBar from './components/TabBar';
@@ -15,6 +16,8 @@ import PdfSection from './components/PdfSection';
 import CollapsedPill from './components/CollapsedPill';
 import AnswerHighlighter from './components/Loader/AnswerHighlighter';
 import AnswerScoreHighlighter from './components/Loader/AnswerScoreHighlighter';
+import AutoSolveLoader from './components/Loader/AutoSolveLoader';
+import QuizActionsStatus from './components/QuizActionsStatus';
 
 const FullPanel: React.FC<{initialState: IExtensionState}> = ({initialState}) => {
 	const {mode} = usePanelUi();
@@ -50,22 +53,24 @@ const PanelShell: React.FC<{initialState: IExtensionState}> = ({initialState}) =
 };
 
 const App: React.FC<{initialState: IExtensionState}> = ({initialState}) => (
-	<PanelUiProvider
-		initialCollapsed={initialState.savedCollapsed}
-		initialMode={initialState.savedMode}>
-		<BugReportProvider>
-			<PanelStatusProvider>
-				<QuestionFinderProvider>
-					<PdfScoreProvider>
-						<ErrorBoundary>
-							<AnswerHighlighter/>
-							<AnswerScoreHighlighter/>
-							<PanelShell initialState={initialState}/>
-						</ErrorBoundary>
-					</PdfScoreProvider>
-				</QuestionFinderProvider>
-			</PanelStatusProvider>
-		</BugReportProvider>
+	<PanelUiProvider initialState={initialState}>
+		<SettingsProvider initialState={initialState}>
+			<BugReportProvider>
+				<PanelStatusProvider>
+					<QuestionFinderProvider>
+						<PdfScoreProvider>
+							<ErrorBoundary>
+								<AnswerHighlighter/>
+								<AnswerScoreHighlighter/>
+								<AutoSolveLoader/>
+								<QuizActionsStatus/>
+								<PanelShell initialState={initialState}/>
+							</ErrorBoundary>
+						</PdfScoreProvider>
+					</QuestionFinderProvider>
+				</PanelStatusProvider>
+			</BugReportProvider>
+		</SettingsProvider>
 	</PanelUiProvider>
 );
 

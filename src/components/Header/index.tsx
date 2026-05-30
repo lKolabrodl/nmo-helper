@@ -6,9 +6,9 @@ import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {IconBug, IconClose, IconMinimize, IconWarn} from '../icons';
 import VersionCheck from '../VersionCheck';
 import BugReportButton from '../BugReportButton';
+import Settings from '../Settings';
+import {UPDATE_URL} from '../../utils/constants';
 import type {IVersionInfo} from '../../api/version-check';
-
-const UPDATE_URL = 'https://nmo-helper.ru/instruction#update';
 
 const Header: React.FC = (): React.JSX.Element => {
 	const {setCollapsed} = usePanelUi();
@@ -37,6 +37,7 @@ const Header: React.FC = (): React.JSX.Element => {
 							<IconBug size={14}/>
 						</button>
 					)}
+					<Settings onOpen={() => setBugOpen(false)}/>
 					<button type="button"
 						className="nmo-icon-btn"
 						title="Свернуть"

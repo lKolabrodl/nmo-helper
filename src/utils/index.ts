@@ -8,4 +8,18 @@ export { fetchViaBackground } from '../api/fetch';
 export { parseHtml } from './html';
 export { cleanTopic, normalizeDashes, normalizeText } from './text';
 export { similarity, detectSource, pickResult } from './matching';
-export { getTopicElement, getQuestionAnchor, getQuestionText, getQuestionHtml, getVariantElements, getVariantTexts, isSingleAnswer } from '../api/dom';
+export {
+	getAnswerClickTarget,
+	getAnswerInput,
+	getFinishQuizButton,
+	getFinishQuizConfirmButton,
+	getNextQuestionButton,
+	getQuizActionsElement,
+	getTopicElement,
+	getQuestionAnchor,
+	getQuestionText,
+	getQuestionHtml,
+	getVariantElements,
+	getVariantTexts,
+	isSingleAnswer,
+} from '../api/dom';
