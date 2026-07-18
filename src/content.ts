@@ -1,8 +1,9 @@
 import './content.scss';
 import type { IExtensionState } from './types';
-import { storageGet } from './utils';
+import { storageGet, storageSet } from './utils';
 import { createPanel, initPanelBehavior } from './Panel';
 import { unlockPageInteractions } from './api/page-interaction-unlock';
+import {DEFAULT_AI_MODEL, normalizeAiModel} from './utils/constants';
 import {
 	AUTO_SOLVE_DELAY_MAX_STORAGE_KEY,
 	AUTO_SOLVE_DELAY_MIN_STORAGE_KEY,
@@ -45,6 +46,9 @@ unlockPageInteractions();
 	'use strict';
 
 	await waitForBody();
+	const storedModel = await storageGet('aiModel', DEFAULT_AI_MODEL);
+	const savedModel = normalizeAiModel(storedModel);
+	if (savedModel !== storedModel) storageSet('aiModel', savedModel);
 
 	const state: IExtensionState = {
 		savedUrl: await storageGet('customUrl', ''),
@@ -53,7 +57,7 @@ unlockPageInteractions();
 		savedTop: await storageGet('panelTop', null),
 		savedMode: await storageGet('mode', 'auto'),
 		savedApiKey: await storageGet('apiKey', ''),
-		savedModel: await storageGet('aiModel', 'gpt-4o-mini'),
+		savedModel,
 		savedCustomAiUrl: await storageGet('customAiUrl', ''),
 		savedCustomAiToken: await storageGet('customAiToken', ''),
 		savedCustomAiModel: await storageGet('customAiModel', ''),

@@ -5,7 +5,7 @@ import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {validateApiKey} from '../../api/fetch';
 import {storageSet, storageGet} from '../../utils';
 import {Status} from '../../types';
-import {StatusTitle} from '../../utils/constants';
+import {DEFAULT_AI_MODEL, normalizeAiModel, StatusTitle} from '../../utils/constants';
 import ModelDropdown from '../ModelDropdown';
 import AIProxyLoader from '../Loader/AIProxyLoader';
 import {IconPlay} from '../icons';
@@ -19,7 +19,7 @@ const AiSection: React.FC = (): React.JSX.Element => {
 	const isCustom = mode === 'ai-pro';
 
 	const [apiKey, setApiKeyRaw] = useState<string | null>(null);
-	const [model, setModelRaw] = useState('gpt-4o-mini');
+	const [model, setModelRaw] = useState(DEFAULT_AI_MODEL);
 
 	const [customUrl, setCustomUrlRaw] = useState<string | null>(null);
 	const [customToken, setCustomTokenRaw] = useState<string | null>(null);
@@ -30,7 +30,11 @@ const AiSection: React.FC = (): React.JSX.Element => {
 
 	useEffect(() => {
 		storageGet('apiKey', '').then(v => setApiKeyRaw(v || null));
-		storageGet('aiModel', 'gpt-4o-mini').then(setModelRaw);
+		storageGet('aiModel', DEFAULT_AI_MODEL).then(storedModel => {
+			const availableModel = normalizeAiModel(storedModel);
+			setModelRaw(availableModel);
+			if (availableModel !== storedModel) storageSet('aiModel', availableModel);
+		});
 		storageGet('customAiUrl', '').then(v => setCustomUrlRaw(v || null));
 		storageGet('customAiToken', '').then(v => setCustomTokenRaw(v || null));
 		storageGet('customAiModel', '').then(v => setCustomModelRaw(v || null));
@@ -221,7 +225,7 @@ const CustomFields: React.FC<ICustomFieldsProps> = ({url, setUrl, token, setToke
 			<label className="nmo-label">Модель</label>
 			<input type="text"
 				className="nmo-input mono"
-				placeholder="gpt-4o, llama3, mistral…"
+				placeholder="gpt-5.4-mini, llama3, mistral…"
 				disabled={disabled}
 				value={model ?? ''}
 				onChange={e => setModel(e.target.value)}/>

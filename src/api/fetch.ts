@@ -52,7 +52,7 @@ export function fetchViaBackground(url: string, options: IRequestOptions = {}): 
  * @param options  Варианты ответа в порядке, в котором они показаны пользователю.
  * @param isSingle `true` — ровно один правильный; `false` — допускается несколько.
  * @param topic    Название темы курса. Пустая строка — без темы в system-prompt.
- * @param model    ID модели (`gpt-4o`, `claude-3-opus`, `o3-mini` и т.д.).
+ * @param model    ID модели (`gpt-5.4-mini`, `claude-sonnet-5`, `gemini-3.5-flash` и т.д.).
  * @param endpoint Необязательный кастомный URL (например, self-hosted OpenAI-совместимый).
  *                 Если указан, модель шлётся как есть, без префикса провайдера.
  * @returns Массив 0-индексированных номеров вариантов, помеченных моделью как правильные.
@@ -164,7 +164,7 @@ export function buildPrompt(question: string, options: string[], isSingle: boole
 /**
  * Собирает URL и `RequestInit` для chat-completion запроса.
  *
- * Reasoning-модели (`o1`/`o3`/`gpt-5`) не принимают поле `temperature` —
+ * Reasoning-модели семейств `o*` и `gpt-5*` не принимают поле `temperature` —
  * для них оно не включается в тело. Для кастомного endpoint'а модель шлётся
  * как есть, без префикса провайдера (см. {@link getApiModel}).
  *

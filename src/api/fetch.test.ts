@@ -78,70 +78,69 @@ describe('fn fetchViaBackground', () => {
 
 describe('fn getApiModel', () => {
 	it('claude-* → anthropic/claude-*', () => {
-		expect(getApiModel('claude-3-opus')).toBe('anthropic/claude-3-opus');
+		expect(getApiModel('claude-sonnet-5')).toBe('anthropic/claude-sonnet-5');
 	});
 
 	it('gemini-* → gemini/gemini-*', () => {
-		expect(getApiModel('gemini-2.0-pro')).toBe('gemini/gemini-2.0-pro');
+		expect(getApiModel('gemini-3.1-flash-preview')).toBe('gemini/gemini-3.1-flash-preview');
 	});
 
 	it('прочие модели возвращаются как есть', () => {
-		expect(getApiModel('gpt-4o')).toBe('gpt-4o');
-		expect(getApiModel('o3-mini')).toBe('o3-mini');
+		expect(getApiModel('gpt-5.4-mini')).toBe('gpt-5.4-mini');
 	});
 });
 
 describe('fn validateApiKey', () => {
 	it('успешный 200 → true, запрос на дефолтный AI_URL', async () => {
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 200, text: '{}' }));
-		const ok = await validateApiKey('sk-test', 'gpt-4o');
+		const ok = await validateApiKey('sk-test', 'gpt-5.4-mini');
 		expect(ok).toBe(true);
 		const [msg] = sendMessage.mock.calls[0] as [Record<string, unknown>, unknown];
 		expect(msg.url).toBe('https://openai.api.proxyapi.ru/v1/chat/completions');
 		expect(msg.method).toBe('POST');
 		expect((msg.headers as Record<string, string>).Authorization).toBe('Bearer sk-test');
 		const body = JSON.parse(msg.body as string);
-		expect(body.model).toBe('gpt-4o');
+		expect(body.model).toBe('gpt-5.4-mini');
 		expect(body.max_completion_tokens).toBe(5);
 	});
 
 	it('переданный endpoint используется вместо AI_URL', async () => {
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 200, text: '{}' }));
-		await validateApiKey('sk', 'claude-3-opus', 'https://custom.example/v1/chat');
+		await validateApiKey('sk', 'claude-sonnet-5', 'https://custom.example/v1/chat');
 		const [msg] = sendMessage.mock.calls[0] as [Record<string, unknown>, unknown];
 		expect(msg.url).toBe('https://custom.example/v1/chat');
 		const body = JSON.parse(msg.body as string);
-		expect(body.model).toBe('anthropic/claude-3-opus');
+		expect(body.model).toBe('anthropic/claude-sonnet-5');
 	});
 
 	it('429 → true (ключ валиден, просто лимит)', async () => {
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 429, text: '' }));
-		await expect(validateApiKey('sk', 'gpt-4o')).resolves.toBe(true);
+		await expect(validateApiKey('sk', 'gpt-5.4-mini')).resolves.toBe(true);
 	});
 
 	it('error=true → "ошибка сети"', async () => {
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: true, status: 0, text: '' }));
-		await expect(validateApiKey('sk', 'gpt-4o')).rejects.toThrow('ошибка сети');
+		await expect(validateApiKey('sk', 'gpt-5.4-mini')).rejects.toThrow('ошибка сети');
 	});
 
 	it('401 → "неверный API-ключ"', async () => {
 		const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 401, text: 'unauthorized' }));
-		await expect(validateApiKey('sk', 'gpt-4o')).rejects.toThrow('неверный API-ключ');
+		await expect(validateApiKey('sk', 'gpt-5.4-mini')).rejects.toThrow('неверный API-ключ');
 		errSpy.mockRestore();
 	});
 
 	it('403 → "неверный API-ключ"', async () => {
 		const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 403, text: 'forbidden' }));
-		await expect(validateApiKey('sk', 'gpt-4o')).rejects.toThrow('неверный API-ключ');
+		await expect(validateApiKey('sk', 'gpt-5.4-mini')).rejects.toThrow('неверный API-ключ');
 		errSpy.mockRestore();
 	});
 
 	it('500 → "ошибка 500"', async () => {
 		const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 500, text: 'boom' }));
-		await expect(validateApiKey('sk', 'gpt-4o')).rejects.toThrow('ошибка 500');
+		await expect(validateApiKey('sk', 'gpt-5.4-mini')).rejects.toThrow('ошибка 500');
 		errSpy.mockRestore();
 	});
 });
@@ -182,12 +181,12 @@ describe('fn buildPrompt', () => {
 
 describe('fn buildRequest', () => {
 	it('обычная модель → url=AI_URL, model с префиксом, temperature=0.2', () => {
-		const { url, init } = buildRequest('sk', 'claude-3-opus', 'sys', 'usr');
+		const { url, init } = buildRequest('sk', 'claude-sonnet-5', 'sys', 'usr');
 		expect(url).toBe('https://openai.api.proxyapi.ru/v1/chat/completions');
 		expect(init.method).toBe('POST');
 		expect(init.headers.Authorization).toBe('Bearer sk');
 		const body = JSON.parse(init.body);
-		expect(body.model).toBe('anthropic/claude-3-opus');
+		expect(body.model).toBe('anthropic/claude-sonnet-5');
 		expect(body.temperature).toBe(0.2);
 		expect(body.messages).toEqual([
 			{ role: 'system', content: 'sys' },
@@ -195,23 +194,17 @@ describe('fn buildRequest', () => {
 		]);
 	});
 
-	it('reasoning-модель (o3) → без поля temperature', () => {
-		const { init } = buildRequest('sk', 'o3-mini', 'sys', 'usr');
-		const body = JSON.parse(init.body);
-		expect(body).not.toHaveProperty('temperature');
-	});
-
 	it('reasoning-модель (gpt-5) → без поля temperature', () => {
-		const { init } = buildRequest('sk', 'gpt-5-nano', 'sys', 'usr');
+		const { init } = buildRequest('sk', 'gpt-5.4-mini', 'sys', 'usr');
 		const body = JSON.parse(init.body);
 		expect(body).not.toHaveProperty('temperature');
 	});
 
 	it('кастомный endpoint → url подменяется, модель без префикса', () => {
-		const { url, init } = buildRequest('sk', 'claude-3-opus', 'sys', 'usr', 'https://custom/api');
+		const { url, init } = buildRequest('sk', 'claude-sonnet-5', 'sys', 'usr', 'https://custom/api');
 		expect(url).toBe('https://custom/api');
 		const body = JSON.parse(init.body);
-		expect(body.model).toBe('claude-3-opus');
+		expect(body.model).toBe('claude-sonnet-5');
 	});
 });
 
@@ -294,44 +287,44 @@ describe('fn askAI', () => {
 	it('успешный ответ → массив 0-индексов', async () => {
 		const body = JSON.stringify({ choices: [{ message: { content: '1,3' } }] });
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 200, text: body }));
-		const res = await askAI('sk', 'Q?', ['a', 'b', 'c'], false, 'Тема', 'gpt-4o');
+		const res = await askAI('sk', 'Q?', ['a', 'b', 'c'], false, 'Тема', 'gpt-5.4-mini');
 		expect(res).toEqual([0, 2]);
 	});
 
 	it('шлёт POST на AI_URL с Bearer-токеном и правильным телом', async () => {
 		const body = JSON.stringify({ choices: [{ message: { content: '1' } }] });
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 200, text: body }));
-		await askAI('sk-test', 'Что?', ['a', 'b'], true, 'Тема', 'claude-3-opus');
+		await askAI('sk-test', 'Что?', ['a', 'b'], true, 'Тема', 'claude-sonnet-5');
 		const [msg] = sendMessage.mock.calls[0] as [Record<string, unknown>, unknown];
 		expect(msg.url).toBe('https://openai.api.proxyapi.ru/v1/chat/completions');
 		expect(msg.method).toBe('POST');
 		expect((msg.headers as Record<string, string>).Authorization).toBe('Bearer sk-test');
 		const sentBody = JSON.parse(msg.body as string);
-		expect(sentBody.model).toBe('anthropic/claude-3-opus');
+		expect(sentBody.model).toBe('anthropic/claude-sonnet-5');
 		expect(sentBody.messages).toHaveLength(2);
 		expect(sentBody.messages[1].content).toContain('Что?');
 	});
 
 	it('error=true → "ошибка сети"', async () => {
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: true, status: 0, text: '' }));
-		await expect(askAI('sk', 'Q?', ['a'], true, '', 'gpt-4o')).rejects.toThrow('ошибка сети');
+		await expect(askAI('sk', 'Q?', ['a'], true, '', 'gpt-5.4-mini')).rejects.toThrow('ошибка сети');
 	});
 
 	it('401 → "неверный API-ключ"', async () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 401, text: '' }));
-		await expect(askAI('sk', 'Q?', ['a'], true, '', 'gpt-4o')).rejects.toThrow('неверный API-ключ');
+		await expect(askAI('sk', 'Q?', ['a'], true, '', 'gpt-5.4-mini')).rejects.toThrow('неверный API-ключ');
 	});
 
 	it('402 → "нет средств на балансе"', async () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 402, text: '' }));
-		await expect(askAI('sk', 'Q?', ['a'], true, '', 'gpt-4o')).rejects.toThrow('нет средств на балансе');
+		await expect(askAI('sk', 'Q?', ['a'], true, '', 'gpt-5.4-mini')).rejects.toThrow('нет средств на балансе');
 	});
 
 	it('429 → "лимит запросов — подождите"', async () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 429, text: '' }));
-		await expect(askAI('sk', 'Q?', ['a'], true, '', 'gpt-4o')).rejects.toThrow('лимит запросов');
+		await expect(askAI('sk', 'Q?', ['a'], true, '', 'gpt-5.4-mini')).rejects.toThrow('лимит запросов');
 	});
 });

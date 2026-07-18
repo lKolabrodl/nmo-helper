@@ -7,6 +7,7 @@ import { QuestionFinderProvider } from '../src/contexts/QuestionFinderContext';
 import { PdfScoreProvider } from '../src/contexts/PdfScoreContext';
 import { SettingsProvider } from '../src/contexts/SettingsContext';
 import type { IExtensionState } from '../src/types';
+import {DEFAULT_AI_MODEL} from '../src/utils/constants';
 
 interface IProviderOptions {
 	readonly initialMode?: string;
@@ -25,7 +26,7 @@ const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({
 		savedTop: null,
 		savedMode: initialMode,
 		savedApiKey: '',
-		savedModel: 'gpt-4o-mini',
+		savedModel: DEFAULT_AI_MODEL,
 		savedCustomAiUrl: '',
 		savedCustomAiToken: '',
 		savedCustomAiModel: '',

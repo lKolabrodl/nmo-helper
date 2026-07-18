@@ -128,10 +128,10 @@
 
 | Уровень | Модели | Описание |
 |---------|--------|----------|
-| 🟢 low | gpt-4o-mini, gemini-2.0-flash, claude-haiku-4.5 | Быстрые и дешёвые |
-| 🔵 medium | gpt-4.1-mini, gemini-2.5-flash | Баланс цена/качество |
-| 🟡 high | gpt-5.3-chat-latest, o3-mini, o4-mini, claude-sonnet-4.6 | Высокая точность |
-| 🟣 ultra | claude-opus-4.8, gemini-3.1-pro, gpt-5.5-pro | Максимальная точность |
+| 🟢 low | gpt-5.4-nano, gemini-2.0-flash, claude-haiku-4.5 | Быстрые и дешёвые |
+| 🔵 medium | gpt-5.4-mini, gpt-5.6-luna, gemini-2.5-flash | Баланс цена/качество |
+| 🟡 high | gpt-5.4, gpt-5.6-terra, claude-sonnet-5 | Высокая точность |
+| 🟣 ultra | gpt-5.6-sol, claude-fable-5, gemini-3.1-pro | Максимальная точность |
 
 > **Disclaimer:** AI-модели решают медицинские тесты НМО в среднем на оценку 3 — вопросы основаны на специфических клинических рекомендациях РФ. Рекомендуем использовать AI как вспомогательный инструмент, а основной упор делать на **авто-поиск**.
 

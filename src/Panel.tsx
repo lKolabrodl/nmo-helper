@@ -22,11 +22,12 @@ export function createPanel(state: IExtensionState): HTMLElement {
 
 const DRAG_HANDLES = '.nmo-titlebar, .nmo-pill, .nmo-footer';
 const INTERACTIVE = 'button, a, input, textarea, select, label';
+const MIN_VISIBLE_SIZE = 8;
 
 export function initPanelBehavior(panel: HTMLElement): void {
 	let isDragging = false;
 	let dx = 0, dy = 0;
-	let panelWidth = 0;
+	let panelWidth = 0, panelHeight = 0;
 
 	panel.addEventListener('mousedown', (e: MouseEvent) => {
 		const target = e.target as HTMLElement;
@@ -39,6 +40,7 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		dx = e.clientX - rect.left;
 		dy = e.clientY - rect.top;
 		panelWidth = rect.width;
+		panelHeight = rect.height;
 		isDragging = true;
 		panel.style.willChange = 'right, top';
 	});
@@ -47,11 +49,18 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		if (!isDragging) return;
 		e.preventDefault();
 		requestAnimationFrame(() => {
-			const newLeft = e.clientX - dx;
-			const right = document.documentElement.clientWidth - (newLeft + panelWidth);
+			const viewportWidth = document.documentElement.clientWidth;
+			const viewportHeight = document.documentElement.clientHeight;
+			const minLeft = MIN_VISIBLE_SIZE - panelWidth;
+			const minTop = MIN_VISIBLE_SIZE - panelHeight;
+			const maxLeft = viewportWidth - MIN_VISIBLE_SIZE;
+			const maxTop = viewportHeight - MIN_VISIBLE_SIZE;
+			const newLeft = Math.min(Math.max(e.clientX - dx, minLeft), maxLeft);
+			const newTop = Math.min(Math.max(e.clientY - dy, minTop), maxTop);
+			const right = viewportWidth - (newLeft + panelWidth);
 			panel.style.right = right + 'px';
 			panel.style.left = 'auto';
-			panel.style.top = (e.clientY - dy) + 'px';
+			panel.style.top = newTop + 'px';
 		});
 	});
 
