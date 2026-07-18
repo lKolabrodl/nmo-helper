@@ -10,78 +10,120 @@ import AnswerLoader from '../Loader/AnswerLoader';
 import type {IVariantModel} from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
-import {detectSource, pickResult} from '../../utils';
+import {pickResult} from '../../utils';
 import {findAnswers, extractCases} from '../../utils/cases';
 import {IconBolt} from '../icons';
 import InlineToast, {type IToast} from '../ui/InlineToast';
 import ThinkingStrip from '../ui/ThinkingStrip';
 
+const EMPTY_ANSWER_MODEL: IAnswerModel = {loading: false, error: null, data: null};
+
 const AutoSection: React.FC = () => {
+	// контекст всяктй
 	const {status, setStatus} = usePanelStatus();
 	const {topic, rawTopic, question, variants} = useQuestionFinder();
 	const {setBugReportContext} = useBugReportContext();
-
-	const [rosmedUrl, setRosmedUrl] = useState('');
-	const [forcareUrl, setForcareUrl] = useState('');
-	const [activeUrl, setActiveUrl] = useState('');
-	const [html, setHtml] = useState<HTMLElement | null>(null);
+	// url save
+	const [rosmedUrl, setRosmedUrl] = useState<string>('');
+	const [forcareUrl, setForcareUrl] = useState<string>('');
+	// models
+	const [rosmedicinfoModel, setRosmedicinfoModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
+	const [forcareModel, setForcareModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 
 	const _updateSearchUrl = (state: IVariantModel): void => {
 		if (!question) return;
-		if (state.loading) return setStatus({title: StatusTitle.SEARCHING_ANSWERS, status: Status.LOADING});
+		if (state.loading) {
+			setRosmedUrl('');
+			setForcareUrl('');
+			setRosmedicinfoModel(EMPTY_ANSWER_MODEL);
+			setForcareModel(EMPTY_ANSWER_MODEL);
+			setBugReportContext({panelMode: 'auto', panelTab: 'auto', activeUrl: ''});
+			return setStatus({title: StatusTitle.SEARCHING_ANSWERS, status: Status.LOADING});
+		}
 		if (state.error) return setStatus({title: state.error, status: Status.WARN});
 		if (!state.data.length && !rawTopic) return;
 
 		const ros = pickResult(state.data, 'rosmedicinfo', topic);
 		const fc = pickResult(state.data, '24forcare', topic);
+		const nextRosmedUrl = ros?.url ?? '';
+		const nextForcareUrl = fc?.url ?? '';
 
-		setRosmedUrl(ros?.url ?? '');
-		setForcareUrl(fc?.url ?? '');
-		setActiveUrl(ros?.url ?? fc?.url ?? '');
+		setRosmedUrl(nextRosmedUrl);
+		setForcareUrl(nextForcareUrl);
+		setRosmedicinfoModel({...EMPTY_ANSWER_MODEL, loading: !!nextRosmedUrl});
+		setForcareModel({...EMPTY_ANSWER_MODEL, loading: !!nextForcareUrl});
+		setBugReportContext({
+			panelMode: 'auto',
+			panelTab: 'auto',
+			activeUrl: nextRosmedUrl || nextForcareUrl,
+		});
 
 		if (!ros && !fc) setStatus({title: StatusTitle.NOT_FOUND, status: Status.WARN});
 	};
 
-	const _updateHtml = (state: IAnswerModel): void => {
-		setHtml(state.data);
-
-		// в баг репортик отправляем
-		if (activeUrl) setBugReportContext({panelMode: 'auto', panelTab: 'auto', activeUrl});
-
-		if (state.loading) return setStatus({title: StatusTitle.LOADING_ANSWERS, status: Status.LOADING});
-
-		if (state.error) {
-			if (activeUrl === rosmedUrl && forcareUrl) return setActiveUrl(forcareUrl);
-			return setStatus({title: StatusTitle.LOADING_FAILED, status: Status.ERR});
-		}
-
-		if (state.data) {
-			const source = activeUrl === rosmedUrl ? 'rosmed' : '24fc';
-			setStatus({title: `загружено: ${source}`, status: Status.OK});
-		}
-	};
-
 	useEffect(() => {
-		if (!question || !variants.length || !html) return;
+		if (!question || !variants.length) return;
 		if (answerCache.has(topic, question, variants)) return;
 
-		const source = detectSource(activeUrl);
-		if (!source) return;
+		const sources = [
+			{key: 'rosmedicinfo' as const, label: 'rosmed', url: rosmedUrl, state: rosmedicinfoModel},
+			{key: '24forcare' as const, label: '24forcare', url: forcareUrl, state: forcareModel},
+		].filter(source => source.url);
 
-		const model = extractCases(source, html);
-		const found = findAnswers(model, question, variants);
-		if (!found) return setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
-		if (!found.answers.length) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});
+		// пока пусто
+		if (!sources.length) return;
 
-		answerCache.set(topic ?? '', question, variants, found.answers);
+		// загрузочка у нас
+		const isLoading = sources.find(source => source.state.loading);
+		if (isLoading) return setStatus({title: StatusTitle.LOADING_ANSWERS, status: Status.LOADING});
 
-		const label = activeUrl === rosmedUrl ? 'rosmed' : '24forcare';
+		// всё в ошибку встало -_-
+		const isAllError = sources.every(source => source.state.error);
+		if (isAllError) return setStatus({title: StatusTitle.LOADING_FAILED, status: Status.ERR});
 
-		if (found.score < LOW_CONFIDENCE_THRESHOLD) {
-			setStatus({title: `${StatusTitle.ANSWER_LOW_CONFIDENCE} • ${label}`, status: Status.WARN});
-		} else setStatus({title: `найдено • ${label}`, status: Status.OK});
+		// ваще голяк
+		const isAllNullData = sources.every(source => !source.state.data);
+		if (isAllNullData) return setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
 
-	}, [question, variants, topic, html]);
+		let hasAnswerMismatch = false;
+
+		for (const source of sources) {
+			if (!source.state.data) continue;
+
+			const model = extractCases(source.key, source.state.data);
+			const found = findAnswers(model, question, variants);
+
+			if (!found) continue;
+			if (!found.answers.length) {
+				hasAnswerMismatch = true;
+				continue;
+			}
+
+			answerCache.set(topic ?? '', question, variants, found.answers);
+			setBugReportContext({panelMode: 'auto', panelTab: 'auto', activeUrl: source.url});
+
+			if (found.score < LOW_CONFIDENCE_THRESHOLD) {
+				setStatus({title: `${StatusTitle.ANSWER_LOW_CONFIDENCE} • ${source.label}`, status: Status.WARN});
+			}
+			else setStatus({title: `найдено • ${source.label}`, status: Status.OK});
+
+			return;
+		}
+
+		if (hasAnswerMismatch) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});
+		setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
+
+	}, [
+		question,
+		variants,
+		topic,
+		rosmedUrl,
+		forcareUrl,
+		rosmedicinfoModel,
+		forcareModel,
+		setBugReportContext,
+		setStatus,
+	]);
 
 	const isWarning = status.status === Status.WARN;
 	const isError = status.status === Status.ERR;
@@ -93,7 +135,8 @@ const AutoSection: React.FC = () => {
 	return (
 		<div className="nmo-section">
 			<VariantLoader text={_topc} onChange={_updateSearchUrl}/>
-			<AnswerLoader url={activeUrl} onChange={_updateHtml}/>
+			<AnswerLoader url={rosmedUrl} onChange={setRosmedicinfoModel}/>
+			<AnswerLoader url={forcareUrl} onChange={setForcareModel}/>
 
 			<div className="nmo-section-inner">
 				<div className="nmo-auto-hero nmo-fade-up">

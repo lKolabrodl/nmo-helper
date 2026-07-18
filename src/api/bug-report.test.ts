@@ -106,12 +106,12 @@ describe('canSubmitBugReport', () => {
 		expect(gate).toEqual({ ok: true });
 	});
 
-	it('history.length >= 5 за 24ч → daily_cap', async () => {
+	it('history.length >= 1 за 24ч → daily_cap', async () => {
 		const now = Date.now();
-		// пять недавних отправок + старый lastSentAt (чтобы не триггерить cooldown)
+		// недавняя отправка + старый lastSentAt (чтобы не триггерить cooldown)
 		await resetStorage({
 			sent: {},
-			history: [now - 1000, now - 2000, now - 3000, now - 4000, now - 5000],
+			history: [now - 1000],
 			lastSentAt: now - 10 * 60_000,
 		});
 		const gate = await canSubmitBugReport('fp1');
@@ -123,7 +123,7 @@ describe('canSubmitBugReport', () => {
 		const dayMs = 24 * 60 * 60 * 1000;
 		await resetStorage({
 			sent: {},
-			history: [now - dayMs - 1000, now - dayMs - 2000, now - dayMs - 3000, now - dayMs - 4000, now - dayMs - 5000],
+			history: [now - dayMs - 1000],
 			lastSentAt: now - 10 * 60_000,
 		});
 		const gate = await canSubmitBugReport('fp1');

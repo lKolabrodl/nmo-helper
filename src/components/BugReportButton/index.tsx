@@ -161,7 +161,7 @@ const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: op
 					<div className="nmo-bug-rate-body">
 						<div className="nmo-bug-rate-title">{STATUSES[status].text}</div>
 						{(status === 'COOLDOWN' || status === 'DAILY_CAP' || status === 'DUPLICATE') && (
-							<div className="nmo-bug-rate-sub">Лимит: 5 отчётов / сутки · 1 раз / 5 мин</div>
+							<div className="nmo-bug-rate-sub">Лимит: 1 отчёт / сутки</div>
 						)}
 					</div>
 				</div>
