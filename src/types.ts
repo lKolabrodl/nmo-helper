@@ -46,7 +46,7 @@ export interface IAiModel {
 }
 
 /** Ключ источника ответов */
-export type ISourceKey = '24forcare' | 'rosmedicinfo';
+export type ISourceKey = '24forcare' | 'rosmedicinfo' | 'alternative';
 
 /** Варианты статуса панели */
 export const Status = {

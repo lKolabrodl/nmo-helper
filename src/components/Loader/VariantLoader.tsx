@@ -16,6 +16,10 @@ interface ISearchResult {
 
 const INIT_STATE: IVariantModel = { loading: false, error: null, data: [] };
 
+const FORCARE_URL = 'https://24forcare.com';
+const ROSMED_URL = 'https://rosmedicinfo.ru';
+const ALTERNATIVE_BASE_URL = 'https://testotvet.com';
+
 interface IVariantLoaderProps {
 	readonly text: string | null;
 	readonly onChange: (state: IVariantModel) => void;
@@ -34,13 +38,14 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 		async function search() {
 			const encoded = encodeURIComponent(query);
 
-			const [fcRes, rosRes] = await Promise.all([
-				fetchViaBackground('https://24forcare.com/search/?query=' + encoded).catch(() => null),
-				fetchViaBackground('https://rosmedicinfo.ru/', {
+			const [fcRes, rosRes, alternativeRes] = await Promise.all([
+				fetchViaBackground(FORCARE_URL + '/search/?query=' + encoded).catch(() => null),
+				fetchViaBackground(ROSMED_URL, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 					body: 'do=search&subaction=search&story=' + encoded,
 				}).catch(() => null),
+				fetchViaBackground(ALTERNATIVE_BASE_URL + '/api/search/suggestions/categories?query=' + encoded).catch(() => null),
 			]);
 
 			if (cancelled) return;
@@ -52,6 +57,10 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 
 			// rosmed всё оки доки
 			if (rosRes && !rosRes.error && rosRes.text) results.push(...parseRosmedUrls(rosRes.text));
+
+			if (alternativeRes && !alternativeRes.error && alternativeRes.text) {
+				results.push(...parseForAlternativeUrl(alternativeRes.text));
+			}
 
 			// не судьба
 			if (results.length === 0) return onChange({loading: false, error: 'ничего не найдено', data: []});
@@ -70,6 +79,12 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 export default VariantLoader;
 
 
+/**
+ * Извлекает варианты страниц с ответами из HTML-результата поиска 24forcare.
+ *
+ * @param html HTML-разметка страницы с результатами поиска.
+ * @returns Найденные варианты с источником, заголовком и абсолютным URL.
+ */
 function parseForcareUrls(html: string): ISearchResult[] {
 	const results: ISearchResult[] = [];
 	const links = Array.from(parseHtml(html).querySelectorAll('a.item-name'));
@@ -83,6 +98,12 @@ function parseForcareUrls(html: string): ISearchResult[] {
 	return results;
 }
 
+/**
+ * Извлекает варианты страниц с ответами из HTML-результата поиска rosmedicinfo.
+ *
+ * @param html HTML-разметка страницы с результатами поиска.
+ * @returns Найденные варианты с источником, заголовком и URL.
+ */
 function parseRosmedUrls(html: string): ISearchResult[] {
 	const results: ISearchResult[] = [];
 	const links = Array.from(parseHtml(html).querySelectorAll('.short__title a'));
@@ -92,5 +113,41 @@ function parseRosmedUrls(html: string): ISearchResult[] {
 		if (!href || !title) return;
 		results.push({ source: 'rosmedicinfo', title, url: href });
 	});
+	return results;
+}
+
+/**
+ * Извлекает варианты страниц с ответами из JSON-результата поиска alternative.
+ *
+ * @param response JSON-ответ, содержащий массив `categories`.
+ * @returns Найденные варианты с источником, заголовком и абсолютным URL.
+ */
+function parseForAlternativeUrl(response: string): ISearchResult[] {
+	const results: ISearchResult[] = [];
+	let data: {readonly categories?: unknown};
+
+	try {
+		data = JSON.parse(response) as {readonly categories?: unknown};
+	} catch {
+		return results;
+	}
+
+	if (!Array.isArray(data.categories)) return results;
+
+	data.categories.forEach((category: unknown) => {
+		if (!category || typeof category !== 'object') return;
+
+		const {name, slug} = category as Record<string, unknown>;
+		const title = typeof name === 'string' ? name.trim() : '';
+		const normalizedSlug = typeof slug === 'string' ? slug.trim() : '';
+		if (!title || !normalizedSlug) return;
+
+		results.push({
+			source: 'alternative',
+			title,
+			url: ALTERNATIVE_BASE_URL + '/test-medik/nmo/' + encodeURIComponent(normalizedSlug) + '.html',
+		});
+	});
+
 	return results;
 }
