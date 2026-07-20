@@ -2348,10 +2348,10 @@ mdn-data@2.27.1:
   resolved "https://registry.npmjs.org/mdn-data/-/mdn-data-2.27.1.tgz"
   integrity sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==
 
-med-pdf-nmo@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/med-pdf-nmo/-/med-pdf-nmo-0.2.1.tgz#7333a6c6323f05f9cce54a740fa21c9b49b8c48b"
-  integrity sha512-6axd/KcdzHJeNANUFbA8462EG5mAaMllyYQDPomzQ6FDdX+8CZBEgy58m+L/HJkc27lW96lN1iuvp4i5ktM5gg==
+med-pdf-nmo@^0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/med-pdf-nmo/-/med-pdf-nmo-0.2.2.tgz#35eca2678b8c7914c8928d0bb5a94cf045f1d0ad"
+  integrity sha512-lZyHPRij5SxD/Til1JK9MVx1qMw1NVjFxYkuesz3/8eARhC7F9L8w0GfiphSFmqrTPo7/N0opk0u/aZdsSQaqA==
   dependencies:
     pdfjs-dist "^5.7.284"
 
