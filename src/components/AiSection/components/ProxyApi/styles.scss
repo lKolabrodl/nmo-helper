@@ -14,3 +14,28 @@
   display: flex;
   flex-direction: column;
 }
+
+.nmo-hint.nmo-api-key-link {
+  align-self: flex-start;
+  margin-top: $gap-6;
+  padding: 5px 8px;
+  border: 1px solid $accent-ring;
+  border-radius: $r-sm;
+  background: $accent-soft;
+  color: $accent;
+  font-size: $fs-sm;
+  font-weight: 700;
+  transition: background .15s, border-color .15s, color .15s, transform .1s;
+
+  &:hover {
+    background: $accent;
+    border-color: $accent;
+    color: $accent-text;
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $accent;
+    outline-offset: 2px;
+  }
+}

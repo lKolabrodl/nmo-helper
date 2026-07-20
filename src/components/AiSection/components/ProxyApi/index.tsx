@@ -84,7 +84,11 @@ const ProxyApi: React.FC<IProxyApiProps> = ({onBusyChange}) => {
 							onChange={event => setApiKey(event.target.value.trim())}/>
 
 						{!apiKey && (
-							<a className="nmo-hint"	href="https://console.proxyapi.ru/keys"	target="_blank"	rel="noreferrer">
+							<a
+								className="nmo-hint nmo-api-key-link"
+								href="https://console.proxyapi.ru/keys"
+								target="_blank"
+								rel="noreferrer">
 								Получить ключ API →
 							</a>
 						)}
