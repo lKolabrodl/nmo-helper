@@ -51,16 +51,15 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		requestAnimationFrame(() => {
 			const viewportWidth = document.documentElement.clientWidth;
 			const viewportHeight = document.documentElement.clientHeight;
-			const minLeft = MIN_VISIBLE_SIZE - panelWidth;
-			const minTop = MIN_VISIBLE_SIZE - panelHeight;
-			const maxLeft = viewportWidth - MIN_VISIBLE_SIZE;
-			const maxTop = viewportHeight - MIN_VISIBLE_SIZE;
-			const newLeft = Math.min(Math.max(e.clientX - dx, minLeft), maxLeft);
-			const newTop = Math.min(Math.max(e.clientY - dy, minTop), maxTop);
-			const right = viewportWidth - (newLeft + panelWidth);
-			panel.style.right = right + 'px';
-			panel.style.left = 'auto';
-			panel.style.top = newTop + 'px';
+			const position = constrainPanelPosition(
+				e.clientX - dx,
+				e.clientY - dy,
+				panelWidth,
+				panelHeight,
+				viewportWidth,
+				viewportHeight,
+			);
+			applyPanelPosition(panel, position.left, position.top, panelWidth, viewportWidth);
 		});
 	});
 
@@ -73,4 +72,29 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		storageSet('panelRight', right);
 		storageSet('panelTop', rect.top);
 	});
+}
+
+interface IPanelPosition {
+	readonly left: number;
+	readonly top: number;
+}
+
+export function constrainPanelPosition(left: number, top: number, panelWidth: number, panelHeight: number, viewportWidth: number, viewportHeight: number): IPanelPosition {
+	const visibleWidth = Math.min(MIN_VISIBLE_SIZE, panelWidth, viewportWidth);
+	const visibleHeight = Math.min(MIN_VISIBLE_SIZE, panelHeight, viewportHeight);
+	const minLeft = visibleWidth - panelWidth;
+	const maxLeft = viewportWidth - visibleWidth;
+	const maxTop = viewportHeight - visibleHeight;
+
+	return {
+		left: Math.min(Math.max(left, minLeft), maxLeft),
+		// Заголовок расположен сверху: не даём ему уйти за верхнюю границу.
+		top: Math.min(Math.max(top, 0), maxTop),
+	};
+}
+
+function applyPanelPosition(panel: HTMLElement, left: number, top: number, panelWidth: number, viewportWidth: number): void {
+	panel.style.right = viewportWidth - (left + panelWidth) + 'px';
+	panel.style.left = 'auto';
+	panel.style.top = top + 'px';
 }
