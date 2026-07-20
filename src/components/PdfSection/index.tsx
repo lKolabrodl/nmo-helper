@@ -9,19 +9,18 @@ import InlineToast, {type IToast} from '../ui/InlineToast';
 import ThinkingStrip from '../ui/ThinkingStrip';
 import PdfLoader, {type IPdfLoaderState} from '../Loader/PdfLoader';
 
-const PdfSection: React.FC = () => {
+const PdfSection: React.FC = (): React.JSX.Element => {
+	// context
 	const {status, setStatus} = usePanelStatus();
 	const {topic, question, variants} = useQuestionFinder();
 	const {clearPdfScore} = usePdfScore();
-
+	// state
 	const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null);
 	const [fileName, setFileName] = useState<string | null>(null);
 	const [processing, setProcessing] = useState(false);
 	const fileRef = useRef<HTMLInputElement>(null);
 
-	const _updateLoader = useCallback((state: IPdfLoaderState) => {
-		setProcessing(state.processing);
-	}, []);
+	const _updateLoader = useCallback((state: IPdfLoaderState) => setProcessing(state.processing), []);
 
 	const _handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -77,40 +76,28 @@ const PdfSection: React.FC = () => {
 				</div>}
 
 				<div className="nmo-pdf-upload nmo-fade-up">
-					{!fileName ? (
+					{!fileName &&
 						<label className="nmo-pdf-dropzone">
-							<input ref={fileRef}
-								type="file"
-								accept=".pdf"
-								className="nmo-pdf-file-input"
-								onChange={_handleFile}/>
+							<input ref={fileRef} type="file" accept=".pdf" className="nmo-pdf-file-input" onChange={_handleFile}/>
 							<IconFile size={20}/>
 							<span>Выбрать PDF-файл</span>
 						</label>
-					) : (
+					}
+					{ !!fileName &&
 						<div className="nmo-pdf-loaded">
 							<IconFile size={14}/>
 							<span className="nmo-pdf-name" title={fileName}>{fileName}</span>
-							<button type="button"
-								className="nmo-icon-btn"
-								disabled={processing}
-								onClick={_clearPdf}>
+							<button type="button" className="nmo-icon-btn" disabled={processing} onClick={_clearPdf}>
 								<IconClose size={12}/>
 							</button>
 						</div>
-					)}
+					}
 				</div>
 			</div>
 
-			{isLoading && (
-				<ThinkingStrip
-					title="Анализирую PDF..."
-					steps={['Извлекаю текст...', 'Индексирую...', 'Ищу ответ...']}/>
-			)}
+			{isLoading && <ThinkingStrip title="Анализирую PDF..." steps={['Извлекаю текст...', 'Индексирую...', 'Ищу ответ...']}/>}
 
-			{(isWarning || isError || isOk) && !isLoading && status.title && (
-				<InlineToast toast={statusToToast(status.title, status.status)}/>
-			)}
+			{(isWarning || isError || isOk) && !isLoading && status.title && (<InlineToast toast={statusToToast(status.title, status.status)}/>)}
 		</div>
 	);
 };

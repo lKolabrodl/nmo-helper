@@ -10,7 +10,7 @@ export interface IToast {
 	readonly sub?: string;
 }
 
-interface IProps {
+interface IInlineToastProps {
 	readonly toast: IToast;
 	readonly onClose?: () => void;
 }
@@ -21,7 +21,7 @@ const ICONS: Record<ToastKind, React.ReactNode> = {
 	danger:  <IconClose size={13}/>,
 };
 
-const InlineToast: React.FC<IProps> = ({toast, onClose}) => (
+const InlineToast: React.FC<IInlineToastProps> = ({toast, onClose}) => (
 	<div className={`nmo-banner nmo-banner-${toast.kind} nmo-fade-up nmo-toast`}>
 		<div className="nmo-banner-icon">{ICONS[toast.kind]}</div>
 

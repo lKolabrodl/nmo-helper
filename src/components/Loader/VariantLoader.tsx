@@ -37,9 +37,11 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 
 		async function search() {
 			const encoded = encodeURIComponent(query);
+			const forcareSearchUrl = new URL('/search/', FORCARE_URL);
+			forcareSearchUrl.searchParams.set('query', query);
 
 			const [fcRes, rosRes, alternativeRes] = await Promise.all([
-				fetchViaBackground(FORCARE_URL + '/search/?query=' + encoded).catch(() => null),
+				fetchViaBackground(forcareSearchUrl.toString()).catch(() => null),
 				fetchViaBackground(ROSMED_URL, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

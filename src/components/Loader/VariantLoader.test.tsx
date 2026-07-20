@@ -16,6 +16,23 @@ describe('VariantLoader', () => {
 		mocks.fetchViaBackground.mockReset();
 	});
 
+	it('сериализует запрос 24forcare в формате поисковой формы сайта', async () => {
+		mocks.fetchViaBackground.mockResolvedValue({
+			error: false,
+			status: 200,
+			text: '',
+		});
+		const onChange = vi.fn();
+
+		render(<VariantLoader text="Тема (тест) - 2026" onChange={onChange}/>);
+
+		await waitFor(() => {
+			expect(mocks.fetchViaBackground).toHaveBeenCalledWith(
+				'https://24forcare.com/search/?query=%D0%A2%D0%B5%D0%BC%D0%B0+%28%D1%82%D0%B5%D1%81%D1%82%29+-+2026',
+			);
+		});
+	});
+
 	it('формирует результаты alternative из categories', async () => {
 		mocks.fetchViaBackground.mockImplementation(async (url: string) => ({
 			error: false,
