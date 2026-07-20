@@ -1,0 +1,16 @@
+@use '../../../../vars' as *;
+
+.nmo-ai-custom-content {
+  margin-top: $gap-12;
+}
+
+.nmo-ai-custom-fields {
+  display: flex;
+  flex-direction: column;
+  gap: $gap-12;
+}
+
+.nmo-ai-custom-field {
+  display: flex;
+  flex-direction: column;
+}

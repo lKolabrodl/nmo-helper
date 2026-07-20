@@ -5,11 +5,13 @@ import { createPanel, initPanelBehavior } from './Panel';
 import { unlockPageInteractions } from './api/page-interaction-unlock';
 import {DEFAULT_AI_MODEL, normalizeAiModel} from './utils/constants';
 import {
+	AI_PROVIDER_STORAGE_KEY,
 	AUTO_SOLVE_DELAY_MAX_STORAGE_KEY,
 	AUTO_SOLVE_DELAY_MIN_STORAGE_KEY,
 	AUTO_SOLVE_STORAGE_KEY,
 	DEFAULT_AUTO_SOLVE_DELAY_MAX_SECONDS,
 	DEFAULT_AUTO_SOLVE_DELAY_MIN_SECONDS,
+	normalizeAiProvider,
 } from './contexts/SettingsContext';
 
 /** Слушает сообщения от popup для экспорта кеша */
@@ -49,13 +51,20 @@ unlockPageInteractions();
 	const storedModel = await storageGet('aiModel', DEFAULT_AI_MODEL);
 	const savedModel = normalizeAiModel(storedModel);
 	if (savedModel !== storedModel) storageSet('aiModel', savedModel);
+	const storedMode = await storageGet('mode', 'auto');
+	const storedAiProvider = await storageGet<unknown>(AI_PROVIDER_STORAGE_KEY, null);
+	const savedMode = storedMode === 'ai-pro' ? 'ai' : storedMode;
+	const savedAiProvider = normalizeAiProvider(storedAiProvider, storedMode);
+	if (savedMode !== storedMode) storageSet('mode', savedMode);
+	if (savedAiProvider !== storedAiProvider) storageSet(AI_PROVIDER_STORAGE_KEY, savedAiProvider);
 
 	const state: IExtensionState = {
 		savedUrl: await storageGet('customUrl', ''),
 		savedCollapsed: await storageGet('panelCollapsed', true),
 		savedRight: await storageGet('panelRight', null),
 		savedTop: await storageGet('panelTop', null),
-		savedMode: await storageGet('mode', 'auto'),
+		savedMode,
+		savedAiProvider,
 		savedApiKey: await storageGet('apiKey', ''),
 		savedModel,
 		savedCustomAiUrl: await storageGet('customAiUrl', ''),

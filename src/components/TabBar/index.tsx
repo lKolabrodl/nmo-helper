@@ -14,15 +14,13 @@ const TABS: {mode: UiMode; label: string; Icon: React.FC<{size?: number}>}[] = [
 const TabBar: React.FC = () => {
 	const {mode, setMode} = usePanelUi();
 
-	const activeTab: UiMode = (mode === 'ai' || mode === 'ai-pro') ? 'ai' : mode;
-
 	return (
 		<div className="nmo-tabs-wrap">
 			<div className="nmo-seg">
 				{TABS.map(({mode: m, label, Icon}) => (
 					<button key={m}
 						type="button"
-						className={activeTab === m ? 'active' : ''}
+						className={mode === m ? 'active' : ''}
 						onClick={() => setMode(m)}>
 						<Icon size={12}/>
 						<span>{label}</span>

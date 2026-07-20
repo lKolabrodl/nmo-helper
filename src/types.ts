@@ -3,6 +3,9 @@
  * @module types
  */
 
+/** Доступные варианты подключения AI. */
+export type AiProvider = 'free' | 'proxy' | 'custom';
+
 /** Сохранённое состояние панели расширения из chrome.storage */
 export interface IExtensionState {
   /** URL страницы с ответами */
@@ -15,6 +18,8 @@ export interface IExtensionState {
   readonly savedTop: number | null;
   /** Активный режим */
   readonly savedMode: string;
+  /** Выбранный вариант подключения AI */
+  readonly savedAiProvider: AiProvider;
   /** API-ключ ProxyAPI */
   readonly savedApiKey: string;
   /** Выбранная AI-модель */

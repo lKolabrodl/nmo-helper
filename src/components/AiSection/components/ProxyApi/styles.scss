@@ -1,0 +1,16 @@
+@use '../../../../vars' as *;
+
+.nmo-ai-proxy-content {
+  margin-top: $gap-12;
+}
+
+.nmo-ai-proxy-fields {
+  display: flex;
+  flex-direction: column;
+  gap: $gap-12;
+}
+
+.nmo-ai-proxy-field {
+  display: flex;
+  flex-direction: column;
+}

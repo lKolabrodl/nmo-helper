@@ -1,13 +1,40 @@
 @use '../../vars' as *;
 
-.nmo-ai-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 12px;
-}
+.nmo-ai-provider-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: $gap-2;
+  padding: 3px;
+  background: $bg-input;
+  border: 1px solid $border-soft;
+  border-radius: $r-md;
 
-.nmo-ai-field {
-  display: flex;
-  flex-direction: column;
+  button {
+    min-width: 0;
+    padding: 7px 5px;
+    overflow: hidden;
+    color: $text-3;
+    background: transparent;
+    border: 0;
+    border-radius: $r-sm + 1px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: background .15s, color .15s;
+
+    &:hover:not(:disabled, .active) { color: $text-2; }
+
+    &.active {
+      color: $text;
+      background: $bg-chip;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    }
+
+    &:disabled { cursor: not-allowed; }
+  }
+
+  &.disabled { opacity: 0.55; }
 }

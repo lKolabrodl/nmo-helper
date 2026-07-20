@@ -30,7 +30,7 @@ const FullPanel: React.FC<{initialState: IExtensionState}> = ({initialState}) =>
 				<ErrorBoundary>
 					{mode === 'auto' && <AutoSection/>}
 					{mode === 'sites' && <SitesSection initialUrl={initialState.savedUrl}/>}
-					{(mode === 'ai' || mode === 'ai-pro') && <AiSection/>}
+					{mode === 'ai' && <AiSection/>}
 					{mode === 'pdf' && <PdfSection/>}
 				</ErrorBoundary>
 			</div>

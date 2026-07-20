@@ -2,6 +2,7 @@ import React, {useEffect, useState} from 'react';
 import './styles.scss';
 import {STATUSES, type BugReportStatus} from './status';
 import {usePanelUi} from '../../contexts/PanelUiContext';
+import {useSettings} from '../../contexts/SettingsContext';
 import {useBugReportContext} from '../../contexts/BugReportContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {getQuestionHtml} from '../../utils';
@@ -32,11 +33,14 @@ interface IProps {
 
 const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: openProp, onClose, hideTrigger}) => {
 	const {mode} = usePanelUi();
+	const {aiProvider} = useSettings();
 	const reportContext = useBugReportContext();
 	const {rawTopic, question, variants} = useQuestionFinder();
 	const contextMatchesMode = reportContext.panelMode === mode;
 	const activeUrl = activeUrlProp ?? (contextMatchesMode ? reportContext.activeUrl : '');
-	const panelTab = contextMatchesMode ? reportContext.panelTab : mode;
+	const panelTab = mode === 'ai'
+		? `ai:${aiProvider}`
+		: contextMatchesMode ? reportContext.panelTab : mode;
 	const source = detectSource(activeUrl) ?? '';
 
 	const controlled = openProp !== undefined;
@@ -210,7 +214,8 @@ function formatPanelTab(mode: string, panelTab: string): string {
 	if (mode === 'auto') return 'Авто';
 	if (mode === 'sites' && panelTab === 'sites:search') return 'Сайты / поиск';
 	if (mode === 'sites') return 'Сайты / URL';
-	if (mode === 'ai-pro') return 'AI / свой endpoint';
+	if (mode === 'ai' && panelTab === 'ai:free') return 'AI / бесплатно';
+	if (mode === 'ai' && panelTab === 'ai:custom') return 'AI / свой endpoint';
 	if (mode === 'ai') return 'AI / ProxyAPI';
 	if (mode === 'pdf') return 'PDF';
 	return panelTab || mode || '—';
