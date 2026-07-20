@@ -1,6 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import type {PredictionSources} from 'med-pdf-nmo/browser';
-import {IconClose} from '../icons';
+import {IconClose} from '../../../icons';
 import {
 	constrainPdfSourceDialogLayout,
 	getPdfSourceDialogViewport,

@@ -18,7 +18,6 @@ import AnswerHighlighter from './components/Loader/AnswerHighlighter';
 import AnswerScoreHighlighter from './components/Loader/AnswerScoreHighlighter';
 import AutoSolveLoader from './components/Loader/AutoSolveLoader';
 import QuizActionsStatus from './components/QuizActionsStatus';
-import PdfSourceViewer from './components/PdfSourceViewer';
 
 const FullPanel: React.FC<{initialState: IExtensionState}> = ({initialState}) => {
 	const {mode} = usePanelUi();
@@ -63,7 +62,6 @@ const App: React.FC<{initialState: IExtensionState}> = ({initialState}) => (
 							<ErrorBoundary>
 								<AnswerHighlighter/>
 								<AnswerScoreHighlighter/>
-								<PdfSourceViewer/>
 								<AutoSolveLoader/>
 								<QuizActionsStatus/>
 								<PanelShell initialState={initialState}/>

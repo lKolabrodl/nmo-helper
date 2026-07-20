@@ -1,25 +1,23 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {createPortal} from 'react-dom';
-import {usePanelUi} from '../../contexts/PanelUiContext';
-import {usePdfScore} from '../../contexts/PdfScoreContext';
-import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
-import {IconFile} from '../icons';
+import {usePdfScore} from '../../../../contexts/PdfScoreContext';
+import {useQuestionFinder} from '../../../../contexts/QuestionFinderContext';
+import {IconFile} from '../../../icons';
 import PdfSourceDialog from './PdfSourceDialog';
 import {ensurePdfSourceHost, removePdfSourceHost} from './dom';
 import {getRelevantSourcePages} from './source-text';
 import './styles.scss';
 
 const PdfSourceViewer: React.FC = () => {
-	const {mode} = usePanelUi();
 	const {topic, question, variants} = useQuestionFinder();
 	const {getPdfScore} = usePdfScore();
-	const model = mode === 'pdf' ? getPdfScore(topic, question, variants) : null;
+	const model = getPdfScore(topic, question, variants);
 	const sources = model?.sources ?? null;
 	const pages = useMemo(() => sources ? getRelevantSourcePages(sources) : [], [sources]);
 	const [host, setHost] = useState<HTMLElement | null>(null);
 	const [open, setOpen] = useState(false);
 	const close = useCallback(() => setOpen(false), []);
-	const enabled = mode === 'pdf' && pages.length > 0;
+	const enabled = pages.length > 0;
 
 	useEffect(() => {
 		if (!enabled) {
@@ -47,7 +45,7 @@ const PdfSourceViewer: React.FC = () => {
 
 	useEffect(() => {
 		setOpen(false);
-	}, [mode, model?.id, model?.updatedAt]);
+	}, [model?.id, model?.updatedAt]);
 
 	const title = pages.length === 1
 		? `Показать источник в PDF, страница ${pages[0].page}`

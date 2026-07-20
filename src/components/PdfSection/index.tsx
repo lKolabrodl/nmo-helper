@@ -8,6 +8,7 @@ import {IconFile, IconClose, IconWarn} from '../icons';
 import InlineToast, {type IToast} from '../ui/InlineToast';
 import ThinkingStrip from '../ui/ThinkingStrip';
 import PdfLoader, {type IPdfLoaderState} from '../Loader/PdfLoader';
+import PdfSourceViewer from './components/PdfSourceViewer';
 
 const PdfSection: React.FC = (): React.JSX.Element => {
 	// context
@@ -56,6 +57,7 @@ const PdfSection: React.FC = (): React.JSX.Element => {
 	return (
 		<div className="nmo-section">
 			<PdfLoader pdfData={pdfData} onChange={_updateLoader}/>
+			<PdfSourceViewer/>
 
 			<div className="nmo-section-inner">
 				<div className="nmo-auto-hero nmo-fade-up">
