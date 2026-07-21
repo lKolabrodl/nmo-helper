@@ -3,10 +3,20 @@ import {createPortal} from 'react-dom';
 import {usePdfScore} from '../../../../contexts/PdfScoreContext';
 import {useQuestionFinder} from '../../../../contexts/QuestionFinderContext';
 import {IconFile} from '../../../icons';
+import ModalWindow, {type IModalWindowSettings} from '../../../ModalWindow';
 import PdfSourceDialog from './PdfSourceDialog';
 import {ensurePdfSourceHost, removePdfSourceHost} from './dom';
 import {getRelevantSourcePages} from './source-text';
 import './styles.scss';
+
+export const PDF_SOURCE_DIALOG_STORAGE_KEY = 'nmo-helper:pdf-source-dialog-layout:v1';
+export const PDF_SOURCE_DIALOG_SETTINGS = {
+	width: 920,
+	height: 720,
+	minWidth: 400,
+	minHeight: 300,
+	verticalOverflowRatio: 0.5,
+} satisfies IModalWindowSettings;
 
 const PdfSourceViewer: React.FC = () => {
 	//context
@@ -22,6 +32,7 @@ const PdfSourceViewer: React.FC = () => {
 	const pages = useMemo(() => sources ? getRelevantSourcePages(sources) : [], [sources]);
 	const enabled = pages.length > 0;
 
+	// закрываем принудительно
 	useEffect(() => setOpen(false), [model?.id, model?.updatedAt]);
 
 	useEffect(() => {
@@ -70,12 +81,16 @@ const PdfSourceViewer: React.FC = () => {
 				host
 			)}
 
-			{open && sources && createPortal(
-				<PdfSourceDialog
+			{open && sources && (
+				<ModalWindow
 					key={`${model?.id ?? 'pdf-source'}-${model?.updatedAt ?? 0}`}
-					sources={sources}
-					onClose={_onClose}/>,
-				document.body
+					storageKey={PDF_SOURCE_DIALOG_STORAGE_KEY}
+					settings={PDF_SOURCE_DIALOG_SETTINGS}
+					className="nmo-pdf-source-dialog"
+					ariaLabelledBy="nmo-pdf-source-title"
+					onClose={_onClose}>
+					<PdfSourceDialog sources={sources} onClose={_onClose}/>
+				</ModalWindow>
 			)}
 		</>
 	);

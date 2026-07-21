@@ -2,24 +2,17 @@ import {createElement} from 'react';
 import {fireEvent, render} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import type {AnswerSources, PredictionSources, SourceExcerpt, SourcePage} from 'med-pdf-nmo/browser';
+import HighlightedText, {type IPdfSourceTextLine} from './HighlightedText';
 import PdfSourceDialog from './PdfSourceDialog';
-import {
-	constrainPdfSourceDialogLayout,
-	loadPdfSourceDialogLayout,
-	PDF_SOURCE_DIALOG_STORAGE_KEY,
-	savePdfSourceDialogLayout,
-} from './dialog-layout';
 import {ensurePdfSourceHost, PDF_SOURCE_HOST_ID, removePdfSourceHost} from './dom';
 import {
 	getPageSourceMarks,
 	getRelevantSourcePages,
 	splitPdfSourceText,
-	splitPdfSourceTextIntoLines,
 } from './source-text';
 
 beforeEach(() => {
 	document.body.innerHTML = '';
-	window.localStorage.removeItem(PDF_SOURCE_DIALOG_STORAGE_KEY);
 });
 
 describe('PdfSourceViewer DOM host', () => {
@@ -112,89 +105,125 @@ describe('PDF source text mapping', () => {
 		const text = 'Первое предложение. Второе выделено! Третье предложение?';
 		const highlightedText = 'Второе выделено';
 		const highlightStart = text.indexOf(highlightedText);
-		const lines = splitPdfSourceTextIntoLines(text, [{
+		const lines = new HighlightedText(text, [{
 			start: highlightStart,
 			end: highlightStart + highlightedText.length,
 			role: 'answer',
-		}]);
+		}]).init();
 
-		expect(lines.map(line => line.map(segment => segment.text).join('').trim())).toEqual([
+		expect(lines.map(getHighlightedLineText)).toEqual([
 			'Первое предложение.',
 			'Второе выделено!',
 			'Третье предложение?',
 		]);
-		expect(lines[1].some(segment => segment.text === highlightedText && segment.role === 'answer')).toBe(true);
+		expect(lines[1].segments.some(
+			segment => segment.text === highlightedText && segment.role === 'answer',
+		)).toBe(true);
 	});
 
 	it('не разрывает распространённые сокращения и инициалы', () => {
-		const lines = splitPdfSourceTextIntoLines(
+		const lines = new HighlightedText(
 			'Пациент осмотрен проф. А. Б. Ивановым. Назначено лечение.',
 			[],
-		);
+		).init();
 
-		expect(lines.map(line => line.map(segment => segment.text).join('').trim())).toEqual([
+		expect(lines.map(getHighlightedLineText)).toEqual([
 			'Пациент осмотрен проф. А. Б. Ивановым.',
 			'Назначено лечение.',
 		]);
 	});
+
+	it('переносит каждый пункт нумерованного списка на новую строку', () => {
+		const text = '1) пищеводная грыжа пищеводного отверстия диафрагмы; '
+			+ '2) кардиальная грыжа пищеводного отверстия диафрагмы; '
+			+ '3) кардиально-фундальная грыжа пищеводного отверстия диафрагмы.';
+
+		const lines = new HighlightedText(text, []).init();
+
+		expect(lines.map(getHighlightedLineText)).toEqual([
+			'1) пищеводная грыжа пищеводного отверстия диафрагмы;',
+			'2) кардиальная грыжа пищеводного отверстия диафрагмы;',
+			'3) кардиально-фундальная грыжа пищеводного отверстия диафрагмы.',
+		]);
+	});
+
+	it('переносит каждый пункт списка с маркером • на новую строку', () => {
+		const text = 'На исход заболевания или состояния могут оказывать влияние: '
+			+ '• поливалентная аллергия; '
+			+ '• наличие в анамнезе лейкоза, онкологических заболеваний, туберкулеза '
+			+ 'или положительной реакции на ВИЧ-инфекцию, гепатит В и С, сифилис; '
+			+ '• выраженные врожденные дефекты, под';
+
+		const lines = new HighlightedText(text, []).init();
+
+		expect(lines.map(getHighlightedLineText)).toEqual([
+			'На исход заболевания или состояния могут оказывать влияние:',
+			'• поливалентная аллергия;',
+			'• наличие в анамнезе лейкоза, онкологических заболеваний, туберкулеза '
+				+ 'или положительной реакции на ВИЧ-инфекцию, гепатит В и С, сифилис;',
+			'• выраженные врожденные дефекты, под',
+		]);
+	});
+
+	it('помечает отдельное слово, римский номер и число как заголовки', () => {
+		const text = 'Грыжа пищеводного отверстия диафрагмы. IV. Короткий пищевод.\n'
+			+ 'Раздел.\n2024.\nПродолжение текста';
+		const lines = new HighlightedText(text, []).init();
+		const headings = lines.filter(line => line.isHeading).map(getHighlightedLineText);
+
+		expect(headings).toEqual(['IV.', 'Раздел.', '2024.']);
+	});
+
+	it('не считает заголовком отдельное слово без точки', () => {
+		const text = 'Классификация заболевания или состояния (группы заболеваний и\nсостояний)';
+		const lines = new HighlightedText(text, []).init();
+
+		expect(lines.some(line => line.isHeading)).toBe(false);
+	});
+
+	it('удаляет числовые ссылки в конце предложения и одиночную точку', () => {
+		const text = 'У пациентов после пластики пищеводного отверстия диафрагмы '
+			+ 'рекомендуется выполнить фундопликацию [5, 30, 32, 37, 39, 40, 43, 49, 58, 62, 73, 76, 84].\n.';
+		const lines = new HighlightedText(text, []).init();
+
+		expect(lines.map(getHighlightedLineText)).toEqual([
+			'У пациентов после пластики пищеводного отверстия диафрагмы рекомендуется выполнить фундопликацию.',
+		]);
+	});
+
+	it('помечает все последовательности цифр для курсивного отображения', () => {
+		const lines = new HighlightedText('В 2024 году выделено 3 типа и 12 подтипов.', []).init();
+		const numbers = lines.flatMap(line => line.segments)
+			.filter(segment => segment.isNumber)
+			.map(segment => segment.text);
+
+		expect(numbers).toEqual(['2024', '3', '12']);
+	});
 });
 
 describe('PDF source dialog', () => {
-	it('перетаскивается за шапку и остаётся в пределах экрана', () => {
-		savePdfSourceDialogLayout({left: 100, top: 80, width: 600, height: 520});
+	it('рисует PDF-содержимое для общего модального окна', () => {
+		const onClose = vi.fn();
 		const {container} = render(createElement(PdfSourceDialog, {
-			sources: makeSources({pages: [makePage(1)]}),
-			onClose: vi.fn(),
+			sources: makeSources({pages: [{page: 1, text: 'Вводный текст. IV. Страница 1 в 2024 году.'}]}),
+			onClose,
 		}));
-		const dialog = container.querySelector<HTMLElement>('.nmo-pdf-source-dialog');
+
 		const header = container.querySelector<HTMLElement>('.nmo-pdf-source-header');
-		expect(dialog).not.toBeNull();
-		expect(header).not.toBeNull();
+		const closeButton = container.querySelector<HTMLButtonElement>('.nmo-pdf-source-close');
+		expect(header).toHaveAttribute('data-nmo-modal-window-drag-handle');
+		expect(container.querySelector('.nmo-pdf-source-page-text')).toHaveTextContent('Страница 1');
+		expect(container.querySelector('.nmo-pdf-source-sentence--heading')).toHaveTextContent('IV.');
+		expect([...container.querySelectorAll('.nmo-pdf-source-number')].map(item => item.textContent)).toEqual(['1', '2024']);
 
-		vi.spyOn(dialog!, 'getBoundingClientRect').mockReturnValue({
-			x: 100,
-			y: 80,
-			left: 100,
-			top: 80,
-			right: 700,
-			bottom: 600,
-			width: 600,
-			height: 520,
-			toJSON: () => ({}),
-		});
-
-		fireEvent.pointerDown(header!, {button: 0, pointerId: 1, clientX: 200, clientY: 150});
-		fireEvent.pointerMove(header!, {pointerId: 1, clientX: 260, clientY: 190});
-
-		expect(dialog).toHaveClass('nmo-pdf-source-dialog--dragging');
-		expect(dialog).toHaveStyle({left: '160px', top: '120px'});
-
-		fireEvent.pointerMove(header!, {pointerId: 1, clientX: 2000, clientY: 2000});
-		expect(dialog).toHaveStyle({left: '416px', top: '240px'});
-		fireEvent.pointerUp(header!, {pointerId: 1});
-		expect(dialog).not.toHaveClass('nmo-pdf-source-dialog--dragging');
+		fireEvent.click(closeButton!);
+		expect(onClose).toHaveBeenCalledOnce();
 	});
 });
 
-describe('PDF source dialog layout', () => {
-	it('ограничивает минимальный размер и максимальный размер viewport', () => {
-		expect(constrainPdfSourceDialogLayout(
-			{left: -100, top: 900, width: 100, height: 1200},
-			{width: 1000, height: 700},
-		)).toEqual({
-			left: 8,
-			top: 8,
-			width: 400,
-			height: 684,
-		});
-	});
-
-	it('сохраняет и восстанавливает размер и абсолютную позицию', () => {
-		const layout = {left: 120, top: 90, width: 640, height: 480};
-		savePdfSourceDialogLayout(layout);
-		expect(loadPdfSourceDialogLayout()).toEqual(layout);
-	});
-});
+function getHighlightedLineText(line: IPdfSourceTextLine): string {
+	return line.segments.map(segment => segment.text).join('').trim();
+}
 
 function makeSources(overrides: Partial<PredictionSources> = {}): PredictionSources {
 	return {

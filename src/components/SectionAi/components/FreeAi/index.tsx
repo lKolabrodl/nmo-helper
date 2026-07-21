@@ -14,10 +14,9 @@ const FreeAi: React.FC = () => (
 				<div className="nmo-ai-free-body">
 					<div className="nmo-ai-free-title-row">
 						<span className="nmo-ai-free-title">Бесплатный AI</span>
-						<span className="nmo-ai-free-badge">По умолчанию</span>
 					</div>
 					<div className="nmo-ai-free-description">
-						Без API-ключа и дополнительных настроек. Подключение бесплатных запросов появится следующим шагом.
+						Недоступен, там всё сложно, надо думать / экспериментировать.
 					</div>
 				</div>
 			</div>

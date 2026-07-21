@@ -37,47 +37,6 @@
 	}
 }
 
-.nmo-pdf-source-backdrop {
-	position: fixed;
-	inset: 0;
-	z-index: 2147483646;
-	background: rgba(4, 7, 13, 0.74);
-}
-
-.nmo-pdf-source-dialog {
-	position: absolute;
-	box-sizing: border-box;
-	display: flex;
-	flex-direction: column;
-	min-width: min(400px, calc(100vw - 16px));
-	min-height: min(300px, calc(100vh - 16px));
-	max-width: calc(100vw - 16px);
-	max-height: calc(100vh - 16px);
-	overflow: hidden;
-	border: 1px solid $border-strong;
-	border-radius: $r-lg;
-	background: $bg-frame;
-	color: $text;
-	box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
-	font-family: $font-ui;
-	font-size: $fs-base;
-	line-height: 1.45;
-	outline: none;
-	resize: both;
-
-	&::after {
-		content: '';
-		position: absolute;
-		right: 3px;
-		bottom: 3px;
-		width: 11px;
-		height: 11px;
-		background: linear-gradient(135deg, transparent 0 44%, $text-3 45% 52%, transparent 53% 64%, $text-3 65% 72%, transparent 73%);
-		opacity: 0.65;
-		pointer-events: none;
-	}
-}
-
 .nmo-pdf-source-header {
 	display: flex;
 	align-items: center;
@@ -86,13 +45,6 @@
 	padding: 14px 16px;
 	border-bottom: 1px solid $border;
 	background: $bg-frame-2;
-	cursor: grab;
-	touch-action: none;
-	user-select: none;
-}
-
-.nmo-pdf-source-dialog--dragging .nmo-pdf-source-header {
-	cursor: grabbing;
 }
 
 .nmo-pdf-source-heading {
@@ -264,6 +216,20 @@
 	&:not(:last-child) {
 		margin-bottom: 0.45em;
 	}
+
+	&--heading {
+		margin-top: 0.8em;
+		margin-bottom: 0.6em;
+		font-size: 1.35em;
+		font-weight: 800;
+		line-height: 1.35;
+		letter-spacing: 0.015em;
+	}
+}
+
+.nmo-pdf-source-number {
+	font-style: italic;
+	opacity: 0.92;
 }
 
 .nmo-pdf-source-mark {

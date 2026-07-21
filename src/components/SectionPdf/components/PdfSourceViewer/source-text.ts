@@ -18,8 +18,6 @@ export interface IPdfSourceTextSegment {
 	readonly role: PdfSourceMarkRole | null;
 }
 
-export type PdfSourceTextLine = readonly IPdfSourceTextSegment[];
-
 export interface IPdfSourceExcerptView {
 	readonly key: string;
 	readonly label: string;
@@ -147,90 +145,6 @@ export function splitPdfSourceText(text: string, marks: readonly IPdfSourceTextM
 	}
 
 	return result;
-}
-
-/**
- * Разбивает текст страницы на предложения, не изменяя исходные offsets подсветки.
- * Физические переносы PDF остаются пробелами, а смысловой перенос добавляется после
- * точки, вопросительного/восклицательного знака или многоточия.
- */
-export function splitPdfSourceTextIntoLines(
-	text: string,
-	marks: readonly IPdfSourceTextMark[],
-): PdfSourceTextLine[] {
-	const segments = splitPdfSourceText(text, marks);
-	if (!segments.length) return [];
-
-	const breakPositions = getSentenceBreakPositions(text);
-	if (!breakPositions.length) return [segments];
-
-	const lines: IPdfSourceTextSegment[][] = [[]];
-	let absoluteOffset = 0;
-	let breakIndex = 0;
-
-	segments.forEach(segment => {
-		const segmentEnd = absoluteOffset + segment.text.length;
-		let localOffset = 0;
-
-		while (breakIndex < breakPositions.length && breakPositions[breakIndex] <= segmentEnd) {
-			const breakPosition = breakPositions[breakIndex];
-			const breakOffset = Math.max(localOffset, breakPosition - absoluteOffset);
-			appendTextSegment(lines[lines.length - 1], segment.text.slice(localOffset, breakOffset), segment.role);
-			lines.push([]);
-			localOffset = breakOffset;
-			breakIndex += 1;
-		}
-
-		appendTextSegment(lines[lines.length - 1], segment.text.slice(localOffset), segment.role);
-		absoluteOffset = segmentEnd;
-	});
-
-	return lines.filter(line => line.some(segment => segment.text.trim()));
-}
-
-const SENTENCE_END_PATTERN = /([.!?…]+["'»”’)\]}]*)(\s+)/gu;
-const NON_TERMINAL_ABBREVIATIONS = new Set([
-	'г', 'гг', 'д', 'др', 'е', 'им', 'к', 'мин', 'мл', 'н', 'п', 'пп', 'пр',
-	'проф', 'ред', 'рис', 'с', 'сек', 'см', 'стр', 'т', 'табл', 'ч',
-	'dr', 'e.g', 'fig', 'i.e', 'mr', 'mrs', 'no', 'p', 'pp', 'prof', 'vs',
-]);
-
-function getSentenceBreakPositions(text: string): number[] {
-	const result: number[] = [];
-
-	for (const match of text.matchAll(SENTENCE_END_PATTERN)) {
-		if (typeof match.index !== 'number') continue;
-
-		const nextPosition = match.index + match[0].length;
-		if (!text.slice(nextPosition).trim()) continue;
-
-		const punctuation = match[1].match(/[.!?…]+/u)?.[0] ?? '';
-		if (punctuation === '.' && isNonTerminalPeriod(text, match.index)) continue;
-		result.push(nextPosition);
-	}
-
-	return result;
-}
-
-function isNonTerminalPeriod(text: string, periodPosition: number): boolean {
-	const token = text.slice(0, periodPosition).match(/[\p{L}.]+$/u)?.[0].toLocaleLowerCase('ru') ?? '';
-	if (!token) return false;
-	if (NON_TERMINAL_ABBREVIATIONS.has(token)) return true;
-	return /^\p{Lu}$/u.test(text.slice(0, periodPosition).match(/\p{L}+$/u)?.[0] ?? '');
-}
-
-function appendTextSegment(
-	line: IPdfSourceTextSegment[],
-	text: string,
-	role: PdfSourceMarkRole | null,
-): void {
-	if (!text) return;
-	const previous = line[line.length - 1];
-	if (previous?.role === role) {
-		line[line.length - 1] = {text: previous.text + text, role};
-	} else {
-		line.push({text, role});
-	}
 }
 
 function mapExcerptHighlight(pageText: string, excerpt: SourceExcerpt, highlight: SourceHighlight): IPdfSourceTextMark | null {
