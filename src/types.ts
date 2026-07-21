@@ -51,7 +51,7 @@ export interface IAiModel {
 }
 
 /** Ключ источника ответов */
-export type ISourceKey = '24forcare' | 'rosmedicinfo' | 'nmo-helper';
+export type ISourceKey = 'primary' | 'secondary' | 'nmo-helper';
 
 /** Варианты статуса панели */
 export const Status = {

@@ -21,7 +21,7 @@ function makePayload(overrides: Partial<IBugReportPayload> = {}): IBugReportPayl
 		panelMode: 'auto',
 		panelTab: 'auto',
 		activeUrl: 'https://example.com/test',
-		source: 'rosmedicinfo',
+		source: 'primary',
 		topic: 'Кардиология - 2024',
 		question: 'Какой диагноз?',
 		questionHtml: '<p>Какой диагноз?</p>',

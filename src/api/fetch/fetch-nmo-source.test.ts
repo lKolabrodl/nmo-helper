@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {fetchViaBackground} from './fetch';
 import {fetchNmoSource} from './fetch-nmo-source';
 import {findAnswers} from '../../utils/cases';
-import {NMO_URL_VARIANT} from '../../utils/constants';
+import {ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
 
 vi.mock('./fetch', async importOriginal => ({
 	...await importOriginal<typeof import('./fetch')>(),
@@ -10,7 +10,7 @@ vi.mock('./fetch', async importOriginal => ({
 }));
 
 const mockFetch = vi.mocked(fetchViaBackground);
-const NMO_BASE_URL = `https://${NMO_URL_VARIANT}`;
+const NMO_BASE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
 
 beforeEach(() => {
 	mockFetch.mockReset();

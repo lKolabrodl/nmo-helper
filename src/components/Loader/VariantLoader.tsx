@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { fetchViaBackground, parseHtml } from '../../utils';
 import {ISourceKey} from '../../types';
-import {NMO_URL_24Forc, NMO_URL_ROSMED, NMO_URL_VARIANT} from '../../utils/constants';
+import {ALTERNATIVE_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, SECONDARY_ANSWER_SOURCE_HOST} from '../../utils/constants';
 
 export interface IVariantModel {
 	readonly loading: boolean;
@@ -17,9 +17,9 @@ interface ISearchResult {
 
 const INIT_STATE: IVariantModel = { loading: false, error: null, data: [] };
 
-const FORCARE_URL = `https://${NMO_URL_24Forc}`;
-const ROSMED_URL = `https://${NMO_URL_ROSMED}`;
-const ALTERNATIVE_BASE_URL = `https://${NMO_URL_VARIANT}`;
+const SECONDARY_SOURCE_URL = `https://${SECONDARY_ANSWER_SOURCE_HOST}`;
+const PRIMARY_SOURCE_URL = `https://${PRIMARY_ANSWER_SOURCE_HOST}`;
+const ALTERNATIVE_BASE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
 
 interface IVariantLoaderProps {
 	readonly text: string | null;
@@ -38,12 +38,12 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 
 		async function search() {
 			const encoded = encodeURIComponent(query);
-			const forcareSearchUrl = new URL('/search/', FORCARE_URL);
-			forcareSearchUrl.searchParams.set('query', query);
+			const secondarySearchUrl = new URL('/search/', SECONDARY_SOURCE_URL);
+			secondarySearchUrl.searchParams.set('query', query);
 
-			const [fcRes, rosRes, alternativeRes] = await Promise.all([
-				fetchViaBackground(forcareSearchUrl.toString()).catch(() => null),
-				fetchViaBackground(ROSMED_URL, {
+			const [secondaryRes, primaryRes, alternativeRes] = await Promise.all([
+				fetchViaBackground(secondarySearchUrl.toString()).catch(() => null),
+				fetchViaBackground(PRIMARY_SOURCE_URL, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 					body: 'do=search&subaction=search&story=' + encoded,
@@ -55,11 +55,11 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 
 			const results: ISearchResult[] = [];
 
-			// 24forcare всё оки
-			if (fcRes && !fcRes.error && fcRes.text) results.push(...parseForcareUrls(fcRes.text));
+			// Результаты дополнительной базы
+			if (secondaryRes && !secondaryRes.error && secondaryRes.text) results.push(...parseSecondarySourceUrls(secondaryRes.text));
 
-			// rosmed всё оки доки
-			if (rosRes && !rosRes.error && rosRes.text) results.push(...parseRosmedUrls(rosRes.text));
+			// Результаты основной базы
+			if (primaryRes && !primaryRes.error && primaryRes.text) results.push(...parsePrimarySourceUrls(primaryRes.text));
 
 			if (alternativeRes && !alternativeRes.error && alternativeRes.text) {
 				results.push(...parseForAlternativeUrl(alternativeRes.text));
@@ -83,38 +83,38 @@ export default VariantLoader;
 
 
 /**
- * Извлекает варианты страниц с ответами из HTML-результата поиска 24forcare.
+ * Извлекает варианты страниц с ответами из HTML-выдачи дополнительной базы.
  *
  * @param html HTML-разметка страницы с результатами поиска.
  * @returns Найденные варианты с источником, заголовком и абсолютным URL.
  */
-function parseForcareUrls(html: string): ISearchResult[] {
+function parseSecondarySourceUrls(html: string): ISearchResult[] {
 	const results: ISearchResult[] = [];
 	const links = Array.from(parseHtml(html).querySelectorAll('a.item-name'));
 	links.forEach(a => {
 		const href = a.getAttribute('href') || '';
 		const title = (a.textContent || '').trim();
 		if (!href || !title) return;
-		const url = href.startsWith('http') ? href : `${FORCARE_URL}/${href.replace(/^\//, '')}`;
-		results.push({ source: '24forcare', title, url });
+		const url = href.startsWith('http') ? href : `${SECONDARY_SOURCE_URL}/${href.replace(/^\//, '')}`;
+		results.push({ source: 'secondary', title, url });
 	});
 	return results;
 }
 
 /**
- * Извлекает варианты страниц с ответами из HTML-результата поиска rosmedicinfo.
+ * Извлекает варианты страниц с ответами из HTML-выдачи основной базы.
  *
  * @param html HTML-разметка страницы с результатами поиска.
  * @returns Найденные варианты с источником, заголовком и URL.
  */
-function parseRosmedUrls(html: string): ISearchResult[] {
+function parsePrimarySourceUrls(html: string): ISearchResult[] {
 	const results: ISearchResult[] = [];
 	const links = Array.from(parseHtml(html).querySelectorAll('.short__title a'));
 	links.forEach(a => {
 		const href = a.getAttribute('href') || '';
 		const title = (a.textContent || '').trim();
 		if (!href || !title) return;
-		results.push({ source: 'rosmedicinfo', title, url: href });
+		results.push({ source: 'primary', title, url: href });
 	});
 	return results;
 }

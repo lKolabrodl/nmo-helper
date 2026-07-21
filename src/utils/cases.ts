@@ -1,13 +1,13 @@
 import type { ISourceKey } from '../types';
 import { matchQuestion, variantScore } from './matching';
 import {
-	extract24forcare,
-	extract24forcareNumberedPPlus,
-	extractRosmedH3Highlighted,
-	extractRosmedH3BrPlus,
-	extractRosmedNumberedPInlineBr,
-	extractRosmedNumberedPPerParagraph,
-	extractRosmedFlatBr,
+	extractSecondaryH3Strong,
+	extractSecondaryNumberedPPlus,
+	extractPrimaryH3Highlighted,
+	extractPrimaryH3BrPlus,
+	extractPrimaryNumberedPInlineBr,
+	extractPrimaryNumberedPPerParagraph,
+	extractPrimaryFlatBr,
 	type QaCaseRaw,
 } from './extractors';
 
@@ -40,14 +40,14 @@ export function extractCases(source: ISourceKey, input: HTMLElement | QaCaseMode
 
 	let raw: QaCaseRaw[] = [];
 
-	if (source === '24forcare') raw = [...extract24forcare(input), ...extract24forcareNumberedPPlus(input)];
-	else if (source === 'rosmedicinfo') {
+	if (source === 'secondary') raw = [...extractSecondaryH3Strong(input), ...extractSecondaryNumberedPPlus(input)];
+	else if (source === 'primary') {
 		raw = [
-			...extractRosmedH3Highlighted(input),
-			...extractRosmedH3BrPlus(input),
-			...extractRosmedNumberedPInlineBr(input),
-			...extractRosmedNumberedPPerParagraph(input),
-			...extractRosmedFlatBr(input),
+			...extractPrimaryH3Highlighted(input),
+			...extractPrimaryH3BrPlus(input),
+			...extractPrimaryNumberedPInlineBr(input),
+			...extractPrimaryNumberedPPerParagraph(input),
+			...extractPrimaryFlatBr(input),
 		];
 	}
 

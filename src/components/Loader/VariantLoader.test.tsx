@@ -1,9 +1,9 @@
 import {render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {NMO_URL_24Forc, NMO_URL_VARIANT} from '../../utils/constants';
+import {SECONDARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import VariantLoader from './VariantLoader';
 
-const NMO_BASE_URL = `https://${NMO_URL_VARIANT}`;
+const NMO_BASE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
 
 const mocks = vi.hoisted(() => ({
 	fetchViaBackground: vi.fn(),
@@ -19,7 +19,7 @@ describe('VariantLoader', () => {
 		mocks.fetchViaBackground.mockReset();
 	});
 
-	it('сериализует запрос 24forcare в формате поисковой формы сайта', async () => {
+	it('сериализует запрос в формате поисковой формы дополнительной базы', async () => {
 		mocks.fetchViaBackground.mockResolvedValue({
 			error: false,
 			status: 200,
@@ -31,7 +31,7 @@ describe('VariantLoader', () => {
 
 		await waitFor(() => {
 			expect(mocks.fetchViaBackground).toHaveBeenCalledWith(
-				`https://${NMO_URL_24Forc}/search/?query=%D0%A2%D0%B5%D0%BC%D0%B0+%28%D1%82%D0%B5%D1%81%D1%82%29+-+2026`,
+				`https://${SECONDARY_ANSWER_SOURCE_HOST}/search/?query=%D0%A2%D0%B5%D0%BC%D0%B0+%28%D1%82%D0%B5%D1%81%D1%82%29+-+2026`,
 			);
 		});
 	});

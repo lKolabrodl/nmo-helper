@@ -1,9 +1,9 @@
 import {describe, expect, it} from 'vitest';
 import {Status} from '../../types';
-import {NMO_URL_ROSMED, NMO_URL_VARIANT} from '../../utils/constants';
+import {PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import {formatUrlForDisplay, plural, statusToToast} from './utils';
 
-const NMO_BASE_URL = `https://${NMO_URL_VARIANT}`;
+const NMO_BASE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
 
 describe('formatUrlForDisplay', () => {
 	it('заменяет альтерантивный URL стабильным 10-символьным ID', () => {
@@ -20,8 +20,8 @@ describe('formatUrlForDisplay', () => {
 	});
 
 	it.each([
-		`https://${NMO_URL_ROSMED}/answers`,
-		`https://not-${NMO_URL_VARIANT}/test`,
+		`https://${PRIMARY_ANSWER_SOURCE_HOST}/answers`,
+		`https://not-${ALTERNATIVE_ANSWER_SOURCE_HOST}/test`,
 		'nmo-helper/id/already-set',
 		'незавершённый ввод',
 	])('не изменяет %s', value => {

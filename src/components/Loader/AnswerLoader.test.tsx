@@ -1,9 +1,9 @@
 import {render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {NMO_URL_VARIANT} from '../../utils/constants';
+import {ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import AnswerLoader from './AnswerLoader';
 
-const NMO_TEST_URL = `https://${NMO_URL_VARIANT}/test-medik/nmo/topic.html`;
+const NMO_TEST_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic.html`;
 
 const mocks = vi.hoisted(() => ({
 	detectSource: vi.fn(),

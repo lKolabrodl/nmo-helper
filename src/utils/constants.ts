@@ -20,14 +20,10 @@ export const CACHE_MAX_TOPICS = 10;
 /** Ссылка на инструкцию по обновлению расширения */
 export const UPDATE_URL = 'https://nmo-helper.ru/instruction#update';
 
-/** Ссылка на альтернативную ссылку поиска */
-export const NMO_URL_VARIANT = getNmoSourceHost();
-
-/** Домен источника 24forcare */
-export const NMO_URL_24Forc = get24ForcareSourceHost();
-
-/** Домен источника Rosmedicinfo */
-export const NMO_URL_ROSMED = getRosmedSourceHost();
+/** Домены баз поиска ответов. Конкретные адреса хранятся только здесь. */
+export const PRIMARY_ANSWER_SOURCE_HOST = 'rosmedicinfo.ru';
+export const SECONDARY_ANSWER_SOURCE_HOST = '24forcare.com';
+export const ALTERNATIVE_ANSWER_SOURCE_HOST = 'testotvet.com';
 
 /**
  * DOM-селекторы страницы НМО.
@@ -93,11 +89,11 @@ export const SELECTORS = {
 
 /** Тексты статусов панели */
 export const StatusTitle = {
-	SEARCHING: 'ищу на обоих сайтах...',
+	SEARCHING: 'ищу в базах ответов...',
 	SEARCHING_ANSWERS: 'ищу ответы...',
 	LOADING_ANSWERS: 'загружаю ответы...',
 	LOADING_FAILED: 'не удалось загрузить ответы',
-	NOT_FOUND: 'ответы не найдены на сайтах',
+	NOT_FOUND: 'ответы не найдены в базах',
 	ANSWER_NOT_FOUND: 'ответ не найден',
 	ANSWER_MISMATCH: 'ответ не совпал с вариантами (такое бывает)',
 	ANSWER_LOW_CONFIDENCE: 'низкая уверенность',
@@ -175,16 +171,4 @@ const AI_MODEL_IDS = new Set(AI_MODELS.map(model => model.id));
 /** Возвращает доступную ProxyAPI-модель или актуальную модель по умолчанию. */
 export function normalizeAiModel(model: string): string {
 	return AI_MODEL_IDS.has(model) ? model : DEFAULT_AI_MODEL;
-}
-
-function getNmoSourceHost(): string {
-	return 'testotvet.com';
-}
-
-function get24ForcareSourceHost(): string {
-	return '24forcare.com';
-}
-
-function getRosmedSourceHost(): string {
-	return 'rosmedicinfo.ru';
 }

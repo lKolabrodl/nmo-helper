@@ -30,9 +30,9 @@ export interface IBugReportPayload {
 	readonly panelMode?: string;
 	/** Детализация внутри таба: auto / sites:url / sites:search / ai:proxy / etc. */
 	readonly panelTab?: string;
-	/** URL страницы-источника ответов (rosmedicinfo.ru / 24forcare.com) */
+	/** URL страницы в одной из поддерживаемых баз ответов */
 	readonly activeUrl: string;
-	/** Ключ источника: `rosmedicinfo` / `24forcare` / '' если не определён */
+	/** Внутренний ключ базы ответов или `''`, если источник не определён */
 	readonly source: string;
 	/** Тема теста как отображается у пользователя */
 	readonly topic: string;

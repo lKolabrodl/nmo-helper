@@ -5,7 +5,7 @@
  */
 
 import {Status} from '../../types';
-import {NMO_URL_VARIANT} from '../../utils/constants';
+import {ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import type {IToast} from '../ui/InlineToast';
 
 const DISPLAY_URL_PREFIX = 'nmo-helper/id/';
@@ -44,7 +44,7 @@ export function formatUrlForDisplay(value: string): string {
 		return value;
 	}
 
-	if (url.protocol !== 'https:' || url.hostname.toLowerCase() !== NMO_URL_VARIANT) return value;
+	if (url.protocol !== 'https:' || url.hostname.toLowerCase() !== ALTERNATIVE_ANSWER_SOURCE_HOST) return value;
 
 	return `${DISPLAY_URL_PREFIX}${createSeededId(url.href)}`;
 }

@@ -1,6 +1,6 @@
 import type { ISourceKey } from '../types';
 import { normalizeDashes, stripQuotes } from './text';
-import {NMO_URL_24Forc, NMO_URL_ROSMED, NMO_URL_VARIANT, SIMILARITY_THRESHOLD} from './constants';
+import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST, SIMILARITY_THRESHOLD} from './constants';
 
 /**
  * Определяет, к какому из поддерживаемых сайтов-источников относится URL.
@@ -9,9 +9,9 @@ import {NMO_URL_24Forc, NMO_URL_ROSMED, NMO_URL_VARIANT, SIMILARITY_THRESHOLD} f
  * @returns Ключ источника или `null`, если домен не поддерживается.
  */
 export function detectSource(url: string): ISourceKey | null {
-	if (url.includes(NMO_URL_24Forc)) return '24forcare';
-	if (url.includes(NMO_URL_ROSMED)) return 'rosmedicinfo';
-	if (url.includes(NMO_URL_VARIANT)) return 'nmo-helper';
+	if (url.includes(SECONDARY_ANSWER_SOURCE_HOST)) return 'secondary';
+	if (url.includes(PRIMARY_ANSWER_SOURCE_HOST)) return 'primary';
+	if (url.includes(ALTERNATIVE_ANSWER_SOURCE_HOST)) return 'nmo-helper';
 	return null;
 }
 
@@ -153,7 +153,7 @@ export interface IPickResultItem {
  *  2. Если задан `topic` — для каждого title считает {@link variantScore}
  *     с предварительным стрипом префикса «Ответы к тестам НМО: "..."».
  *     Возвращает аргмакс при score ≥ {@link MIN_TITLE_SCORE}.
- *  3. Иначе fallback — последний элемент (rosmed возвращает старые → новые,
+ *  3. Иначе fallback — последний элемент (основная база возвращает старые → новые,
  *     свежий обычно правильнее).
  *
  * Та же идеология, что и {@link findAnswers} в `cases.ts`: «лучший по score»

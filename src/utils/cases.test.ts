@@ -18,14 +18,14 @@ function createDiv(html: string): HTMLElement {
 	return div;
 }
 
-describe('extractCases — 24forcare', () => {
+describe('extractCases — дополнительная база', () => {
 	it('извлекает вопрос + variants + answers + idx из h3 + p > strong', () => {
 		const div = createDiv(`
 			<h3>Какой метод лечения?</h3>
 			<p><strong>Лапароскопия</strong><br>Лапаротомия<br><strong>Торакотомия</strong></p>
 		`);
 
-		const cases = extractCases('24forcare', div);
+		const cases = extractCases('secondary', div);
 		expect(cases).toHaveLength(1);
 
 		const [c] = cases;
@@ -37,7 +37,7 @@ describe('extractCases — 24forcare', () => {
 
 	it('возвращает пустой массив если нет вопросов', () => {
 		const div = createDiv('<div>пусто</div>');
-		expect(extractCases('24forcare', div)).toEqual([]);
+		expect(extractCases('secondary', div)).toEqual([]);
 	});
 });
 
@@ -55,14 +55,14 @@ describe('extractCases — nmo-helper', () => {
 	});
 });
 
-describe('extractCases — rosmedicinfo layout1 (h3 + span highlighted)', () => {
+describe('extractCases — основная база, layout1 (h3 + span highlighted)', () => {
 	it('извлекает правильные варианты по жёлтому фону', () => {
 		const div = createDiv(`
 			<h3>Вопрос о лечении</h3>
 			<p><span style="background: #fbeeb8">Правильный ответ</span><br><span>Неправильный</span></p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question === 'Вопрос о лечении')!;
 
 		expect(c).toBeDefined();
@@ -72,14 +72,14 @@ describe('extractCases — rosmedicinfo layout1 (h3 + span highlighted)', () => 
 	});
 });
 
-describe('extractCases — rosmedicinfo layout2 (p.MsoNormal + br + плюс)', () => {
+describe('extractCases — основная база, layout2 (p.MsoNormal + br + плюс)', () => {
 	it('извлекает правильные варианты по `+`', () => {
 		const div = createDiv(`
 			<p class="MsoNormal"><b>1. Какой препарат?</b></p>
 			<p class="MsoNormal">Аспирин+<br>Ибупрофен<br>Парацетамол+</p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question === 'Какой препарат?')!;
 
 		expect(c).toBeDefined();
@@ -100,7 +100,7 @@ describe('extractCases — idx уникален в пределах массив
 			<p>1) m;<br><b>2) n;+</b></p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		expect(cases.length).toBeGreaterThanOrEqual(3);
 
 		const idxs = cases.map(c => c.idx);
@@ -356,7 +356,7 @@ describe('findAnswers — интеграция с extractCases (реальный
 			<p><span style="background-color:#fbeeb8;">1) ремоделирование правого желудочка; +</span> <br>2) гипертрофия и дилатация левого желудочка; <br>3) миокардит; <br>4) отек головного мозга; <br>5) увеличение селезенки.</p>
 		`);
 
-		const model = extractCases('rosmedicinfo', div);
+		const model = extractCases('primary', div);
 		const userVariants = [
 			'1) Ремоделирование правого желудочка',
 			'2) Гипертрофия и дилатация левого желудочка',
@@ -378,7 +378,7 @@ describe('findAnswers — интеграция с extractCases (реальный
 			<p><span style="background-color:#fbeeb8;">1) правильный;+</span><br>2) неправильный;<br>3) тоже нет.</p>
 		`);
 
-		const model = extractCases('rosmedicinfo', div);
+		const model = extractCases('primary', div);
 		// Должно быть как минимум 2 дубля с одинаковым question
 		const sameQ = model.filter(c => c.question === 'Вопрос с двойной разметкой');
 		expect(sameQ.length).toBeGreaterThanOrEqual(1);
@@ -408,7 +408,7 @@ describe('баг репорт', () => {
 			<p>1) агрегация данных; <br>2) разбор текста; <br><span style="background-color:#fbeeb8;">3) проверка логической согласованности, полноты и достоверности выводов, сформированных агентами Causal Reasoning Agent (CRA) и Retrieval-Augmented Generation Agent (RAG);</span> <br>4) формирование рекомендаций по лечению.</p>
 		`);
 
-		const model = extractCases('rosmedicinfo', div);
+		const model = extractCases('primary', div);
 
 		const question = 'Роль агента «Критик» – это';
 		
@@ -432,7 +432,7 @@ describe('баг репорт', () => {
 			<p><span style="background-color:#fbeeb8;">1) "Лейтер-3 - Международные шкалы продуктивности"; +</span> <br>2) "Шкала Стэнфорд-Бине"; <br>3) "Шкала интеллекта для детей Векслера"; <br>4) "Шкала развития М. Палмер".</p>
 		`);
 
-		const model = extractCases('rosmedicinfo', div);
+		const model = extractCases('primary', div);
 
 		const question = 'Для верификации состояния когнитивного/интеллектуального развития детей с мукополисахаридозом II типа в случае нарушения слуха используется';
 
@@ -463,7 +463,7 @@ describe('баг репорт', () => {
 			</span><b>обеспечение приемлемого качества жизни в	болезни+</b></span></span></p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question === 'Цель сестринского процесса')!;
 
 		expect(c).toBeDefined();
@@ -479,7 +479,7 @@ describe('баг репорт', () => {
 			<p>1) пола и возраста пациента;<br><b>2) предпочтений хирурга и соматического статуса пациента;+</b><br>3) размеров камней и количества доступов;<br>4) стороны оперируемой почки.</p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x =>
 			x.question === 'Выбор «укладки» пациента на операционный стол (на животе или на спине) при перкутанной нефролитотрипсии зависит от',
 		)!;
@@ -496,7 +496,7 @@ describe('баг репорт', () => {
 			<p>1) повышение липопротеинов высокой плотности в крови;<br>2) разветвленная периферическая сосудистая сеть;<br><b>3) дисбаланс между вазодилататорами и вазоконстрикторами;+</b><br>4) выделение биологически активных веществ надпочечниками.</p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question.includes('В патогенезе синдрома Рейно'))!;
 
 		expect(c).toBeDefined();
@@ -515,7 +515,7 @@ describe('баг репорт', () => {
 			<p class="MsoNormal">4) 1</p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question === 'Количество стадий эфирного наркоза по Гведелу')!;
 
 		expect(c).toBeDefined();
@@ -530,7 +530,7 @@ describe('баг репорт', () => {
 			<p>1) радиус;<br>2) результат;<br><b>3) размер; +&nbsp;</b><br>4) расстояние.</p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question.includes('В системе самоконтроля АККОРД'))!;
 
 		expect(c).toBeDefined();
@@ -546,7 +546,7 @@ describe('баг репорт', () => {
 			<p>1) эпидуральной анестезией; <br>2) проводниковой анестезией; <br>3) аппликационной анестезией; <br><span style="background-color:#fbeeb8;">4) местной инфильтративной анестезией кожи.+</span></p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question.includes('мозолями'))!;
 
 		expect(c).toBeDefined();
@@ -562,7 +562,7 @@ describe('баг репорт', () => {
 			<p><span style="background-color:#fbeeb8;">1) ремоделирование правого желудочка; +</span> <br>2) гипертрофия и дилатация левого желудочка; <br>3) миокардит; <br>4) отек головного мозга; <br>5) увеличение селезенки.</p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question.includes('Морфологический субстрат ЛГ'))!;
 
 		expect(c).toBeDefined();
@@ -578,7 +578,7 @@ describe('баг репорт', () => {
 			<p><span style="background-color:#fbeeb8;">1) болезни крови (гемофилия, лейкозы, геморрагические диатезы); </span> <br><span style="background-color:#fbeeb8;">2) наличие аномальных сосудов в глотке (пульсация боковой стенки глотки); </span> <br>3) наличие всех видов декомпенсации хронического тонзиллита, кроме рецидивов острого тонзиллита (ангин); <br>4) наличие декомпенсации хронического тонзиллита в виде рецидивов острого тонзиллита (ангин); <br>5) наличие неэффективности повторных (2-3 раза в год) тщательно проведенных курсов консервативного лечения у больных хронического тонзиллита простой формы.</p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question.includes('тонзиллэктомии'))!;
 
 		expect(c).toBeDefined();
@@ -595,7 +595,7 @@ describe('баг репорт', () => {
 			<p><b>1) возраст более 60 лет для исключения МДС и лейкозов;+</b><br><b>2) отсутствие ответа на стандартную терапию в течение 6 мес.;+</b><br>3) повышение лейкоцитов периферической крови &gt; 15,0 х 109/л на терапии глюкокортикостероидами;<br>4) уровень тромбоцитов 30,0-50,0 х 109/л на фоне терапии.</p>
 		`);
 
-		const cases = extractCases('rosmedicinfo', div);
+		const cases = extractCases('primary', div);
 		const c = cases.find(x => x.question.includes('аспирационной биопсии'))!;
 
 		expect(c).toBeDefined();
@@ -612,7 +612,7 @@ describe('баг репорт', () => {
 			<p class="MsoNormal" style="margin-bottom:0cm;"><b>1) катепсина К;+</b><br>2) папаина;<br>3) эреисина;<br>4) катепсина А.</p>
 		`);
 
-		const model = extractCases('rosmedicinfo', div);
+		const model = extractCases('primary', div);
 
 		const question = 'Деструктивная свойства активированных остеокластов при РА связаны с синтезом широкого спектра протеаз, в первую очередь';
 
@@ -637,7 +637,7 @@ describe('баг репорт', () => {
 			<p>1) антидепрессанты;<br>2) вытяжение позвоночника;<br>3) мануальная терапия;<br>4) рефлексотерапия;<br><strong class="correct-answer-highlight">5) хирургическое лечение.+</strong></p>
 		`);
 
-		const model = extractCases('24forcare', div);
+		const model = extractCases('secondary', div);
 
 		const question = 'Лечение дискогенной компрессии корешков конского хвоста:';
 
@@ -677,7 +677,7 @@ describe('баг репорт', () => {
 		<br>
 		`);
 
-		const model = extractCases('rosmedicinfo', div);
+		const model = extractCases('primary', div);
 
 		const question = 'Переломовывих Галеацци – это';
 
@@ -701,7 +701,7 @@ describe('баг репорт', () => {
 		<p><span style="background-color:#fbeeb8;">1) пульсоксиметрия;</span> <br>2) УЗИ щитовидной железы; <br>3) дуплексное сканирование сосудов щитовидной железы; <br>4) исследование общего (клинического) анализа крови.</p>
 		`);
 
-		const model = extractCases('rosmedicinfo', div);
+		const model = extractCases('primary', div);
 
 		const question = 'Какое диагностическое исследование не проводится при обследовании пациентов с болезнью Грейвса';
 

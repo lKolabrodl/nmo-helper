@@ -32,7 +32,7 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 		}
 
 		const sourceKey = detectSource(valid.href);
-		if (!sourceKey) return onChange({loading: false, error: 'URL не от rosmed, 24forcare или nmo-helper', data: null});
+		if (!sourceKey) return onChange({loading: false, error: 'URL не относится к поддерживаемой базе ответов', data: null});
 
 		onChange({ loading: true, error: null, data: null });
 

@@ -21,9 +21,9 @@ import {formatUrlForDisplay, plural, statusToToast} from './utils';
 type Tab = 'url' | 'search';
 
 const SOURCE_DETAILS: Record<ISourceKey, {readonly label: string; readonly className: string; readonly priority: number}> = {
-	'rosmedicinfo': {label: 'rosmed', className: 'rosmed', priority: 0},
-	'24forcare': {label: '24fc', className: 'fc', priority: 1},
-	'nmo-helper': {label: 'nmo-helper', className: 'fc', priority: 2},
+	'primary': {label: 'база 1', className: 'primary', priority: 0},
+	'secondary': {label: 'база 2', className: 'secondary', priority: 1},
+	'nmo-helper': {label: 'nmo-helper', className: 'secondary', priority: 2},
 };
 
 const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
@@ -153,7 +153,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 							value={formatUrlForDisplay(url)}
 							onChange={e => setUrl(e.target.value)}/>
 						<div className="nmo-sites-help">
-							Поддерживаются rosmedicinfo, 24forcare и nmo-helper
+							Поддерживаются базы поиска ответов и nmo-helper
 						</div>
 					</div>
 				) : (
@@ -200,7 +200,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 												<div className="nmo-results-meta-row">
 													<span className={cn('nmo-results-src', source.className)}>
 														{source.label}
-														{r.source === 'rosmedicinfo' && <> <IconStar size={9}/></>}
+														{r.source === 'primary' && <> <IconStar size={9}/></>}
 													</span>
 												</div>
 											</button>

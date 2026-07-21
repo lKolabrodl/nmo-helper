@@ -26,13 +26,13 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 	const {setBugReportContext} = useBugReportContext();
 
 	// url save
-	const [rosmedUrl, setRosmedUrl] = useState<string>('');
-	const [forcareUrl, setForcareUrl] = useState<string>('');
+	const [primarySourceUrl, setPrimarySourceUrl] = useState<string>('');
+	const [secondarySourceUrl, setSecondarySourceUrl] = useState<string>('');
 	const [nmoHelperUrl, setNmoHelperUrl] = useState<string>('');
 
 	// models
-	const [rosmedicinfoModel, setRosmedicinfoModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
-	const [forcareModel, setForcareModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
+	const [primarySourceModel, setPrimarySourceModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
+	const [secondarySourceModel, setSecondarySourceModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 	const [nmoHelperModel, setNmoHelperModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 
 	const _updateSearchUrl = (state: IVariantModel): void => {
@@ -40,12 +40,12 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 
 		if (state.loading) {
 			// clen url
-			setRosmedUrl('');
-			setForcareUrl('');
+			setPrimarySourceUrl('');
+			setSecondarySourceUrl('');
 			setNmoHelperUrl('');
 			// clen model
-			setRosmedicinfoModel(EMPTY_ANSWER_MODEL);
-			setForcareModel(EMPTY_ANSWER_MODEL);
+			setPrimarySourceModel(EMPTY_ANSWER_MODEL);
+			setSecondarySourceModel(EMPTY_ANSWER_MODEL);
 			setNmoHelperModel(EMPTY_ANSWER_MODEL);
 			// init status
 			setBugReportContext({panelMode: 'auto', panelTab: 'auto', activeUrl: ''});
@@ -55,27 +55,27 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		if (state.error) return setStatus({title: state.error, status: Status.WARN});
 		if (!state.data.length && !rawTopic) return;
 
-		const ros = pickResult(state.data, 'rosmedicinfo', topic);
-		const fc = pickResult(state.data, '24forcare', topic);
+		const primaryResult = pickResult(state.data, 'primary', topic);
+		const secondaryResult = pickResult(state.data, 'secondary', topic);
 		const nmo = pickResult(state.data, 'nmo-helper', topic);
 
-		const nextRosmedUrl = ros?.url ?? '';
-		const nextForcareUrl = fc?.url ?? '';
+		const nextPrimarySourceUrl = primaryResult?.url ?? '';
+		const nextSecondarySourceUrl = secondaryResult?.url ?? '';
 		const nextNmoHelperUrl = nmo?.url ?? '';
 		// upd url
-		setRosmedUrl(nextRosmedUrl);
-		setForcareUrl(nextForcareUrl);
+		setPrimarySourceUrl(nextPrimarySourceUrl);
+		setSecondarySourceUrl(nextSecondarySourceUrl);
 		setNmoHelperUrl(nextNmoHelperUrl);
 		// clean model
-		setRosmedicinfoModel({...EMPTY_ANSWER_MODEL, loading: !!nextRosmedUrl});
-		setForcareModel({...EMPTY_ANSWER_MODEL, loading: !!nextForcareUrl});
+		setPrimarySourceModel({...EMPTY_ANSWER_MODEL, loading: !!nextPrimarySourceUrl});
+		setSecondarySourceModel({...EMPTY_ANSWER_MODEL, loading: !!nextSecondarySourceUrl});
 		setNmoHelperModel({...EMPTY_ANSWER_MODEL, loading: !!nextNmoHelperUrl});
 
 		// update report
-		setBugReportContext({panelMode: 'auto',	panelTab: 'auto', activeUrl: nextRosmedUrl || nextForcareUrl || nextNmoHelperUrl});
+		setBugReportContext({panelMode: 'auto',	panelTab: 'auto', activeUrl: nextPrimarySourceUrl || nextSecondarySourceUrl || nextNmoHelperUrl});
 
 		// ничего не нашли =`(
-		if (!ros && !fc && !nmo) setStatus({title: StatusTitle.NOT_FOUND, status: Status.WARN});
+		if (!primaryResult && !secondaryResult && !nmo) setStatus({title: StatusTitle.NOT_FOUND, status: Status.WARN});
 	};
 
 	useEffect(() => {
@@ -83,8 +83,8 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		if (answerCache.has(topic, question, variants)) return;
 
 		const sources = [
-			{key: 'rosmedicinfo' as const, label: 'rosmed', url: rosmedUrl, state: rosmedicinfoModel},
-			{key: '24forcare' as const, label: '24forcare', url: forcareUrl, state: forcareModel},
+			{key: 'primary' as const, label: 'база 1', url: primarySourceUrl, state: primarySourceModel},
+			{key: 'secondary' as const, label: 'база 2', url: secondarySourceUrl, state: secondarySourceModel},
 			{key: 'nmo-helper' as const, label: 'nmo-helper', url: nmoHelperUrl, state: nmoHelperModel},
 		].filter(source => source.url);
 
@@ -136,11 +136,11 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		question,
 		variants,
 		topic,
-		rosmedUrl,
-		forcareUrl,
+		primarySourceUrl,
+		secondarySourceUrl,
 		nmoHelperUrl,
-		rosmedicinfoModel,
-		forcareModel,
+		primarySourceModel,
+		secondarySourceModel,
 		nmoHelperModel,
 		setBugReportContext,
 		setStatus,
@@ -156,8 +156,8 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 	return (
 		<div className="nmo-section">
 			<VariantLoader text={_topc} onChange={_updateSearchUrl}/>
-			<AnswerLoader url={rosmedUrl} onChange={setRosmedicinfoModel}/>
-			<AnswerLoader url={forcareUrl} onChange={setForcareModel}/>
+			<AnswerLoader url={primarySourceUrl} onChange={setPrimarySourceModel}/>
+			<AnswerLoader url={secondarySourceUrl} onChange={setSecondarySourceModel}/>
 			<AnswerLoader url={nmoHelperUrl} onChange={setNmoHelperModel}/>
 
 			<div className="nmo-section-inner">
