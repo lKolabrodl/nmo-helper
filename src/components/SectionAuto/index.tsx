@@ -28,40 +28,54 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 	// url save
 	const [rosmedUrl, setRosmedUrl] = useState<string>('');
 	const [forcareUrl, setForcareUrl] = useState<string>('');
+	const [nmoHelperUrl, setNmoHelperUrl] = useState<string>('');
 
 	// models
 	const [rosmedicinfoModel, setRosmedicinfoModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 	const [forcareModel, setForcareModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
+	const [nmoHelperModel, setNmoHelperModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 
 	const _updateSearchUrl = (state: IVariantModel): void => {
 		if (!question) return;
+
 		if (state.loading) {
+			// clen url
 			setRosmedUrl('');
 			setForcareUrl('');
+			setNmoHelperUrl('');
+			// clen model
 			setRosmedicinfoModel(EMPTY_ANSWER_MODEL);
 			setForcareModel(EMPTY_ANSWER_MODEL);
+			setNmoHelperModel(EMPTY_ANSWER_MODEL);
+			// init status
 			setBugReportContext({panelMode: 'auto', panelTab: 'auto', activeUrl: ''});
 			return setStatus({title: StatusTitle.SEARCHING_ANSWERS, status: Status.LOADING});
 		}
+
 		if (state.error) return setStatus({title: state.error, status: Status.WARN});
 		if (!state.data.length && !rawTopic) return;
 
 		const ros = pickResult(state.data, 'rosmedicinfo', topic);
 		const fc = pickResult(state.data, '24forcare', topic);
+		const nmo = pickResult(state.data, 'nmo-helper', topic);
+
 		const nextRosmedUrl = ros?.url ?? '';
 		const nextForcareUrl = fc?.url ?? '';
-
+		const nextNmoHelperUrl = nmo?.url ?? '';
+		// upd url
 		setRosmedUrl(nextRosmedUrl);
 		setForcareUrl(nextForcareUrl);
+		setNmoHelperUrl(nextNmoHelperUrl);
+		// clean model
 		setRosmedicinfoModel({...EMPTY_ANSWER_MODEL, loading: !!nextRosmedUrl});
 		setForcareModel({...EMPTY_ANSWER_MODEL, loading: !!nextForcareUrl});
-		setBugReportContext({
-			panelMode: 'auto',
-			panelTab: 'auto',
-			activeUrl: nextRosmedUrl || nextForcareUrl,
-		});
+		setNmoHelperModel({...EMPTY_ANSWER_MODEL, loading: !!nextNmoHelperUrl});
 
-		if (!ros && !fc) setStatus({title: StatusTitle.NOT_FOUND, status: Status.WARN});
+		// update report
+		setBugReportContext({panelMode: 'auto',	panelTab: 'auto', activeUrl: nextRosmedUrl || nextForcareUrl || nextNmoHelperUrl});
+
+		// ничего не нашли =`(
+		if (!ros && !fc && !nmo) setStatus({title: StatusTitle.NOT_FOUND, status: Status.WARN});
 	};
 
 	useEffect(() => {
@@ -71,6 +85,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		const sources = [
 			{key: 'rosmedicinfo' as const, label: 'rosmed', url: rosmedUrl, state: rosmedicinfoModel},
 			{key: '24forcare' as const, label: '24forcare', url: forcareUrl, state: forcareModel},
+			{key: 'nmo-helper' as const, label: 'nmo-helper', url: nmoHelperUrl, state: nmoHelperModel},
 		].filter(source => source.url);
 
 		// пока пусто
@@ -93,12 +108,11 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		for (const source of sources) {
 			if (!source.state.data) continue;
 
-			const model = Array.isArray(source.state.data)
-				? source.state.data
-				: extractCases(source.key, source.state.data);
+			const model = extractCases(source.key, source.state.data);
 			const found = findAnswers(model, question, variants);
 
 			if (!found) continue;
+
 			if (!found.answers.length) {
 				hasAnswerMismatch = true;
 				continue;
@@ -124,8 +138,10 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		topic,
 		rosmedUrl,
 		forcareUrl,
+		nmoHelperUrl,
 		rosmedicinfoModel,
 		forcareModel,
+		nmoHelperModel,
 		setBugReportContext,
 		setStatus,
 	]);
@@ -142,6 +158,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			<VariantLoader text={_topc} onChange={_updateSearchUrl}/>
 			<AnswerLoader url={rosmedUrl} onChange={setRosmedicinfoModel}/>
 			<AnswerLoader url={forcareUrl} onChange={setForcareModel}/>
+			<AnswerLoader url={nmoHelperUrl} onChange={setNmoHelperModel}/>
 
 			<div className="nmo-section-inner">
 				<div className="nmo-auto-hero nmo-fade-up">

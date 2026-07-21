@@ -1,6 +1,6 @@
 import {act, render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {NMO_URL_24Forc, NMO_URL_ROSMED} from '../../utils/constants';
+import {NMO_URL_24Forc, NMO_URL_ROSMED, NMO_URL_VARIANT} from '../../utils/constants';
 import SectionAuto from './index';
 
 interface ITestAnswerModel {
@@ -10,7 +10,7 @@ interface ITestAnswerModel {
 }
 
 interface ITestSearchResult {
-	readonly source: 'rosmedicinfo' | '24forcare';
+	readonly source: 'rosmedicinfo' | '24forcare' | 'nmo-helper';
 	readonly title: string;
 	readonly url: string;
 }
@@ -93,6 +93,7 @@ vi.mock('../Loader/AnswerLoader', () => ({
 
 const ROSMED_URL = `https://${NMO_URL_ROSMED}/test`;
 const FORCARE_URL = `https://${NMO_URL_24Forc}/test`;
+const NMO_HELPER_URL = `https://${NMO_URL_VARIANT}/test-medik/nmo/test.html`;
 
 describe('SectionAuto', () => {
 	beforeEach(() => {
@@ -103,7 +104,7 @@ describe('SectionAuto', () => {
 		testState.cacheHas.mockReturnValue(false);
 	});
 
-	it('запускает загрузку обоих найденных источников одновременно', async () => {
+	it('запускает загрузку всех найденных источников одновременно', async () => {
 		render(<SectionAuto/>);
 
 		startSourceLoading();
@@ -111,6 +112,7 @@ describe('SectionAuto', () => {
 		await waitFor(() => {
 			expect(testState.answerChanges.has(ROSMED_URL)).toBe(true);
 			expect(testState.answerChanges.has(FORCARE_URL)).toBe(true);
+			expect(testState.answerChanges.has(NMO_HELPER_URL)).toBe(true);
 		});
 	});
 
@@ -120,13 +122,22 @@ describe('SectionAuto', () => {
 		render(<SectionAuto/>);
 		startSourceLoading();
 
-		await waitFor(() => expect(testState.answerChanges.size).toBe(2));
+		await waitFor(() => expect(testState.answerChanges.size).toBe(3));
 
 		act(() => {
 			testState.answerChanges.get(ROSMED_URL)?.({
 				loading: false,
 				error: null,
 				data: document.createElement('div'),
+			});
+		});
+		expect(testState.cacheSet).not.toHaveBeenCalled();
+
+		act(() => {
+			testState.answerChanges.get(NMO_HELPER_URL)?.({
+				loading: false,
+				error: null,
+				data: null,
 			});
 		});
 		expect(testState.cacheSet).not.toHaveBeenCalled();
@@ -155,12 +166,12 @@ describe('SectionAuto', () => {
 		});
 	});
 
-	it('ждёт завершения обоих источников перед обработкой ответа rosmed', async () => {
+	it('ждёт завершения всех источников перед обработкой ответа rosmed', async () => {
 		testState.foundBySource.set('rosmedicinfo', {answers: ['Ответ A'], score: 1});
 		render(<SectionAuto/>);
 		startSourceLoading();
 
-		await waitFor(() => expect(testState.answerChanges.size).toBe(2));
+		await waitFor(() => expect(testState.answerChanges.size).toBe(3));
 
 		act(() => {
 			testState.answerChanges.get(ROSMED_URL)?.({
@@ -178,6 +189,15 @@ describe('SectionAuto', () => {
 				data: document.createElement('div'),
 			});
 		});
+		expect(testState.cacheSet).not.toHaveBeenCalled();
+
+		act(() => {
+			testState.answerChanges.get(NMO_HELPER_URL)?.({
+				loading: false,
+				error: null,
+				data: null,
+			});
+		});
 
 		await waitFor(() => {
 			expect(testState.cacheSet).toHaveBeenCalledWith(
@@ -190,13 +210,14 @@ describe('SectionAuto', () => {
 		});
 	});
 
-	it('сохраняет приоритет rosmed, когда ответ есть в обоих источниках', async () => {
-		testState.foundBySource.set('rosmedicinfo', {answers: ['Ответ A'], score: 1});
-		testState.foundBySource.set('24forcare', {answers: ['Ответ B'], score: 1});
+	it('использует nmo-helper, если другие источники не нашли ответ', async () => {
+		testState.foundBySource.set('rosmedicinfo', null);
+		testState.foundBySource.set('24forcare', null);
+		testState.foundBySource.set('nmo-helper', {answers: ['Ответ B'], score: 1});
 		render(<SectionAuto/>);
 		startSourceLoading();
 
-		await waitFor(() => expect(testState.answerChanges.size).toBe(2));
+		await waitFor(() => expect(testState.answerChanges.size).toBe(3));
 
 		act(() => {
 			testState.answerChanges.get(ROSMED_URL)?.({
@@ -205,6 +226,54 @@ describe('SectionAuto', () => {
 				data: document.createElement('div'),
 			});
 			testState.answerChanges.get(FORCARE_URL)?.({
+				loading: false,
+				error: null,
+				data: document.createElement('div'),
+			});
+			testState.answerChanges.get(NMO_HELPER_URL)?.({
+				loading: false,
+				error: null,
+				data: document.createElement('div'),
+			});
+		});
+
+		await waitFor(() => {
+			expect(testState.cacheSet).toHaveBeenCalledWith(
+				'Тема',
+				'Вопрос',
+				['Ответ A', 'Ответ B'],
+				['Ответ B'],
+			);
+			expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • nmo-helper', status: 'ok'});
+			expect(testState.setBugReportContext).toHaveBeenLastCalledWith({
+				panelMode: 'auto',
+				panelTab: 'auto',
+				activeUrl: NMO_HELPER_URL,
+			});
+		});
+	});
+
+	it('сохраняет приоритет rosmed, когда ответ есть в обоих источниках', async () => {
+		testState.foundBySource.set('rosmedicinfo', {answers: ['Ответ A'], score: 1});
+		testState.foundBySource.set('24forcare', {answers: ['Ответ B'], score: 1});
+		testState.foundBySource.set('nmo-helper', {answers: ['Ответ B'], score: 1});
+		render(<SectionAuto/>);
+		startSourceLoading();
+
+		await waitFor(() => expect(testState.answerChanges.size).toBe(3));
+
+		act(() => {
+			testState.answerChanges.get(ROSMED_URL)?.({
+				loading: false,
+				error: null,
+				data: document.createElement('div'),
+			});
+			testState.answerChanges.get(FORCARE_URL)?.({
+				loading: false,
+				error: null,
+				data: document.createElement('div'),
+			});
+			testState.answerChanges.get(NMO_HELPER_URL)?.({
 				loading: false,
 				error: null,
 				data: document.createElement('div'),
@@ -231,6 +300,7 @@ function startSourceLoading(): void {
 			data: [
 				{source: 'rosmedicinfo', title: 'Тема', url: ROSMED_URL},
 				{source: '24forcare', title: 'Тема', url: FORCARE_URL},
+				{source: 'nmo-helper', title: 'Тема', url: NMO_HELPER_URL},
 			],
 		});
 	});
