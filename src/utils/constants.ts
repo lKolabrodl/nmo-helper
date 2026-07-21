@@ -20,6 +20,8 @@ export const CACHE_MAX_TOPICS = 10;
 /** Ссылка на инструкцию по обновлению расширения */
 export const UPDATE_URL = 'https://nmo-helper.ru/instruction#update';
 
+export const NMO_URL_VARIANT = getNmoSourceHost();
+
 /**
  * DOM-селекторы страницы НМО.
  * Каждый ключ — массив CSS-селекторов в порядке приоритета (fallback-цепочка).
@@ -90,7 +92,7 @@ export const StatusTitle = {
 	LOADING_FAILED: 'не удалось загрузить ответы',
 	NOT_FOUND: 'ответы не найдены на сайтах',
 	ANSWER_NOT_FOUND: 'ответ не найден',
-	ANSWER_MISMATCH: 'ответ не совпал с вариантами',
+	ANSWER_MISMATCH: 'ответ не совпал с вариантами (такое бывает)',
 	ANSWER_LOW_CONFIDENCE: 'низкая уверенность',
 	AI_THINKING: 'думаю...',
 	AI_NO_ANSWER: 'AI не определил ответ',
@@ -166,4 +168,8 @@ const AI_MODEL_IDS = new Set(AI_MODELS.map(model => model.id));
 /** Возвращает доступную ProxyAPI-модель или актуальную модель по умолчанию. */
 export function normalizeAiModel(model: string): string {
 	return AI_MODEL_IDS.has(model) ? model : DEFAULT_AI_MODEL;
+}
+
+function getNmoSourceHost(): string {
+	return 'testotvet.com';
 }

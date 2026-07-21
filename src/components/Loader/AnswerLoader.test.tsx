@@ -1,6 +1,9 @@
 import {render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {NMO_URL_VARIANT} from '../../utils/constants';
 import AnswerLoader from './AnswerLoader';
+
+const NMO_TEST_URL = `https://${NMO_URL_VARIANT}/test-medik/nmo/topic.html`;
 
 const mocks = vi.hoisted(() => ({
 	detectSource: vi.fn(),
@@ -37,13 +40,13 @@ describe('AnswerLoader', () => {
 		mocks.fetchNmoSource.mockResolvedValue(model);
 		const onChange = vi.fn();
 
-		render(<AnswerLoader url="https://testotvet.com/test-medik/nmo/topic.html" onChange={onChange}/>);
+		render(<AnswerLoader url={NMO_TEST_URL} onChange={onChange}/>);
 
 		expect(onChange).toHaveBeenCalledWith({loading: true, error: null, data: null});
 		await waitFor(() => {
 			expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: model});
 		});
-		expect(mocks.fetchNmoSource).toHaveBeenCalledWith('https://testotvet.com/test-medik/nmo/topic.html');
+		expect(mocks.fetchNmoSource).toHaveBeenCalledWith(NMO_TEST_URL);
 		expect(mocks.fetchViaBackground).not.toHaveBeenCalled();
 	});
 });

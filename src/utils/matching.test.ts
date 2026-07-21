@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { detectSource, matchQuestion, pickResult, similarity, variantScore } from './matching';
 import type { ISourceKey } from '../types';
+import {NMO_URL_VARIANT} from './constants';
 
 describe('detectSource', () => {
 	it('24forcare.com → "24forcare"', () => {
@@ -11,8 +12,8 @@ describe('detectSource', () => {
 		expect(detectSource('https://rosmedicinfo.ru/answers')).toBe('rosmedicinfo');
 	});
 
-	it('testotvet.com → "nmo-helper"', () => {
-		expect(detectSource('https://testotvet.com/test-medik/nmo/topic.html')).toBe('nmo-helper');
+	it(`${NMO_URL_VARIANT} → "nmo-helper"`, () => {
+		expect(detectSource(`https://${NMO_URL_VARIANT}/test-medik/nmo/topic.html`)).toBe('nmo-helper');
 	});
 
 	it('неизвестный домен → null', () => {

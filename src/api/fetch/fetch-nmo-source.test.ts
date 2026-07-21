@@ -2,6 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {fetchViaBackground} from './fetch';
 import {fetchNmoSource} from './fetch-nmo-source';
 import {findAnswers} from '../../utils/cases';
+import {NMO_URL_VARIANT} from '../../utils/constants';
 
 vi.mock('./fetch', async importOriginal => ({
 	...await importOriginal<typeof import('./fetch')>(),
@@ -9,6 +10,7 @@ vi.mock('./fetch', async importOriginal => ({
 }));
 
 const mockFetch = vi.mocked(fetchViaBackground);
+const NMO_BASE_URL = `https://${NMO_URL_VARIANT}`;
 
 beforeEach(() => {
 	mockFetch.mockReset();
@@ -24,14 +26,14 @@ describe('fetchNmoSource', () => {
 		]);
 
 		mockFetch.mockImplementation(async url => {
-			if (url === 'https://testotvet.com/test-medik/nmo/topic.html') return ok(pageOne);
-			if (url === 'https://testotvet.com/test-medik/nmo/topic.html?page=2') return ok(pageTwo);
+			if (url === `${NMO_BASE_URL}/test-medik/nmo/topic.html`) return ok(pageOne);
+			if (url === `${NMO_BASE_URL}/test-medik/nmo/topic.html?page=2`) return ok(pageTwo);
 			if (url.endsWith('/api/question/101/answer')) return ok('{"success":true,"correct_index":[2]}');
 			if (url.endsWith('/api/question/202/answer')) return ok('{"success":true,"correct_index":[0,1]}');
 			return failure(404, 'not found');
 		});
 
-		const model = await fetchNmoSource('https://testotvet.com/test-medik/nmo/topic.html');
+		const model = await fetchNmoSource(`${NMO_BASE_URL}/test-medik/nmo/topic.html`);
 
 		expect(model).toEqual([
 			{
@@ -54,10 +56,10 @@ describe('fetchNmoSource', () => {
 
 		const urls = mockFetch.mock.calls.map(([url]) => url);
 		expect(urls).toEqual([
-			'https://testotvet.com/test-medik/nmo/topic.html',
-			'https://testotvet.com/test-medik/nmo/topic.html?page=2',
-			'https://testotvet.com/api/question/101/answer',
-			'https://testotvet.com/api/question/202/answer',
+			`${NMO_BASE_URL}/test-medik/nmo/topic.html`,
+			`${NMO_BASE_URL}/test-medik/nmo/topic.html?page=2`,
+			`${NMO_BASE_URL}/api/question/101/answer`,
+			`${NMO_BASE_URL}/api/question/202/answer`,
 		]);
 		expect(mockFetch.mock.calls.slice(0, 2).every(([, options]) => options?.credentials === 'include')).toBe(true);
 		expect(mockFetch.mock.calls.slice(2).every(([, options]) => options?.credentials === 'omit')).toBe(true);
@@ -70,7 +72,7 @@ describe('fetchNmoSource', () => {
 			return ok(makePage([makeQuestion('303', 'Что выбрать?', ['Первый', 'Второй', 'Третий'])]));
 		});
 
-		const model = await fetchNmoSource('https://testotvet.com/test-medik/nmo/topic.html');
+		const model = await fetchNmoSource(`${NMO_BASE_URL}/test-medik/nmo/topic.html`);
 		const found = findAnswers(model, 'Что выбрать?', ['Третий', 'Второй', 'Первый']);
 
 		expect(found).toEqual({answers: ['Второй'], score: 1});
@@ -83,7 +85,7 @@ describe('fetchNmoSource', () => {
 			return ok(makePage([makeQuestion('404', 'Только первая страница', ['Да', 'Нет'])]));
 		});
 
-		await expect(fetchNmoSource('https://testotvet.com/test-medik/nmo/topic.html'))
+		await expect(fetchNmoSource(`${NMO_BASE_URL}/test-medik/nmo/topic.html`))
 			.resolves.toMatchObject([{docId: '404', correctIndexes: [0], answers: ['Да']}]);
 	});
 
@@ -98,7 +100,7 @@ describe('fetchNmoSource', () => {
 			]));
 		});
 
-		const model = await fetchNmoSource('https://testotvet.com/test-medik/nmo/topic.html');
+		const model = await fetchNmoSource(`${NMO_BASE_URL}/test-medik/nmo/topic.html`);
 		expect(model).toMatchObject([{docId: '2', correctIndexes: [1], idx: 0}]);
 	});
 
@@ -109,8 +111,8 @@ describe('fetchNmoSource', () => {
 			return ok(makePage([makeQuestion('505', 'Вопрос', ['A', 'B'])]));
 		});
 
-		await expect(fetchNmoSource('https://testotvet.com/test-medik/nmo/topic.html'))
-			.rejects.toThrow('не удалось загрузить ответы testotvet');
+		await expect(fetchNmoSource(`${NMO_BASE_URL}/test-medik/nmo/topic.html`))
+			.rejects.toThrow('не удалось загрузить ответы nmo-source');
 	});
 });
 

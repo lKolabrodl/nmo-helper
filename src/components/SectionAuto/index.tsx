@@ -18,7 +18,7 @@ import ThinkingStrip from '../ui/ThinkingStrip';
 
 const EMPTY_ANSWER_MODEL: IAnswerModel = {loading: false, error: null, data: null};
 
-const SectionAuto: React.FC = () => {
+const SectionAuto: React.FC = (): React.JSX.Element => {
 	// контекст всяктй
 	const {status, setStatus} = usePanelStatus();
 	const {topic, rawTopic, question, variants} = useQuestionFinder();

@@ -41,6 +41,20 @@ describe('extractCases — 24forcare', () => {
 	});
 });
 
+describe('extractCases — nmo-helper', () => {
+	it('возвращает уже собранную модель без повторной обработки', () => {
+		const model: QaCaseModel[] = [{
+			question: 'Готовый вопрос',
+			variants: ['Первый', 'Второй'],
+			answers: ['Второй'],
+			idx: 7,
+		}];
+
+		expect(extractCases('nmo-helper', model)).toBe(model);
+		expect(model[0].idx).toBe(7);
+	});
+});
+
 describe('extractCases — rosmedicinfo layout1 (h3 + span highlighted)', () => {
 	it('извлекает правильные варианты по жёлтому фону', () => {
 		const div = createDiv(`

@@ -14,7 +14,8 @@ import type {IVariantModel} from '../Loader/VariantLoader';
 import {Status, type ISourceKey} from '../../types';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
 import {IconPlay, IconSearch, IconStar} from '../icons';
-import InlineToast, {type IToast} from '../ui/InlineToast';
+import InlineToast from '../ui/InlineToast';
+import {formatUrlForDisplay, plural, statusToToast} from './utils';
 
 type Tab = 'url' | 'search';
 
@@ -93,9 +94,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		const source = detectSource(activeUrl);
 		if (!source) return;
 
-		const model = Array.isArray(answerModel.data)
-			? answerModel.data
-			: extractCases(source, answerModel.data);
+		const model = extractCases(source, answerModel.data);
 		const found = findAnswers(model, question, variants);
 		if (!found) return setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
 		if (!found.answers.length) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});
@@ -149,10 +148,10 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 						<input type="text"
 							className="nmo-input mono"
 							placeholder="https://example.com/answers"
-							value={url}
+							value={formatUrlForDisplay(url)}
 							onChange={e => setUrl(e.target.value)}/>
 						<div className="nmo-sites-help">
-							Поддерживаются rosmedicinfo, 24forcare и testotvet
+							Поддерживаются rosmedicinfo, 24forcare и nmo-helper
 						</div>
 					</div>
 				) : (
@@ -236,15 +235,3 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 };
 
 export default SectionSites;
-
-function plural(n: number): string {
-	if (n === 1) return 'тест';
-	if (n < 5) return 'теста';
-	return 'тестов';
-}
-
-function statusToToast(title: string, status: typeof Status[keyof typeof Status]): IToast {
-	if (status === Status.OK)   return {kind: 'success', title};
-	if (status === Status.ERR)  return {kind: 'danger',  title};
-	return {kind: 'warning', title};
-}

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { fetchViaBackground, parseHtml } from '../../utils';
 import {ISourceKey} from '../../types';
+import {NMO_URL_VARIANT} from '../../utils/constants';
 
 export interface IVariantModel {
 	readonly loading: boolean;
@@ -18,7 +19,7 @@ const INIT_STATE: IVariantModel = { loading: false, error: null, data: [] };
 
 const FORCARE_URL = 'https://24forcare.com';
 const ROSMED_URL = 'https://rosmedicinfo.ru';
-const ALTERNATIVE_BASE_URL = 'https://testotvet.com';
+const ALTERNATIVE_BASE_URL = `https://${NMO_URL_VARIANT}`;
 
 interface IVariantLoaderProps {
 	readonly text: string | null;

@@ -1,6 +1,9 @@
 import {render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {NMO_URL_VARIANT} from '../../utils/constants';
 import VariantLoader from './VariantLoader';
+
+const NMO_BASE_URL = `https://${NMO_URL_VARIANT}`;
 
 const mocks = vi.hoisted(() => ({
 	fetchViaBackground: vi.fn(),
@@ -61,7 +64,7 @@ describe('VariantLoader', () => {
 				data: [{
 					source: 'nmo-helper',
 					title: 'Особенности физической реабилитации при постковидном синдроме',
-					url: 'https://testotvet.com/test-medik/nmo/678270b4b100db787f87d662.html',
+					url: `${NMO_BASE_URL}/test-medik/nmo/678270b4b100db787f87d662.html`,
 				}],
 			});
 		});

@@ -29,7 +29,7 @@ function createDiv(html: string): HTMLElement {
 }
 
 describe('parseNmoSourceQuestions', () => {
-	it('извлекает вопрос, варианты и data-docid из разметки testotvet', () => {
+	it('извлекает вопрос, варианты и data-docid из разметки nmo-helper', () => {
 		const questions = parseNmoSourceQuestions(makeNmoPage([
 			makeNmoQuestion('329960', '  После завершения\nпечати?  ', ['1) гипса;', 'жидких остатков смолы.']),
 		]));
