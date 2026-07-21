@@ -6,7 +6,7 @@ import {useSettings} from '../../../../contexts/SettingsContext';
 import {Status} from '../../../../types';
 import {StatusTitle} from '../../../../utils/constants';
 import AIProxyLoader from '../../../Loader/AIProxyLoader';
-import ModelDropdown from '../../../ModelDropdown';
+import ModelDropdown from '../ModelDropdown';
 import {IconPlay} from '../../../icons';
 import InlineToast from '../../../ui/InlineToast';
 import ThinkingStrip from '../../../ui/ThinkingStrip';

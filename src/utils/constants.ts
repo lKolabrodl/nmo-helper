@@ -20,7 +20,14 @@ export const CACHE_MAX_TOPICS = 10;
 /** Ссылка на инструкцию по обновлению расширения */
 export const UPDATE_URL = 'https://nmo-helper.ru/instruction#update';
 
+/** Ссылка на альтернативную ссылку поиска */
 export const NMO_URL_VARIANT = getNmoSourceHost();
+
+/** Домен источника 24forcare */
+export const NMO_URL_24Forc = get24ForcareSourceHost();
+
+/** Домен источника Rosmedicinfo */
+export const NMO_URL_ROSMED = getRosmedSourceHost();
 
 /**
  * DOM-селекторы страницы НМО.
@@ -172,4 +179,12 @@ export function normalizeAiModel(model: string): string {
 
 function getNmoSourceHost(): string {
 	return 'testotvet.com';
+}
+
+function get24ForcareSourceHost(): string {
+	return '24forcare.com';
+}
+
+function getRosmedSourceHost(): string {
+	return 'rosmedicinfo.ru';
 }

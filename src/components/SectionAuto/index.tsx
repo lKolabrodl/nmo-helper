@@ -13,8 +13,9 @@ import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
 import {pickResult} from '../../utils';
 import {findAnswers, extractCases} from '../../utils/cases';
 import {IconBolt} from '../icons';
-import InlineToast, {type IToast} from '../ui/InlineToast';
+import InlineToast from '../ui/InlineToast';
 import ThinkingStrip from '../ui/ThinkingStrip';
+import {statusToToast} from './utils';
 
 const EMPTY_ANSWER_MODEL: IAnswerModel = {loading: false, error: null, data: null};
 
@@ -164,9 +165,3 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 };
 
 export default SectionAuto;
-
-function statusToToast(title: string, status: typeof Status[keyof typeof Status]): IToast {
-	if (status === Status.OK)   return {kind: 'success', title};
-	if (status === Status.ERR)  return {kind: 'danger',  title};
-	return {kind: 'warning', title};
-}

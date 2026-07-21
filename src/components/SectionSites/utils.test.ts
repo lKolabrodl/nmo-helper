@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {Status} from '../../types';
-import {NMO_URL_VARIANT} from '../../utils/constants';
+import {NMO_URL_ROSMED, NMO_URL_VARIANT} from '../../utils/constants';
 import {formatUrlForDisplay, plural, statusToToast} from './utils';
 
 const NMO_BASE_URL = `https://${NMO_URL_VARIANT}`;
@@ -20,7 +20,7 @@ describe('formatUrlForDisplay', () => {
 	});
 
 	it.each([
-		'https://rosmedicinfo.ru/answers',
+		`https://${NMO_URL_ROSMED}/answers`,
 		`https://not-${NMO_URL_VARIANT}/test`,
 		'nmo-helper/id/already-set',
 		'незавершённый ввод',

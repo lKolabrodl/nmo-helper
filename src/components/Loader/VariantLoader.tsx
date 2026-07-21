@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { fetchViaBackground, parseHtml } from '../../utils';
 import {ISourceKey} from '../../types';
-import {NMO_URL_VARIANT} from '../../utils/constants';
+import {NMO_URL_24Forc, NMO_URL_ROSMED, NMO_URL_VARIANT} from '../../utils/constants';
 
 export interface IVariantModel {
 	readonly loading: boolean;
@@ -17,8 +17,8 @@ interface ISearchResult {
 
 const INIT_STATE: IVariantModel = { loading: false, error: null, data: [] };
 
-const FORCARE_URL = 'https://24forcare.com';
-const ROSMED_URL = 'https://rosmedicinfo.ru';
+const FORCARE_URL = `https://${NMO_URL_24Forc}`;
+const ROSMED_URL = `https://${NMO_URL_ROSMED}`;
 const ALTERNATIVE_BASE_URL = `https://${NMO_URL_VARIANT}`;
 
 interface IVariantLoaderProps {
@@ -95,7 +95,7 @@ function parseForcareUrls(html: string): ISearchResult[] {
 		const href = a.getAttribute('href') || '';
 		const title = (a.textContent || '').trim();
 		if (!href || !title) return;
-		const url = href.startsWith('http') ? href : 'https://24forcare.com/' + href.replace(/^\//, '');
+		const url = href.startsWith('http') ? href : `${FORCARE_URL}/${href.replace(/^\//, '')}`;
 		results.push({ source: '24forcare', title, url });
 	});
 	return results;

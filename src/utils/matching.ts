@@ -1,6 +1,6 @@
 import type { ISourceKey } from '../types';
 import { normalizeDashes, stripQuotes } from './text';
-import {NMO_URL_VARIANT, SIMILARITY_THRESHOLD} from './constants';
+import {NMO_URL_24Forc, NMO_URL_ROSMED, NMO_URL_VARIANT, SIMILARITY_THRESHOLD} from './constants';
 
 /**
  * Определяет, к какому из поддерживаемых сайтов-источников относится URL.
@@ -9,8 +9,8 @@ import {NMO_URL_VARIANT, SIMILARITY_THRESHOLD} from './constants';
  * @returns Ключ источника или `null`, если домен не поддерживается.
  */
 export function detectSource(url: string): ISourceKey | null {
-	if (url.includes('24forcare.com')) return '24forcare';
-	if (url.includes('rosmedicinfo.ru')) return 'rosmedicinfo';
+	if (url.includes(NMO_URL_24Forc)) return '24forcare';
+	if (url.includes(NMO_URL_ROSMED)) return 'rosmedicinfo';
 	if (url.includes(NMO_URL_VARIANT)) return 'nmo-helper';
 	return null;
 }

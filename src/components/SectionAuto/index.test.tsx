@@ -1,5 +1,6 @@
 import {act, render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {NMO_URL_24Forc, NMO_URL_ROSMED} from '../../utils/constants';
 import SectionAuto from './index';
 
 interface ITestAnswerModel {
@@ -90,8 +91,8 @@ vi.mock('../Loader/AnswerLoader', () => ({
 	},
 }));
 
-const ROSMED_URL = 'https://rosmedicinfo.ru/test';
-const FORCARE_URL = 'https://24forcare.com/test';
+const ROSMED_URL = `https://${NMO_URL_ROSMED}/test`;
+const FORCARE_URL = `https://${NMO_URL_24Forc}/test`;
 
 describe('SectionAuto', () => {
 	beforeEach(() => {
