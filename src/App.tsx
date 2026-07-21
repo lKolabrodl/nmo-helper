@@ -1,4 +1,5 @@
 import React from 'react';
+import cn from 'classnames';
 import type {IExtensionState} from './types';
 import {PanelUiProvider, usePanelUi} from './contexts/PanelUiContext';
 import {PanelStatusProvider} from './contexts/PanelStatusContext';
@@ -44,7 +45,7 @@ const PanelShell: React.FC<{initialState: IExtensionState}> = ({initialState}) =
 	// схлопывание/расхлопывание чисто визуальное.
 	return (
 		<>
-			<div className={`nmo-fullpanel ${collapsed ? 'hidden' : ''}`}>
+			<div className={cn('nmo-fullpanel', {hidden: collapsed})}>
 				<FullPanel initialState={initialState}/>
 			</div>
 			{collapsed && <CollapsedPill/>}

@@ -28,7 +28,7 @@ export interface INmoSourceCase extends QaCaseModel {
 interface INmoAnswerResponse {
 	/** Сервер подтвердил успешное получение ответа. */
 	readonly success?: unknown;
-	/** Предполагаемый массив 0-индексированных позиций правильных вариантов. */
+	/** Предполагаемый массив 1-индексированных номеров правильных вариантов. */
 	readonly correct_index?: unknown;
 }
 
@@ -106,7 +106,8 @@ async function fetchNmoQuestionAnswer(pageUrl: string,	question: INmoSourceQuest
 }
 
 /**
- * Разбирает `correct_index` и оставляет только уникальные допустимые индексы.
+ * Разбирает 1-индексированный `correct_index` и преобразует его во внутренние
+ * 0-индексированные позиции вариантов.
  *
  * @param text Сырое JSON-тело ответа API.
  * @param variantCount Число вариантов вопроса для проверки границ индекса.
@@ -123,7 +124,11 @@ function parseCorrectIndexes(text: string, variantCount: number): number[] | nul
 
 	if (data.success !== true || !Array.isArray(data.correct_index)) return null;
 
-	return [...new Set(data.correct_index.filter((value): value is number =>
-		typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < variantCount,
-	))];
+	const correctIndexes = [...new Set(data.correct_index
+		.filter((value): value is number =>
+			typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= variantCount,
+		)
+		.map(value => value - 1))];
+
+	return correctIndexes.length ? correctIndexes : null;
 }

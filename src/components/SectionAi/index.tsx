@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {useSettings} from '../../contexts/SettingsContext';
@@ -29,7 +30,7 @@ const SectionAi: React.FC = (): React.JSX.Element => {
 		<div className="nmo-section">
 			<div className="nmo-section-inner">
 				<div
-					className={`nmo-ai-provider-tabs ${providerLocked ? 'disabled' : ''}`}
+					className={cn('nmo-ai-provider-tabs', {disabled: providerLocked})}
 					role="tablist"
 					aria-label="Вариант подключения AI">
 					{AI_PROVIDERS.map(provider => (
@@ -38,7 +39,7 @@ const SectionAi: React.FC = (): React.JSX.Element => {
 							type="button"
 							role="tab"
 							aria-selected={aiProvider === provider.id}
-							className={aiProvider === provider.id ? 'active' : ''}
+							className={cn({active: aiProvider === provider.id})}
 							disabled={providerLocked}
 							onClick={() => selectProvider(provider.id)}>
 							{provider.label}

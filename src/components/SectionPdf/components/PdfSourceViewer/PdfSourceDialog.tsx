@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import type {PredictionSources} from 'med-pdf-nmo/browser';
+import cn from 'classnames';
 import {IconClose} from '../../../icons';
 import {MODAL_WINDOW_DRAG_HANDLE_PROPS,	MODAL_WINDOW_DRAG_IGNORE_PROPS} from '../../../ModalWindow';
 import HighlightedText from './HighlightedText';
@@ -102,11 +103,11 @@ const PdfSourceDialog: React.FC<IPdfSourceDialogProps> = ({sources, onClose}) =>
 export default PdfSourceDialog;
 
 function getLineClassName(isHeading: boolean): string {
-	return isHeading
-		? 'nmo-pdf-source-sentence nmo-pdf-source-sentence--heading'
-		: 'nmo-pdf-source-sentence';
+	return cn('nmo-pdf-source-sentence', {
+		'nmo-pdf-source-sentence--heading': isHeading,
+	});
 }
 
 function getMarkClassName(role: PdfSourceMarkRole): string {
-	return `nmo-pdf-source-mark nmo-pdf-source-mark--${role}`;
+	return cn('nmo-pdf-source-mark', `nmo-pdf-source-mark--${role}`);
 }

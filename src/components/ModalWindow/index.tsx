@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
+import cn from 'classnames';
 import {
 	constrainModalWindowLayout,
 	getModalWindowViewport,
@@ -193,12 +194,10 @@ const ModalWindow: React.FC<IModalWindowProps> = ({
 		saveModalWindowLayout(storageKey, layoutRef.current);
 	};
 
-	const modalClassName = [
-		'nmo-modal-window',
-		className,
-		interactionKind === 'drag' ? 'nmo-modal-window--dragging' : null,
-		interactionKind === 'resize' ? 'nmo-modal-window--resizing' : null,
-	].filter(Boolean).join(' ');
+	const modalClassName = cn('nmo-modal-window', className, {
+		'nmo-modal-window--dragging': interactionKind === 'drag',
+		'nmo-modal-window--resizing': interactionKind === 'resize',
+	});
 
 	return createPortal(
 		<div

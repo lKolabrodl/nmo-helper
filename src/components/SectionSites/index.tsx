@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
@@ -96,6 +97,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 		const model = extractCases(source, answerModel.data);
 		const found = findAnswers(model, question, variants);
+
 		if (!found) return setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
 		if (!found.answers.length) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});
 
@@ -134,10 +136,10 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 			<div className="nmo-section-inner">
 				<div className="nmo-sub-tabs">
-					<button type="button" className={tab === 'search' ? 'active' : ''} onClick={() => setTab('search')}>
+					<button type="button" className={cn({active: tab === 'search'})} onClick={() => setTab('search')}>
 						Найти тест
 					</button>
-					<button type="button" className={tab === 'url' ? 'active' : ''}	onClick={() => setTab('url')}>
+					<button type="button" className={cn({active: tab === 'url'})}	onClick={() => setTab('url')}>
 						URL
 					</button>
 				</div>
@@ -156,7 +158,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 					</div>
 				) : (
 					<div className="nmo-fade-up">
-						<label className="nmo-label">Вставьте текст или название теста</label>
+						<label className="nmo-label">Вставьте название теста</label>
 						<textarea className="nmo-input"
 							rows={2}
 							value={searchQuery}
@@ -191,12 +193,12 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 										return (
 											<button key={i} type="button"
-												className={`nmo-results-item ${source.className}`}
+												className={cn('nmo-results-item', source.className)}
 												title={r.title}
 												onClick={() => selectResult(r)}>
 												<div className="nmo-results-title">{r.title}</div>
 												<div className="nmo-results-meta-row">
-													<span className={`nmo-results-src ${source.className}`}>
+													<span className={cn('nmo-results-src', source.className)}>
 														{source.label}
 														{r.source === 'rosmedicinfo' && <> <IconStar size={9}/></>}
 													</span>

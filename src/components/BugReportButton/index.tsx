@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {STATUSES, type BugReportStatus} from './status';
 import {usePanelUi} from '../../contexts/PanelUiContext';
@@ -16,7 +17,7 @@ import {
 } from '../../api/bug-report';
 import {checkVersion, isOutdated} from '../../api/version-check';
 import {IconBug, IconCheck, IconClose, IconWarn} from '../icons';
-import {formatUrlForDisplay} from "../SectionSites/utils";
+import {formatUrlForDisplay} from '../SectionSites/utils';
 
 const EXT_VERSION = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest?.()?.version) || '';
 
@@ -128,7 +129,7 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlP
 		if (hideTrigger) return null;
 		return (
 			<button type="button"
-				className={`nmo-bug-pill ${status ? 'disabled' : ''}`}
+				className={cn('nmo-bug-pill', {disabled: status})}
 				disabled={!!status}
 				onClick={() => canSubmit && setOpenLocal(true)}>
 				<IconBug size={12}/>

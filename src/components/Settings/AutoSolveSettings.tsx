@@ -1,4 +1,5 @@
 import React from 'react';
+import cn from 'classnames';
 import {MIN_AUTO_SOLVE_DELAY_SECONDS, useSettings} from '../../contexts/SettingsContext';
 import {IconCheck} from '../icons';
 
@@ -14,7 +15,7 @@ const AutoSolveSettings: React.FC = () => {
 
 	return (
 		<>
-			<label className={`nmo-settings-option ${autoSolveEnabled ? 'on' : ''}`}
+			<label className={cn('nmo-settings-option', {on: autoSolveEnabled})}
 				role="menuitemcheckbox"
 				aria-checked={autoSolveEnabled}>
 				<input type="checkbox"
@@ -27,7 +28,7 @@ const AutoSolveSettings: React.FC = () => {
 				</span>
 			</label>
 
-			<div className={`nmo-settings-section ${autoSolveEnabled ? '' : 'disabled'}`} aria-disabled={!autoSolveEnabled}>
+			<div className={cn('nmo-settings-section', {disabled: !autoSolveEnabled})} aria-disabled={!autoSolveEnabled}>
 				<div className="nmo-settings-section-title">Интервал прохождения вопроса</div>
 
 				<div className="nmo-settings-range">

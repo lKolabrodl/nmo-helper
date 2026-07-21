@@ -51,8 +51,8 @@ export interface INmoSourceQuestion {
 
 /**
  * Извлекает вопросы nmo-sources из одной HTML-страницы.
- * Индексы вариантов сохраняются как есть: API `correct_index` возвращает
- * 0-индексированные позиции именно в этом списке.
+ * Порядок вариантов сохраняется как есть: 1-индексированные номера из API
+ * `correct_index` затем преобразуются в позиции именно в этом списке.
  */
 export function parseNmoSourceQuestions(html: string): INmoSourceQuestion[] {
 	const root = parseHtml(html);

@@ -28,8 +28,8 @@ describe('fetchNmoSource', () => {
 		mockFetch.mockImplementation(async url => {
 			if (url === `${NMO_BASE_URL}/test-medik/nmo/topic.html`) return ok(pageOne);
 			if (url === `${NMO_BASE_URL}/test-medik/nmo/topic.html?page=2`) return ok(pageTwo);
-			if (url.endsWith('/api/question/101/answer')) return ok('{"success":true,"correct_index":[2]}');
-			if (url.endsWith('/api/question/202/answer')) return ok('{"success":true,"correct_index":[0,1]}');
+			if (url.endsWith('/api/question/101/answer')) return ok('{"success":true,"correct_index":[3]}');
+			if (url.endsWith('/api/question/202/answer')) return ok('{"success":true,"correct_index":[1,2]}');
 			return failure(404, 'not found');
 		});
 
@@ -67,7 +67,7 @@ describe('fetchNmoSource', () => {
 
 	it('возвращает совместимую с matcher модель', async () => {
 		mockFetch.mockImplementation(async url => {
-			if (url.includes('/api/question/303/answer')) return ok('{"success":true,"correct_index":[1]}');
+			if (url.includes('/api/question/303/answer')) return ok('{"success":true,"correct_index":[2]}');
 			if (url.includes('page=2')) return failure(404, 'not found');
 			return ok(makePage([makeQuestion('303', 'Что выбрать?', ['Первый', 'Второй', 'Третий'])]));
 		});
@@ -81,7 +81,7 @@ describe('fetchNmoSource', () => {
 	it('считает отсутствие второй страницы допустимым', async () => {
 		mockFetch.mockImplementation(async url => {
 			if (url.includes('page=2')) return failure(404, '<html>Нет страницы</html>');
-			if (url.includes('/api/question/404/answer')) return ok('{"success":true,"correct_index":[0]}');
+			if (url.includes('/api/question/404/answer')) return ok('{"success":true,"correct_index":[1]}');
 			return ok(makePage([makeQuestion('404', 'Только первая страница', ['Да', 'Нет'])]));
 		});
 
@@ -89,11 +89,24 @@ describe('fetchNmoSource', () => {
 			.resolves.toMatchObject([{docId: '404', correctIndexes: [0], answers: ['Да']}]);
 	});
 
+	it('преобразует номер последнего варианта из API в 0-индексированную позицию', async () => {
+		mockFetch.mockImplementation(async url => {
+			if (url.includes('page=2')) return failure(404, 'not found');
+			if (url.includes('/api/question/176184/answer')) return ok('{"success":true,"correct_index":[4]}');
+			return ok(makePage([
+				makeQuestion('176184', 'Какой вариант выбрать?', ['Первый', 'Второй', 'Третий', 'Четвёртый']),
+			]));
+		});
+
+		await expect(fetchNmoSource(`${NMO_BASE_URL}/test-medik/nmo/topic.html`))
+			.resolves.toMatchObject([{docId: '176184', correctIndexes: [3], answers: ['Четвёртый']}]);
+	});
+
 	it('пропускает отдельный неуспешный ответ API, сохраняя остальные вопросы', async () => {
 		mockFetch.mockImplementation(async url => {
 			if (url.includes('page=2')) return failure(404, 'not found');
 			if (url.endsWith('/api/question/1/answer')) return ok('{"success":false}');
-			if (url.endsWith('/api/question/2/answer')) return ok('{"success":true,"correct_index":[1]}');
+			if (url.endsWith('/api/question/2/answer')) return ok('{"success":true,"correct_index":[2]}');
 			return ok(makePage([
 				makeQuestion('1', 'Недоступный', ['A', 'B']),
 				makeQuestion('2', 'Доступный', ['A', 'B']),

@@ -1,4 +1,5 @@
 import React, {useLayoutEffect, useRef, useState} from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {usePanelUi} from '../../contexts/PanelUiContext';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
@@ -24,14 +25,14 @@ const Header: React.FC = (): React.JSX.Element => {
 		<>
 			<div className="nmo-titlebar">
 				<div className="nmo-brand">
-					<span className={`nmo-brand-dot ${status.status}`}/>
+					<span className={cn('nmo-brand-dot', status.status)}/>
 					<span className="nmo-brand-name">NMO Helper</span>
 					<VersionCheck onOutdated={setUpdate}/>
 				</div>
 				<div className="nmo-titlebar-ctrl">
 					{canReport && (
 						<button type="button"
-							className={`nmo-icon-btn nmo-titlebar-bug ${status.status}`}
+							className={cn('nmo-icon-btn', 'nmo-titlebar-bug', status.status)}
 							title="Сообщить о проблеме"
 							onClick={() => setBugOpen(o => !o)}>
 							<IconBug size={14}/>
@@ -98,7 +99,7 @@ const TopicBlock: React.FC<{topic: string | null}> = ({topic}) => {
 				Определён тест
 			</div>
 			<div ref={titleRef}
-				className={`nmo-topic-title ${expanded ? 'expanded' : ''}`}
+				className={cn('nmo-topic-title', {expanded})}
 				onClick={() => overflow && setExpanded(!expanded)}
 				title={overflow ? topic : undefined}>
 				{topic}

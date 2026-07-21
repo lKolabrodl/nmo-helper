@@ -1,4 +1,5 @@
 import React from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {usePanelUi} from '../../contexts/PanelUiContext';
 import type {UiMode} from '../../contexts/PanelUiContext';
@@ -20,7 +21,7 @@ const TabBar: React.FC = () => {
 				{TABS.map(({mode: m, label, Icon}) => (
 					<button key={m}
 						type="button"
-						className={mode === m ? 'active' : ''}
+						className={cn({active: mode === m})}
 						onClick={() => setMode(m)}>
 						<Icon size={12}/>
 						<span>{label}</span>
