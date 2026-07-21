@@ -82,9 +82,10 @@ export async function validateApiKey(apiKey: string, model: string, endpoint?: s
 /**
  * Собирает URL и `RequestInit` для chat-completion запроса.
  *
- * Reasoning-модели семейств `o*` и `gpt-5*` не принимают поле `temperature` —
- * для них оно не включается в тело. Для кастомного endpoint'а модель шлётся
- * как есть, без префикса провайдера (см. {@link getApiModel}).
+ * `temperature` намеренно не задаётся: она не нужна для ответа одним номером,
+ * а новые Claude отклоняют её нестандартное значение с HTTP 400. Для кастомного
+ * endpoint'а модель шлётся как есть, без префикса провайдера
+ * (см. {@link getApiModel}).
  *
  * @param apiKey       Bearer-токен.
  * @param model        ID модели.
@@ -94,8 +95,6 @@ export async function validateApiKey(apiKey: string, model: string, endpoint?: s
  * @returns `{ url, init }` для передачи в {@link fetchViaBackground}.
  */
 export function buildRequest(apiKey: string, model: string, systemPrompt: string, userPrompt: string, endpoint?: string) {
-	const isReasoning = /^o\d/.test(model) || /^gpt-5/.test(model);
-
 	const body: Record<string, unknown> = {
 		model: endpoint ? model : getApiModel(model),
 		messages: [
@@ -103,7 +102,6 @@ export function buildRequest(apiKey: string, model: string, systemPrompt: string
 			{ role: 'user', content: userPrompt },
 		],
 	};
-	if (!isReasoning) body.temperature = 0.2;
 
 	return {
 		url: endpoint || AI_URL,

@@ -122,14 +122,14 @@ describe('fn buildPrompt', () => {
 });
 
 describe('fn buildRequest', () => {
-	it('обычная модель → url=AI_URL, model с префиксом, temperature=0.2', () => {
-		const { url, init } = buildRequest('sk', 'claude-sonnet-5', 'sys', 'usr');
+	it('обычная модель → url=AI_URL и model с префиксом', () => {
+		const { url, init } = buildRequest('sk', 'claude-opus-4-8', 'sys', 'usr');
 		expect(url).toBe('https://openai.api.proxyapi.ru/v1/chat/completions');
 		expect(init.method).toBe('POST');
 		expect(init.headers.Authorization).toBe('Bearer sk');
 		const body = JSON.parse(init.body);
-		expect(body.model).toBe('anthropic/claude-sonnet-5');
-		expect(body.temperature).toBe(0.2);
+		expect(body.model).toBe('anthropic/claude-opus-4-8');
+		expect(body).not.toHaveProperty('temperature');
 		expect(body.messages).toEqual([
 			{ role: 'system', content: 'sys' },
 			{ role: 'user', content: 'usr' },
