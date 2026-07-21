@@ -2,11 +2,11 @@ import {fireEvent, screen} from '@testing-library/react';
 import {describe, expect, it} from 'vitest';
 import {storageGet} from '../../utils';
 import {renderWithProviders} from '../../tests-helpers';
-import AiSection from './index';
+import SectionAi from './index';
 
-describe('AiSection', () => {
+describe('SectionAi', () => {
 	it('по умолчанию показывает заглушку бесплатного AI', () => {
-		renderWithProviders(<AiSection/>, {initialMode: 'ai'});
+		renderWithProviders(<SectionAi/>, {initialMode: 'ai'});
 
 		expect(screen.getByRole('tab', {name: 'Бесплатно'})).toHaveAttribute('aria-selected', 'true');
 		expect(screen.getByText('Бесплатный AI')).toBeInTheDocument();
@@ -15,7 +15,7 @@ describe('AiSection', () => {
 	});
 
 	it('переключает ProxyAPI и свой endpoint, сохраняя выбранный вариант', async () => {
-		renderWithProviders(<AiSection/>, {initialMode: 'ai'});
+		renderWithProviders(<SectionAi/>, {initialMode: 'ai'});
 
 		fireEvent.click(screen.getByRole('tab', {name: 'ProxyAPI'}));
 		expect(screen.getByLabelText('API-ключ ProxyAPI')).toBeInTheDocument();
@@ -28,7 +28,7 @@ describe('AiSection', () => {
 	});
 
 	it('открывает сохранённый ProxyAPI вместо бесплатной заглушки', () => {
-		renderWithProviders(<AiSection/>, {initialMode: 'ai', initialAiProvider: 'proxy'});
+		renderWithProviders(<SectionAi/>, {initialMode: 'ai', initialAiProvider: 'proxy'});
 
 		expect(screen.getByRole('tab', {name: 'ProxyAPI'})).toHaveAttribute('aria-selected', 'true');
 		expect(screen.getByLabelText('API-ключ ProxyAPI')).toBeInTheDocument();

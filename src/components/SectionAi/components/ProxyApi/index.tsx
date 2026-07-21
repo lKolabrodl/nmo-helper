@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import './styles.scss';
-import {validateApiKey} from '../../../../api/fetch';
+import {validateApiKey} from '../../../../api/fetch/fetch-ai';
 import {usePanelStatus} from '../../../../contexts/PanelStatusContext';
 import {useSettings} from '../../../../contexts/SettingsContext';
 import {Status} from '../../../../types';
@@ -8,8 +8,9 @@ import {StatusTitle} from '../../../../utils/constants';
 import AIProxyLoader from '../../../Loader/AIProxyLoader';
 import ModelDropdown from '../../../ModelDropdown';
 import {IconPlay} from '../../../icons';
-import InlineToast, {type IToast} from '../../../ui/InlineToast';
+import InlineToast from '../../../ui/InlineToast';
 import ThinkingStrip from '../../../ui/ThinkingStrip';
+import {statusToToast} from '../../utils';
 
 interface IProxyApiProps {
 	readonly onBusyChange: (busy: boolean) => void;
@@ -126,9 +127,3 @@ const ProxyApi: React.FC<IProxyApiProps> = ({onBusyChange}) => {
 };
 
 export default ProxyApi;
-
-function statusToToast(title: string, status: typeof Status[keyof typeof Status]): IToast {
-	if (status === Status.OK) return {kind: 'success', title};
-	if (status === Status.ERR) return {kind: 'danger', title};
-	return {kind: 'warning', title};
-}

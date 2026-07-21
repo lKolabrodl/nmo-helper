@@ -1,6 +1,6 @@
 import {act, render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import AutoSection from './index';
+import SectionAuto from './index';
 
 interface ITestAnswerModel {
 	readonly loading: boolean;
@@ -93,7 +93,7 @@ vi.mock('../Loader/AnswerLoader', () => ({
 const ROSMED_URL = 'https://rosmedicinfo.ru/test';
 const FORCARE_URL = 'https://24forcare.com/test';
 
-describe('AutoSection', () => {
+describe('SectionAuto', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		testState.variantChange = null;
@@ -103,7 +103,7 @@ describe('AutoSection', () => {
 	});
 
 	it('запускает загрузку обоих найденных источников одновременно', async () => {
-		render(<AutoSection/>);
+		render(<SectionAuto/>);
 
 		startSourceLoading();
 
@@ -116,7 +116,7 @@ describe('AutoSection', () => {
 	it('дожидается 24forcare, если на rosmed ответа нет', async () => {
 		testState.foundBySource.set('rosmedicinfo', null);
 		testState.foundBySource.set('24forcare', {answers: ['Ответ B'], score: 1});
-		render(<AutoSection/>);
+		render(<SectionAuto/>);
 		startSourceLoading();
 
 		await waitFor(() => expect(testState.answerChanges.size).toBe(2));
@@ -156,7 +156,7 @@ describe('AutoSection', () => {
 
 	it('ждёт завершения обоих источников перед обработкой ответа rosmed', async () => {
 		testState.foundBySource.set('rosmedicinfo', {answers: ['Ответ A'], score: 1});
-		render(<AutoSection/>);
+		render(<SectionAuto/>);
 		startSourceLoading();
 
 		await waitFor(() => expect(testState.answerChanges.size).toBe(2));
@@ -192,7 +192,7 @@ describe('AutoSection', () => {
 	it('сохраняет приоритет rosmed, когда ответ есть в обоих источниках', async () => {
 		testState.foundBySource.set('rosmedicinfo', {answers: ['Ответ A'], score: 1});
 		testState.foundBySource.set('24forcare', {answers: ['Ответ B'], score: 1});
-		render(<AutoSection/>);
+		render(<SectionAuto/>);
 		startSourceLoading();
 
 		await waitFor(() => expect(testState.answerChanges.size).toBe(2));

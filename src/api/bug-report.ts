@@ -9,7 +9,7 @@
  */
 
 import { storageGet, storageSet } from './storage';
-import { fetchViaBackground } from './fetch';
+import { fetchViaBackground } from './fetch/fetch';
 import { BUG_REPORT_ENDPOINT, BUG_REPORT_STORAGE_KEY } from '../utils/constants';
 
 /** Минимальный интервал между двумя отправками с одного устройства (мс) */

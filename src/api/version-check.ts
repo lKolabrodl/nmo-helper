@@ -5,7 +5,7 @@
  * Защита от спама — клиентский кэш в chrome.storage.local + throttle.
  */
 
-import {fetchViaBackground} from './fetch';
+import {fetchViaBackground} from './fetch/fetch';
 import {storageGet, storageSet} from './storage';
 
 const VERSION_ENDPOINT = 'https://nmo-helper.ru/api/version';

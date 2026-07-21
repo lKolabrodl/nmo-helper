@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { fetchViaBackground, parseHtml } from '../../utils';
 import { detectSource } from '../../utils';
+import {fetchNmoSource} from '../../api/fetch/fetch-nmo-source';
+import type {QaCaseModel} from '../../utils/cases';
 
 export interface IAnswerModel {
 	readonly loading: boolean;
 	readonly error: string | null;
-	readonly data: HTMLElement | null;
+	readonly data: HTMLElement | QaCaseModel[] | null;
 }
 
 const INIT_STATE: IAnswerModel = { loading: false, error: null, data: null };
@@ -30,7 +32,7 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 		}
 
 		const sourceKey = detectSource(valid.href);
-		if (!sourceKey) return onChange({loading: false, error: 'URL не от rosmed или 24forcare', data: null});
+		if (!sourceKey) return onChange({loading: false, error: 'URL не от rosmed, 24forcare или testotvet', data: null});
 
 		onChange({ loading: true, error: null, data: null });
 
@@ -38,6 +40,15 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 
 		async function load() {
 			try {
+
+				// отдельная обработка
+				if (sourceKey === 'nmo-helper') {
+					const model = await fetchNmoSource(valid.href);
+					if (cancelled) return;
+					onChange({loading: false, error: null, data: model});
+					return;
+				}
+
 				const res = await fetchViaBackground(valid.href);
 				if (cancelled) return;
 
@@ -51,7 +62,7 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 					return onChange({ loading: false, error: 'пустой ответ от сервера', data: null });
 				}
 
-				onChange({ loading: false, error: null, data: parseHtml(res.text, true) });
+				onChange({loading: false, error: null, data: parseHtml(res.text, true)});
 
 			} catch (error) {
 				if (cancelled) return;

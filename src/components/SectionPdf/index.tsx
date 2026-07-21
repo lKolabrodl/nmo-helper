@@ -10,7 +10,7 @@ import ThinkingStrip from '../ui/ThinkingStrip';
 import PdfLoader, {type IPdfLoaderState} from '../Loader/PdfLoader';
 import PdfSourceViewer from './components/PdfSourceViewer';
 
-const PdfSection: React.FC = (): React.JSX.Element => {
+const SectionPdf: React.FC = (): React.JSX.Element => {
 	// context
 	const {status, setStatus} = usePanelStatus();
 	const {topic, question, variants} = useQuestionFinder();
@@ -104,7 +104,7 @@ const PdfSection: React.FC = (): React.JSX.Element => {
 	);
 };
 
-export default PdfSection;
+export default SectionPdf;
 
 function statusToToast(title: string, s: typeof Status[keyof typeof Status]): IToast {
 	if (s === Status.OK)  return {kind: 'success', title};

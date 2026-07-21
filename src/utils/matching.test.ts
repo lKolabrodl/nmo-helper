@@ -11,6 +11,10 @@ describe('detectSource', () => {
 		expect(detectSource('https://rosmedicinfo.ru/answers')).toBe('rosmedicinfo');
 	});
 
+	it('testotvet.com → "nmo-helper"', () => {
+		expect(detectSource('https://testotvet.com/test-medik/nmo/topic.html')).toBe('nmo-helper');
+	});
+
 	it('неизвестный домен → null', () => {
 		expect(detectSource('https://example.com')).toBeNull();
 	});

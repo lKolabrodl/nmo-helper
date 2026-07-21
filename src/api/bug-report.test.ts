@@ -1,17 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-vi.mock('./fetch', () => ({
+vi.mock('./fetch/fetch', () => ({
 	fetchViaBackground: vi.fn(),
 }));
 
-import { fetchViaBackground } from './fetch';
-import { BUG_REPORT_STORAGE_KEY } from '../utils/constants';
-import {
-	computeFingerprint,
-	canSubmitBugReport,
-	submitBugReport,
-	type IBugReportPayload,
-} from './bug-report';
+import {fetchViaBackground} from './fetch/fetch';
+import {BUG_REPORT_STORAGE_KEY} from '../utils/constants';
+import {computeFingerprint, canSubmitBugReport, submitBugReport, type IBugReportPayload} from './bug-report';
 
 const mockFetch = fetchViaBackground as unknown as ReturnType<typeof vi.fn>;
 

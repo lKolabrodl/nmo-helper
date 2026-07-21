@@ -7,6 +7,7 @@ import {
 	extractRosmedNumberedPInlineBr,
 	extractRosmedNumberedPPerParagraph,
 	extractRosmedFlatBr,
+	parseNmoSourceQuestions,
 } from './extractors';
 
 /**
@@ -26,6 +27,31 @@ function createDiv(html: string): HTMLElement {
 	});
 	return div;
 }
+
+describe('parseNmoSourceQuestions', () => {
+	it('извлекает вопрос, варианты и data-docid из разметки testotvet', () => {
+		const questions = parseNmoSourceQuestions(makeNmoPage([
+			makeNmoQuestion('329960', '  После завершения\nпечати?  ', ['1) гипса;', 'жидких остатков смолы.']),
+		]));
+
+		expect(questions).toEqual([{
+			question: 'После завершения печати?',
+			variants: ['гипса', 'жидких остатков смолы'],
+			docId: '329960',
+		}]);
+	});
+
+	it('игнорирует неполные элементы и не считает button вариантом ответа', () => {
+		const html = makeNmoPage([
+			'<li class="vopros"><h4>Без docid</h4><ol class="answers-list"><li>A</li></ol></li>',
+			makeNmoQuestion('42', 'Валидный вопрос', ['A', 'B']),
+		]);
+
+		const questions = parseNmoSourceQuestions(html);
+		expect(questions).toHaveLength(1);
+		expect(questions[0].variants).toEqual(['A', 'B']);
+	});
+});
 
 describe('extract24forcare', () => {
 	it('находит вопрос + strong-варианты', () => {
@@ -630,3 +656,19 @@ describe('extractors — общие свойства', () => {
 		expect(c.variants).toEqual(['первый', 'второй']);
 	});
 });
+
+function makeNmoPage(items: readonly string[]): string {
+	return `<div id="questionListApp"><ul class="categoryListApp">${items.join('')}</ul></div>`;
+}
+
+function makeNmoQuestion(docId: string, question: string, variants: readonly string[]): string {
+	return `
+		<li class="vopros show">
+			<h4 class="fs-14">${question}</h4>
+			<ol class="answers-list">
+				${variants.map(variant => `<li><p class="line-clamp">${variant}</p></li>`).join('')}
+				<button class="get-answer" data-docid="${docId}">Показать ответ</button>
+			</ol>
+		</li>
+	`;
+}

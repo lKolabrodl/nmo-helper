@@ -14,7 +14,7 @@ const AI_PROVIDERS: ReadonlyArray<{readonly id: AiProvider; readonly label: stri
 	{id: 'custom', label: 'Свой endpoint'},
 ];
 
-const AiSection: React.FC = (): React.JSX.Element => {
+const SectionAi: React.FC = (): React.JSX.Element => {
 	const {aiProvider, setAiProvider} = useSettings();
 	const {setStatus} = usePanelStatus();
 	const [providerLocked, setProviderLocked] = useState(false);
@@ -54,4 +54,4 @@ const AiSection: React.FC = (): React.JSX.Element => {
 	);
 };
 
-export default AiSection;
+export default SectionAi;

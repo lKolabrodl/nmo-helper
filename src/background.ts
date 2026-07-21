@@ -12,6 +12,7 @@ interface IFetchMessage {
   readonly method: string;
   readonly headers: Record<string, string> | null;
   readonly body: string | null;
+  readonly credentials: RequestCredentials | null;
 }
 
 /** Dev-mode auto-reload: polls dev-reload.json and reloads extension on change */
@@ -79,6 +80,7 @@ chrome.runtime.onMessage.addListener(
 			method: message.method || 'GET',
 			headers: message.headers || undefined,
 			body: message.body || undefined,
+			credentials: message.credentials || undefined,
 		})
 			.then(async (res) => {
 				const text = await res.text();

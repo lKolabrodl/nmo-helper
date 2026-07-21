@@ -59,7 +59,7 @@ describe('VariantLoader', () => {
 				loading: false,
 				error: null,
 				data: [{
-					source: 'alternative',
+					source: 'nmo-helper',
 					title: 'Особенности физической реабилитации при постковидном синдроме',
 					url: 'https://testotvet.com/test-medik/nmo/678270b4b100db787f87d662.html',
 				}],

@@ -145,7 +145,7 @@ function parseForAlternativeUrl(response: string): ISearchResult[] {
 		if (!title || !normalizedSlug) return;
 
 		results.push({
-			source: 'alternative',
+			source: 'nmo-helper',
 			title,
 			url: ALTERNATIVE_BASE_URL + '/test-medik/nmo/' + encodeURIComponent(normalizedSlug) + '.html',
 		});

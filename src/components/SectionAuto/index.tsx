@@ -18,14 +18,16 @@ import ThinkingStrip from '../ui/ThinkingStrip';
 
 const EMPTY_ANSWER_MODEL: IAnswerModel = {loading: false, error: null, data: null};
 
-const AutoSection: React.FC = () => {
+const SectionAuto: React.FC = () => {
 	// контекст всяктй
 	const {status, setStatus} = usePanelStatus();
 	const {topic, rawTopic, question, variants} = useQuestionFinder();
 	const {setBugReportContext} = useBugReportContext();
+
 	// url save
 	const [rosmedUrl, setRosmedUrl] = useState<string>('');
 	const [forcareUrl, setForcareUrl] = useState<string>('');
+
 	// models
 	const [rosmedicinfoModel, setRosmedicinfoModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 	const [forcareModel, setForcareModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
@@ -90,7 +92,9 @@ const AutoSection: React.FC = () => {
 		for (const source of sources) {
 			if (!source.state.data) continue;
 
-			const model = extractCases(source.key, source.state.data);
+			const model = Array.isArray(source.state.data)
+				? source.state.data
+				: extractCases(source.key, source.state.data);
 			const found = findAnswers(model, question, variants);
 
 			if (!found) continue;
@@ -159,7 +163,7 @@ const AutoSection: React.FC = () => {
 	);
 };
 
-export default AutoSection;
+export default SectionAuto;
 
 function statusToToast(title: string, status: typeof Status[keyof typeof Status]): IToast {
 	if (status === Status.OK)   return {kind: 'success', title};

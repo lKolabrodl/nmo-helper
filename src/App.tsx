@@ -9,10 +9,10 @@ import {SettingsProvider} from './contexts/SettingsContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import TabBar from './components/TabBar';
-import AutoSection from './components/AutoSection';
-import SitesSection from './components/SitesSection';
-import AiSection from './components/AiSection';
-import PdfSection from './components/PdfSection';
+import SectionAuto from './components/SectionAuto';
+import SectionSites from './components/SectionSites';
+import SectionAi from './components/SectionAi';
+import SectionPdf from './components/SectionPdf';
 import CollapsedPill from './components/CollapsedPill';
 import AnswerHighlighter from './components/Loader/AnswerHighlighter';
 import AnswerScoreHighlighter from './components/Loader/AnswerScoreHighlighter';
@@ -28,10 +28,10 @@ const FullPanel: React.FC<{initialState: IExtensionState}> = ({initialState}) =>
 			<div className="nmo-body">
 				<TabBar/>
 				<ErrorBoundary>
-					{mode === 'auto' && <AutoSection/>}
-					{mode === 'sites' && <SitesSection initialUrl={initialState.savedUrl}/>}
-					{mode === 'ai' && <AiSection/>}
-					{mode === 'pdf' && <PdfSection/>}
+					{mode === 'auto' && <SectionAuto/>}
+					{mode === 'sites' && <SectionSites initialUrl={initialState.savedUrl}/>}
+					{mode === 'ai' && <SectionAi/>}
+					{mode === 'pdf' && <SectionPdf/>}
 				</ErrorBoundary>
 			</div>
 		</>

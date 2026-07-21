@@ -11,6 +11,7 @@ import { SIMILARITY_THRESHOLD } from './constants';
 export function detectSource(url: string): ISourceKey | null {
 	if (url.includes('24forcare.com')) return '24forcare';
 	if (url.includes('rosmedicinfo.ru')) return 'rosmedicinfo';
+	if (url.includes('testotvet.com')) return 'nmo-helper';
 	return null;
 }
 

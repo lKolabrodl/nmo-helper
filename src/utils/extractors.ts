@@ -18,6 +18,7 @@
  */
 
 import { cleanAnswer } from './text';
+import { parseHtml } from './html';
 
 /**
  * Сырой результат extractor'а — один `case` без порядкового индекса.
@@ -36,6 +37,49 @@ export interface QaCaseRaw {
 interface RawLine {
 	readonly text: string;
 	readonly html: string;
+}
+
+//──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────── nmo-sources ───────────────────────────────────────────────
+//──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+export interface INmoSourceQuestion {
+	readonly question: string;
+	readonly variants: string[];
+	readonly docId: string;
+}
+
+/**
+ * Извлекает вопросы nmo-sources из одной HTML-страницы.
+ * Индексы вариантов сохраняются как есть: API `correct_index` возвращает
+ * 0-индексированные позиции именно в этом списке.
+ */
+export function parseNmoSourceQuestions(html: string): INmoSourceQuestion[] {
+	const root = parseHtml(html);
+	const questions: INmoSourceQuestion[] = [];
+
+	for (const item of Array.from(root.querySelectorAll('#questionListApp .categoryListApp li.vopros'))) {
+		const questionElement = item.querySelector('h4.fs-14, h4');
+		const answersList = item.querySelector('ol.answers-list');
+		const docIdElement = item.querySelector('[data-docid]');
+
+		const question = normalizeNmoText(questionElement?.textContent ?? '');
+		const docId = (docIdElement?.getAttribute('data-docid') ?? '').trim();
+		if (!question || !docId || !answersList) continue;
+
+		const variants = Array.from(answersList.children)
+			.filter(element => element.tagName === 'LI')
+			.map(element => cleanAnswer(element.textContent ?? ''));
+
+		if (!variants.length) continue;
+		questions.push({question, variants, docId});
+	}
+
+	return questions;
+}
+
+function normalizeNmoText(text: string): string {
+	return text.replace(/\s+/g, ' ').trim();
 }
 
 //──────────────────────────────────────────────────────────────────────────────────────────────────────────────────

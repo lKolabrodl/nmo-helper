@@ -21,10 +21,10 @@ type Tab = 'url' | 'search';
 const SOURCE_DETAILS: Record<ISourceKey, {readonly label: string; readonly className: string; readonly priority: number}> = {
 	'rosmedicinfo': {label: 'rosmed', className: 'rosmed', priority: 0},
 	'24forcare': {label: '24fc', className: 'fc', priority: 1},
-	'alternative': {label: 'alternative', className: 'fc', priority: 2},
+	'nmo-helper': {label: 'nmo-helper', className: 'fc', priority: 2},
 };
 
-const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
+const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	// context
 	const {status, setStatus} = usePanelStatus();
 	const {question, variants, topic} = useQuestionFinder();
@@ -93,14 +93,16 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		const source = detectSource(activeUrl);
 		if (!source) return;
 
-		const model = extractCases(source, answerModel.data);
+		const model = Array.isArray(answerModel.data)
+			? answerModel.data
+			: extractCases(source, answerModel.data);
 		const found = findAnswers(model, question, variants);
 		if (!found) return setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
 		if (!found.answers.length) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});
 
 		answerCache.set(topic ?? '', question, variants, found.answers);
 
-		const label = source === 'rosmedicinfo' ? 'rosmed' : '24forcare';
+		const label = SOURCE_DETAILS[source].label;
 
 		if (found.score < LOW_CONFIDENCE_THRESHOLD) {
 			setStatus({title: `${StatusTitle.ANSWER_LOW_CONFIDENCE} • ${label}`, status: Status.WARN});
@@ -150,7 +152,7 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 							value={url}
 							onChange={e => setUrl(e.target.value)}/>
 						<div className="nmo-sites-help">
-							Поддерживаются только на rosmedicinfo, 24force
+							Поддерживаются rosmedicinfo, 24forcare и testotvet
 						</div>
 					</div>
 				) : (
@@ -233,7 +235,7 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	);
 };
 
-export default SitesSection;
+export default SectionSites;
 
 function plural(n: number): string {
 	if (n === 1) return 'тест';
