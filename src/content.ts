@@ -14,13 +14,20 @@ import {
 	normalizeAiProvider,
 } from './contexts/SettingsContext';
 
-/** Слушает сообщения от popup для экспорта кеша */
-function initExportListener() {
+declare const __DEV__: boolean;
+
+/** Refreshes the host page after a watch build invalidates this content script. */
+function initDevReloadListener(): void {
 	chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-		// if (msg?.type === 'EXPORT_JSON') sendResponse(answerCache.exportAll());
-		// else if (msg?.type === 'EXPORT_CSV') sendResponse(answerCache.exportCsv());
+		if (msg?.type !== 'NMO_DEV_RELOAD') return false;
+
+		window.setTimeout(() => window.location.reload(), 250);
+		sendResponse({ok: true});
+		return false;
 	});
 }
+
+if (__DEV__) initDevReloadListener();
 
 function waitForBody(): Promise<void> {
 	if (document.body) return Promise.resolve();

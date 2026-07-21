@@ -6,9 +6,19 @@
  */
 export function storageGet<T>(key: string, defaultValue: T): Promise<T> {
 	return new Promise<T>(resolve => {
-		chrome.storage.local.get(key, (result: Record<string, unknown>) => {
-			resolve((result[key] !== undefined ? result[key] : defaultValue) as T);
-		});
+		try {
+			chrome.storage.local.get(key, (result: Record<string, unknown> | undefined) => {
+				if (hasRuntimeError() || !result) {
+					resolve(defaultValue);
+					return;
+				}
+
+				resolve((result[key] !== undefined ? result[key] : defaultValue) as T);
+			});
+		} catch {
+			// A content script keeps running briefly after an extension update/reload.
+			resolve(defaultValue);
+		}
 	});
 }
 
@@ -18,5 +28,25 @@ export function storageGet<T>(key: string, defaultValue: T): Promise<T> {
  * @param value — значение для сохранения
  */
 export function storageSet(key: string, value: unknown): void {
-	chrome.storage.local.set({ [key]: value });
+	try {
+		chrome.storage.local.set({[key]: value}, consumeRuntimeError);
+	} catch {
+		// The page will be refreshed after a dev reload; the stale script must stay quiet.
+	}
+}
+
+function hasRuntimeError(): boolean {
+	try {
+		return Boolean(chrome.runtime.lastError);
+	} catch {
+		return true;
+	}
+}
+
+function consumeRuntimeError(): void {
+	try {
+		void chrome.runtime.lastError;
+	} catch {
+		// Access itself may fail after the extension context has been invalidated.
+	}
 }

@@ -29,14 +29,42 @@ interface IRequestOptions {
  */
 export function fetchViaBackground(url: string, options: IRequestOptions = {}): Promise<IRequestResponse> {
 	return new Promise(resolve => {
-		chrome.runtime.sendMessage({
-			action: 'fetch',
-			url,
-			method: options.method || 'GET',
-			headers: options.headers || null,
-			body: options.body || null,
-		}, resolve);
+		try {
+			chrome.runtime.sendMessage({
+				action: 'fetch',
+				url,
+				method: options.method || 'GET',
+				headers: options.headers || null,
+				body: options.body || null,
+			}, (response: IRequestResponse | undefined) => {
+				const runtimeError = getRuntimeErrorMessage();
+				if (runtimeError) {
+					resolve(requestFailure(runtimeError));
+					return;
+				}
+
+				resolve(response ?? requestFailure('Background did not return a response.'));
+			});
+		} catch (error) {
+			resolve(requestFailure(getErrorMessage(error)));
+		}
 	});
+}
+
+function getRuntimeErrorMessage(): string | null {
+	try {
+		return chrome.runtime.lastError?.message ?? null;
+	} catch (error) {
+		return getErrorMessage(error);
+	}
+}
+
+function getErrorMessage(error: unknown): string {
+	return error instanceof Error ? error.message : String(error);
+}
+
+function requestFailure(message: string): IRequestResponse {
+	return {error: true, status: 0, text: '', message};
 }
 
 /**

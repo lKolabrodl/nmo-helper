@@ -74,6 +74,19 @@ describe('fn fetchViaBackground', () => {
 		expect(msg.headers).toBeNull();
 		expect(msg.body).toBeNull();
 	});
+
+	it('превращает invalidated context в ошибочный ответ, а не в unhandled exception', async () => {
+		sendMessage.mockImplementation(() => {
+			throw new Error('Extension context invalidated.');
+		});
+
+		await expect(fetchViaBackground('https://example.com/')).resolves.toEqual({
+			error: true,
+			status: 0,
+			text: '',
+			message: 'Extension context invalidated.',
+		});
+	});
 });
 
 describe('fn getApiModel', () => {

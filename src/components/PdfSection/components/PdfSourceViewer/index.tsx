@@ -9,15 +9,20 @@ import {getRelevantSourcePages} from './source-text';
 import './styles.scss';
 
 const PdfSourceViewer: React.FC = () => {
+	//context
 	const {topic, question, variants} = useQuestionFinder();
 	const {getPdfScore} = usePdfScore();
-	const model = getPdfScore(topic, question, variants);
-	const sources = model?.sources ?? null;
-	const pages = useMemo(() => sources ? getRelevantSourcePages(sources) : [], [sources]);
+	// state
 	const [host, setHost] = useState<HTMLElement | null>(null);
 	const [open, setOpen] = useState(false);
-	const close = useCallback(() => setOpen(false), []);
+
+	const model = getPdfScore(topic, question, variants);
+	const sources = model?.sources ?? null;
+
+	const pages = useMemo(() => sources ? getRelevantSourcePages(sources) : [], [sources]);
 	const enabled = pages.length > 0;
+
+	useEffect(() => setOpen(false), [model?.id, model?.updatedAt]);
 
 	useEffect(() => {
 		if (!enabled) {
@@ -43,13 +48,13 @@ const PdfSourceViewer: React.FC = () => {
 		};
 	}, [enabled]);
 
-	useEffect(() => {
-		setOpen(false);
-	}, [model?.id, model?.updatedAt]);
+
 
 	const title = pages.length === 1
 		? `Показать источник в PDF, страница ${pages[0].page}`
 		: 'Показать источники в PDF';
+
+	const _onClose = useCallback(() => setOpen(false), []);
 
 	return (
 		<>
@@ -69,7 +74,7 @@ const PdfSourceViewer: React.FC = () => {
 				<PdfSourceDialog
 					key={`${model?.id ?? 'pdf-source'}-${model?.updatedAt ?? 0}`}
 					sources={sources}
-					onClose={close}/>,
+					onClose={_onClose}/>,
 				document.body
 			)}
 		</>
@@ -78,9 +83,6 @@ const PdfSourceViewer: React.FC = () => {
 
 export default PdfSourceViewer;
 
-function setHostIfChanged(
-	setHost: React.Dispatch<React.SetStateAction<HTMLElement | null>>,
-	nextHost: HTMLElement | null,
-): void {
+function setHostIfChanged(setHost: React.Dispatch<React.SetStateAction<HTMLElement | null>>,nextHost: HTMLElement | null): void {
 	setHost(currentHost => currentHost === nextHost ? currentHost : nextHost);
 }

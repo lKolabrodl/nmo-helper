@@ -11,24 +11,32 @@ import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
 import type {IVariantModel} from '../Loader/VariantLoader';
-import {Status} from '../../types';
+import {Status, type ISourceKey} from '../../types';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
 import {IconPlay, IconSearch, IconStar} from '../icons';
 import InlineToast, {type IToast} from '../ui/InlineToast';
 
 type Tab = 'url' | 'search';
 
+const SOURCE_DETAILS: Record<ISourceKey, {readonly label: string; readonly className: string; readonly priority: number}> = {
+	'rosmedicinfo': {label: 'rosmed', className: 'rosmed', priority: 0},
+	'24forcare': {label: '24fc', className: 'fc', priority: 1},
+	'alternative': {label: 'alternative', className: 'fc', priority: 2},
+};
+
 const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
+	// context
 	const {status, setStatus} = usePanelStatus();
 	const {question, variants, topic} = useQuestionFinder();
 	const {setBugReportContext} = useBugReportContext();
 
+	// url
 	const [tab, setTab] = useState<Tab>('search');
 	const [url, setUrlRaw] = useState(initialUrl);
 	const [activeUrl, setActiveUrl] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeSearch, setActiveSearch] = useState('');
-
+	//
 	const [variantModel, setVariantModel] = useState<IVariantModel>({loading: false, error: null, data: []});
 	const [answerModel, setAnswerModel] = useState<IAnswerModel>({loading: false, error: null, data: null});
 
@@ -59,7 +67,7 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		setActiveSearch(searchQuery.trim());
 	};
 
-	const selectResult = (result: {url: string}) => {
+	const selectResult = (result: {url: string }): void => {
 		setUrl(result.url);
 		setActiveSearch('');
 		setVariantModel({loading: false, error: null, data: []});
@@ -67,12 +75,12 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		setTab('url');
 	};
 
-	const run = () => {
+	const _run = (): void => {
 		if (!url.trim()) return setStatus({title: StatusTitle.ENTER_URL, status: Status.ERR});
 		setActiveUrl(url.trim());
 	};
 
-	const stop = () => {
+	const _stop = () => {
 		setActiveUrl('');
 		setAnswerModel({loading: false, error: null, data: null});
 		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
@@ -113,9 +121,7 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const isOk = status.status === Status.OK;
 
 	const results = [...variantModel.data].sort((a, b) => {
-		const ar = a.source === 'rosmedicinfo' ? 0 : 1;
-		const br = b.source === 'rosmedicinfo' ? 0 : 1;
-		return ar - br;
+		return SOURCE_DETAILS[a.source].priority - SOURCE_DETAILS[b.source].priority;
 	});
 
 	const canSearch = searchQuery.trim().length > 0 && !variantModel.loading;
@@ -127,12 +133,12 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 			<div className="nmo-section-inner">
 				<div className="nmo-sub-tabs">
-					<button type="button"
-						className={tab === 'search' ? 'active' : ''}
-						onClick={() => setTab('search')}>Найти тест</button>
-					<button type="button"
-						className={tab === 'url' ? 'active' : ''}
-						onClick={() => setTab('url')}>URL</button>
+					<button type="button" className={tab === 'search' ? 'active' : ''} onClick={() => setTab('search')}>
+						Найти тест
+					</button>
+					<button type="button" className={tab === 'url' ? 'active' : ''}	onClick={() => setTab('url')}>
+						URL
+					</button>
 				</div>
 
 				{tab === 'url' ? (
@@ -179,20 +185,24 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 									Найдено: {results.length} {plural(results.length)}
 								</div>
 								<div className="nmo-results-list">
-									{results.map((r, i) => (
-										<button key={i} type="button"
-											className="nmo-results-item"
-											title={r.title}
-											onClick={() => selectResult(r)}>
-											<div className="nmo-results-title">{r.title}</div>
-											<div className="nmo-results-meta-row">
-												<span className={`nmo-results-src ${r.source === 'rosmedicinfo' ? 'rosmed' : 'fc'}`}>
-													{r.source === 'rosmedicinfo' ? 'rosmed' : '24fc'}
-													{r.source === 'rosmedicinfo' && <> <IconStar size={9}/></>}
-												</span>
-											</div>
-										</button>
-									))}
+									{results.map((r, i) => {
+										const source = SOURCE_DETAILS[r.source];
+
+										return (
+											<button key={i} type="button"
+												className={`nmo-results-item ${source.className}`}
+												title={r.title}
+												onClick={() => selectResult(r)}>
+												<div className="nmo-results-title">{r.title}</div>
+												<div className="nmo-results-meta-row">
+													<span className={`nmo-results-src ${source.className}`}>
+														{source.label}
+														{r.source === 'rosmedicinfo' && <> <IconStar size={9}/></>}
+													</span>
+												</div>
+											</button>
+										);
+									})}
 								</div>
 							</div>
 						)}
@@ -204,20 +214,19 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 			{(tab === 'url' || isRunning) && (
 				<div className="nmo-footer">
-					{!isRunning ? (
+					{!isRunning &&
 						<button type="button"
 							className="nmo-btn nmo-btn-primary nmo-btn-cta"
 							disabled={!url.trim() || answerModel.loading}
-							onClick={run}>
+							onClick={_run}>
 							<IconPlay size={14}/>Запустить
 						</button>
-					) : (
-						<button type="button"
-							className="nmo-btn nmo-btn-stop nmo-btn-cta"
-							onClick={stop}>
+					}
+					{isRunning &&
+						<button type="button" className="nmo-btn nmo-btn-stop nmo-btn-cta" onClick={_stop}>
 							Остановить
 						</button>
-					)}
+					}
 				</div>
 			)}
 		</div>
