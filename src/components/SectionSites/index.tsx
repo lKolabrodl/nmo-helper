@@ -21,8 +21,8 @@ import {formatUrlForDisplay, plural, statusToToast} from './utils';
 type Tab = 'url' | 'search';
 
 const SOURCE_DETAILS: Record<ISourceKey, {readonly label: string; readonly className: string; readonly priority: number}> = {
-	'primary': {label: 'база 1', className: 'primary', priority: 0},
-	'secondary': {label: 'база 2', className: 'secondary', priority: 1},
+	'primary': {label: 'rosmed', className: 'primary', priority: 0},
+	'secondary': {label: '24fc', className: 'secondary', priority: 1},
 	'nmo-helper': {label: 'nmo-helper', className: 'secondary', priority: 2},
 };
 
