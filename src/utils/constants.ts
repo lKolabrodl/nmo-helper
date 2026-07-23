@@ -17,8 +17,8 @@ export const LOW_CONFIDENCE_THRESHOLD = 0.5;
 /** Максимальное количество тем в кеше ответов (LRU — старые вытесняются) */
 export const CACHE_MAX_TOPICS = 10;
 
-/** Ссылка на инструкцию по обновлению расширения */
-export const UPDATE_URL = 'https://nmo-helper.ru/instruction#update';
+/** Ссылка на страницу обновления расширения */
+export const UPDATE_URL = 'https://nmo-helper.ru/update';
 
 /** Домены баз поиска ответов. Конкретные адреса хранятся только здесь. */
 export const PRIMARY_ANSWER_SOURCE_HOST = 'rosmedicinfo.ru';

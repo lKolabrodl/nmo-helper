@@ -54,14 +54,12 @@ const VersionCheck: React.FC<IProps> = ({onOutdated}) => {
 				? 'У вас последняя версия'
 		 : 'Доступна новая версия';
 
-	const cls = cn('nmo-chip', 'nmo-version-chip', state);
-
 	return (
 		<div className="nmo-version-wrap"
 			onMouseEnter={() => setHover(true)}
 			onMouseLeave={() => setHover(false)}>
 			<button type="button"
-				className={cls}
+				className={cn('nmo-chip', 'nmo-version-chip', state)}
 				disabled={state === 'checking'}
 				onClick={handleClick}>
 				<span className="nmo-version-icon">
@@ -73,9 +71,7 @@ const VersionCheck: React.FC<IProps> = ({onOutdated}) => {
 				<span>v{EXT_VERSION}</span>
 			</button>
 
-			{hover && state !== 'checking' && (
-				<div className="nmo-version-tip nmo-fade-up">{tooltip}</div>
-			)}
+			{hover && state !== 'checking' && <div className="nmo-version-tip nmo-fade-up">{tooltip}</div>}
 		</div>
 	);
 };

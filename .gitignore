@@ -6,3 +6,5 @@ drafts
 BUILD.md
 AGENTS.md
 repomix-output.md
+.playwright-cli/
+output/
