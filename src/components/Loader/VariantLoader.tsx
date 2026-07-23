@@ -9,7 +9,7 @@ export interface IVariantModel {
 	readonly data: ISearchResult[];
 }
 
-interface ISearchResult {
+export interface ISearchResult {
 	readonly source: ISourceKey;
 	readonly title: string;
 	readonly url: string;

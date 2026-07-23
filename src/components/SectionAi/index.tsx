@@ -29,10 +29,7 @@ const SectionAi: React.FC = (): React.JSX.Element => {
 	return (
 		<div className="nmo-section">
 			<div className="nmo-section-inner">
-				<div
-					className={cn('nmo-ai-provider-tabs', {disabled: providerLocked})}
-					role="tablist"
-					aria-label="Вариант подключения AI">
+				<div className={cn('nmo-ai-provider-tabs', {disabled: providerLocked})}	role="tablist" aria-label="Вариант подключения AI">
 					{AI_PROVIDERS.map(provider => (
 						<button
 							key={provider.id}

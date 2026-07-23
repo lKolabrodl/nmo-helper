@@ -4,7 +4,7 @@
  * @module components/SectionSites/utils
  */
 
-import {Status} from '../../types';
+import {Status, type ISourceKey} from '../../types';
 import {ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import type {IToast} from '../ui/InlineToast';
 
@@ -12,6 +12,16 @@ const DISPLAY_URL_PREFIX = 'nmo-helper/id/';
 const FNV_OFFSET_BASIS_64 = 0xcbf29ce484222325n;
 const FNV_PRIME_64 = 0x100000001b3n;
 const DISPLAY_ID_LENGTH = 10;
+
+export const SOURCE_DETAILS: Record<ISourceKey, {
+	readonly label: string;
+	readonly className: string;
+	readonly priority: number;
+}> = {
+	'primary': {label: 'rosmed', className: 'primary', priority: 0},
+	'secondary': {label: '24fc', className: 'secondary', priority: 1},
+	'nmo-helper': {label: 'nmo-helper', className: 'secondary', priority: 2},
+};
 
 /**
  * Создаёт стабильный псевдослучайный идентификатор из строки-семени.
@@ -47,18 +57,6 @@ export function formatUrlForDisplay(value: string): string {
 	if (url.protocol !== 'https:' || url.hostname.toLowerCase() !== ALTERNATIVE_ANSWER_SOURCE_HOST) return value;
 
 	return `${DISPLAY_URL_PREFIX}${createSeededId(url.href)}`;
-}
-
-/**
- * Выбирает форму слова «тест» для отображения количества результатов.
- *
- * @param n Количество найденных тестов.
- * @returns Подходящая форма: «тест», «теста» или «тестов».
- */
-export function plural(n: number): string {
-	if (n === 1) return 'тест';
-	if (n < 5) return 'теста';
-	return 'тестов';
 }
 
 /**

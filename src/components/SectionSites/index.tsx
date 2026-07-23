@@ -11,20 +11,15 @@ import {findAnswers, extractCases} from '../../utils/cases';
 import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
-import type {IVariantModel} from '../Loader/VariantLoader';
-import {Status, type ISourceKey} from '../../types';
+import type {ISearchResult, IVariantModel} from '../Loader/VariantLoader';
+import {Status} from '../../types';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
-import {IconPlay, IconSearch, IconStar} from '../icons';
+import {IconPlay, IconSearch} from '../icons';
 import InlineToast from '../ui/InlineToast';
-import {formatUrlForDisplay, plural, statusToToast} from './utils';
+import SearchResults from './components/SearchResults';
+import {formatUrlForDisplay, SOURCE_DETAILS, statusToToast} from './utils';
 
 type Tab = 'url' | 'search';
-
-const SOURCE_DETAILS: Record<ISourceKey, {readonly label: string; readonly className: string; readonly priority: number}> = {
-	'primary': {label: 'rosmed', className: 'primary', priority: 0},
-	'secondary': {label: '24fc', className: 'secondary', priority: 1},
-	'nmo-helper': {label: 'nmo-helper', className: 'secondary', priority: 2},
-};
 
 const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	// context
@@ -57,7 +52,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		else if (state.data) setStatus({title: StatusTitle.RUNNING, status: Status.OK});
 	};
 
-	const _updateSearchUrl = (state: IVariantModel) => {
+	const _updateSearchUrl = (state: IVariantModel): void => {
 		setVariantModel(state);
 		if (state.loading) setStatus({title: StatusTitle.SEARCHING, status: Status.LOADING});
 		else if (state.error) setStatus({title: state.error, status: Status.WARN});
@@ -69,12 +64,9 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		setActiveSearch(searchQuery.trim());
 	};
 
-	const selectResult = (result: {url: string }): void => {
+	const _onSelectResult = (result: ISearchResult): void => {
 		setUrl(result.url);
-		setActiveSearch('');
-		setVariantModel({loading: false, error: null, data: []});
 		setActiveUrl(result.url);
-		setTab('url');
 	};
 
 	const _run = (): void => {
@@ -82,7 +74,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		setActiveUrl(url.trim());
 	};
 
-	const _stop = () => {
+	const _stop = (): void => {
 		setActiveUrl('');
 		setAnswerModel({loading: false, error: null, data: null});
 		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
@@ -122,10 +114,6 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const isWarning = status.status === Status.WARN;
 	const isError = status.status === Status.ERR;
 	const isOk = status.status === Status.OK;
-
-	const results = [...variantModel.data].sort((a, b) => {
-		return SOURCE_DETAILS[a.source].priority - SOURCE_DETAILS[b.source].priority;
-	});
 
 	const canSearch = searchQuery.trim().length > 0 && !variantModel.loading;
 
@@ -182,33 +170,10 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 							)}
 						</button>
 
-						{results.length > 0 && (
-							<div className="nmo-results nmo-fade-up">
-								<div className="nmo-results-meta">
-									Найдено: {results.length} {plural(results.length)}
-								</div>
-								<div className="nmo-results-list">
-									{results.map((r, i) => {
-										const source = SOURCE_DETAILS[r.source];
-
-										return (
-											<button key={i} type="button"
-												className={cn('nmo-results-item', source.className)}
-												title={r.title}
-												onClick={() => selectResult(r)}>
-												<div className="nmo-results-title">{r.title}</div>
-												<div className="nmo-results-meta-row">
-													<span className={cn('nmo-results-src', source.className)}>
-														{source.label}
-														{r.source === 'primary' && <> <IconStar size={9}/></>}
-													</span>
-												</div>
-											</button>
-										);
-									})}
-								</div>
-							</div>
-						)}
+						<SearchResults
+							results={variantModel.data}
+							selectedUrl={url}
+							onSelect={_onSelectResult}/>
 					</div>
 				)}
 			</div>

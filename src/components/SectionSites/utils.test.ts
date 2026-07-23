@@ -1,7 +1,7 @@
 import {describe, expect, it} from 'vitest';
 import {Status} from '../../types';
 import {PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
-import {formatUrlForDisplay, plural, statusToToast} from './utils';
+import {formatUrlForDisplay, statusToToast} from './utils';
 
 const NMO_BASE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
 
@@ -26,17 +26,6 @@ describe('formatUrlForDisplay', () => {
 		'незавершённый ввод',
 	])('не изменяет %s', value => {
 		expect(formatUrlForDisplay(value)).toBe(value);
-	});
-});
-
-describe('plural', () => {
-	it.each([
-		[1, 'тест'],
-		[2, 'теста'],
-		[4, 'теста'],
-		[5, 'тестов'],
-	] as const)('для количества %i возвращает «%s»', (count, expected) => {
-		expect(plural(count)).toBe(expected);
 	});
 });
 
