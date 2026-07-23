@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {IconCheck, IconRefresh} from '../icons';
 import {checkVersion, isOutdated, type IVersionInfo} from '../../api/version-check';
@@ -53,28 +54,24 @@ const VersionCheck: React.FC<IProps> = ({onOutdated}) => {
 				? 'У вас последняя версия'
 		 : 'Доступна новая версия';
 
-	const cls = `nmo-chip nmo-version-chip ${state}`;
-
 	return (
 		<div className="nmo-version-wrap"
 			onMouseEnter={() => setHover(true)}
 			onMouseLeave={() => setHover(false)}>
 			<button type="button"
-				className={cls}
+				className={cn('nmo-chip', 'nmo-version-chip', state)}
 				disabled={state === 'checking'}
 				onClick={handleClick}>
 				<span className="nmo-version-icon">
 					{state === 'checking' && <span className="nmo-spinner" style={{width: 9, height: 9, borderWidth: 1.4}}/>}
 					{state === 'uptodate' && <IconCheck size={10}/>}
 					{state === 'outdated' && <span className="nmo-version-dot"/>}
-					{state === 'idle' && <IconRefresh size={10} className={hover ? 'rot' : ''}/>}
+					{state === 'idle' && <IconRefresh size={10} className={cn({rot: hover})}/>}
 				</span>
 				<span>v{EXT_VERSION}</span>
 			</button>
 
-			{hover && state !== 'checking' && (
-				<div className="nmo-version-tip nmo-fade-up">{tooltip}</div>
-			)}
+			{hover && state !== 'checking' && <div className="nmo-version-tip nmo-fade-up">{tooltip}</div>}
 		</div>
 	);
 };

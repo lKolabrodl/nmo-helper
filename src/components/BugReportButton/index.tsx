@@ -1,7 +1,9 @@
 import React, {useEffect, useState} from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {STATUSES, type BugReportStatus} from './status';
 import {usePanelUi} from '../../contexts/PanelUiContext';
+import {useSettings} from '../../contexts/SettingsContext';
 import {useBugReportContext} from '../../contexts/BugReportContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {getQuestionHtml} from '../../utils';
@@ -15,12 +17,13 @@ import {
 } from '../../api/bug-report';
 import {checkVersion, isOutdated} from '../../api/version-check';
 import {IconBug, IconCheck, IconClose, IconWarn} from '../icons';
+import {formatUrlForDisplay} from '../SectionSites/utils';
 
 const EXT_VERSION = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest?.()?.version) || '';
 
 
 
-interface IProps {
+interface IBugReportButtonProps {
 	readonly activeUrl?: string;
 	/** Контролируемый режим: открыт ли диалог. Если undefined — компонент управляет сам через свой trigger-pill */
 	readonly isOpen?: boolean;
@@ -30,24 +33,33 @@ interface IProps {
 	readonly hideTrigger?: boolean;
 }
 
-const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: openProp, onClose, hideTrigger}) => {
+const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlProp, isOpen: openProp, onClose, hideTrigger}) => {
+	// context
 	const {mode} = usePanelUi();
+	const {aiProvider} = useSettings();
 	const reportContext = useBugReportContext();
 	const {rawTopic, question, variants} = useQuestionFinder();
+
+	// state
+	const [sending, setSending] = useState<boolean>(false);
+	const [status, setStatus] = useState<BugReportStatus | null>(null);
+	const [message, setMessage] = useState<string>('');
+	const [openLocal, setOpenLocal] = useState<boolean>(false);
+
+
 	const contextMatchesMode = reportContext.panelMode === mode;
 	const activeUrl = activeUrlProp ?? (contextMatchesMode ? reportContext.activeUrl : '');
-	const panelTab = contextMatchesMode ? reportContext.panelTab : mode;
+
+	const panelTab = mode === 'ai'
+		? `ai:${aiProvider}`
+		: contextMatchesMode ? reportContext.panelTab : mode;
+
 	const source = detectSource(activeUrl) ?? '';
 
 	const controlled = openProp !== undefined;
-	const [openLocal, setOpenLocal] = useState(false);
+
 	const isOpen = controlled ? !!openProp : openLocal;
 
-	const closeForm = () => (controlled ? onClose?.() : setOpenLocal(false));
-
-	const [sending, setSending] = useState(false);
-	const [status, setStatus] = useState<BugReportStatus | null>(null);
-	const [message, setMessage] = useState('');
 
 	useEffect(() => {
 		let cancelled = false;
@@ -70,7 +82,7 @@ const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: op
 	useEffect(() => {
 		if (status !== 'SENT') return;
 		const id = setTimeout(() => {
-			closeForm();
+			_onCloseForm();
 			setStatus(null);
 		}, 1500);
 		return () => clearTimeout(id);
@@ -78,7 +90,7 @@ const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: op
 
 	const canSubmit = status === null;
 
-	const handleSend = async () => {
+	const _onSendForm = async () => {
 		if (!canSubmit) return;
 		setSending(true);
 
@@ -100,6 +112,8 @@ const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: op
 		setStatus(resultStatus(res));
 	};
 
+	const _onCloseForm = () => (controlled ? onClose?.() : setOpenLocal(false));
+
 	if (!question) return null;
 
 	if (status === 'SENT') {
@@ -115,7 +129,7 @@ const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: op
 		if (hideTrigger) return null;
 		return (
 			<button type="button"
-				className={`nmo-bug-pill ${status ? 'disabled' : ''}`}
+				className={cn('nmo-bug-pill', {disabled: status})}
 				disabled={!!status}
 				onClick={() => canSubmit && setOpenLocal(true)}>
 				<IconBug size={12}/>
@@ -130,7 +144,7 @@ const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: op
 				<div className="nmo-bug-form-title">
 					<IconBug size={12}/>Сообщить о проблеме
 				</div>
-				<button type="button" className="nmo-icon-btn nmo-bug-close" onClick={closeForm}>
+				<button type="button" className="nmo-icon-btn nmo-bug-close" onClick={_onCloseForm}>
 					<IconClose size={12}/>
 				</button>
 			</div>
@@ -150,7 +164,7 @@ const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: op
 					<div>• Вариантов: <span>{variants.length}</span></div>
 					<div>• Таб: <span>{formatPanelTab(mode, panelTab)}</span></div>
 					<div>• Источник: <span>{source || '—'}</span></div>
-					<div>• Ссылка: <span>{activeUrl || '—'}</span></div>
+					<div>• Ссылка: <span>{formatUrlForDisplay(activeUrl || '—')}</span></div>
 					<div>• Версия: <span>{EXT_VERSION} · {getBrowserInfo()}</span></div>
 				</div>
 			</div>
@@ -160,26 +174,23 @@ const BugReportButton: React.FC<IProps> = ({activeUrl: activeUrlProp, isOpen: op
 					<div className="nmo-bug-rate-icon"><IconWarn size={12}/></div>
 					<div className="nmo-bug-rate-body">
 						<div className="nmo-bug-rate-title">{STATUSES[status].text}</div>
-						{(status === 'COOLDOWN' || status === 'DAILY_CAP' || status === 'DUPLICATE') && (
-							<div className="nmo-bug-rate-sub">Лимит: 5 отчётов / сутки · 1 раз / 5 мин</div>
-						)}
+						{['COOLDOWN', 'DAILY_CAP', 'DUPLICATE'].includes(status) &&
+							<div className="nmo-bug-rate-sub">Лимит: 1 отчёт / сутки</div>
+						}
 					</div>
 				</div>
 			)}
 
 			<div className="nmo-bug-form-foot">
-				<button type="button"
-					className="nmo-bug-btn-cancel"
-					disabled={sending}
-					onClick={closeForm}>
+
+				<button type="button" className="nmo-bug-btn-cancel" disabled={sending}	onClick={_onCloseForm}>
 					Отмена
 				</button>
-				<button type="button"
-					className="nmo-btn nmo-btn-warning nmo-bug-btn-send"
-					disabled={!canSubmit || sending}
-					onClick={handleSend}>
+
+				<button type="button" className="nmo-btn nmo-btn-warning nmo-bug-btn-send" disabled={!canSubmit || sending}	onClick={_onSendForm}>
 					{sending ? 'Отправка…' : 'Отправить'}
 				</button>
+
 			</div>
 		</div>
 	);
@@ -210,7 +221,8 @@ function formatPanelTab(mode: string, panelTab: string): string {
 	if (mode === 'auto') return 'Авто';
 	if (mode === 'sites' && panelTab === 'sites:search') return 'Сайты / поиск';
 	if (mode === 'sites') return 'Сайты / URL';
-	if (mode === 'ai-pro') return 'AI / свой endpoint';
+	if (mode === 'ai' && panelTab === 'ai:free') return 'AI / бесплатно';
+	if (mode === 'ai' && panelTab === 'ai:custom') return 'AI / свой endpoint';
 	if (mode === 'ai') return 'AI / ProxyAPI';
 	if (mode === 'pdf') return 'PDF';
 	return panelTab || mode || '—';

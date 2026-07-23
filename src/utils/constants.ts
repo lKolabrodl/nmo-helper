@@ -17,8 +17,13 @@ export const LOW_CONFIDENCE_THRESHOLD = 0.5;
 /** Максимальное количество тем в кеше ответов (LRU — старые вытесняются) */
 export const CACHE_MAX_TOPICS = 10;
 
-/** Ссылка на инструкцию по обновлению расширения */
-export const UPDATE_URL = 'https://nmo-helper.ru/instruction#update';
+/** Ссылка на страницу обновления расширения */
+export const UPDATE_URL = 'https://nmo-helper.ru/update';
+
+/** Домены баз поиска ответов. Конкретные адреса хранятся только здесь. */
+export const PRIMARY_ANSWER_SOURCE_HOST = 'rosmedicinfo.ru';
+export const SECONDARY_ANSWER_SOURCE_HOST = '24forcare.com';
+export const ALTERNATIVE_ANSWER_SOURCE_HOST = 'testotvet.com';
 
 /**
  * DOM-селекторы страницы НМО.
@@ -84,13 +89,13 @@ export const SELECTORS = {
 
 /** Тексты статусов панели */
 export const StatusTitle = {
-	SEARCHING: 'ищу на обоих сайтах...',
+	SEARCHING: 'ищу в базах ответов...',
 	SEARCHING_ANSWERS: 'ищу ответы...',
 	LOADING_ANSWERS: 'загружаю ответы...',
 	LOADING_FAILED: 'не удалось загрузить ответы',
-	NOT_FOUND: 'ответы не найдены на сайтах',
+	NOT_FOUND: 'ответы не найдены в базах',
 	ANSWER_NOT_FOUND: 'ответ не найден',
-	ANSWER_MISMATCH: 'ответ не совпал с вариантами',
+	ANSWER_MISMATCH: 'ответ не совпал с вариантами (такое бывает)',
 	ANSWER_LOW_CONFIDENCE: 'низкая уверенность',
 	AI_THINKING: 'думаю...',
 	AI_NO_ANSWER: 'AI не определил ответ',
@@ -120,11 +125,10 @@ export const BUG_REPORT_STORAGE_KEY = 'bugReports';
  * id — точный идентификатор у ProxyAPI; name — отображаемое имя в дропдауне.
  * Anthropic id с дефисами (`claude-opus-4-8`), name с точкой (`claude-opus-4.8`).
  */
+export const DEFAULT_AI_MODEL = 'gpt-5.4-mini';
+
 export const AI_MODELS: IAiModel[] = [
 	// low — быстрые / дешёвые для простых задач
-	{ id: 'gpt-4o-mini',            name: 'gpt-4o-mini',            tier: 'low' },
-	{ id: 'gpt-4.1-nano',           name: 'gpt-4.1-nano',           tier: 'low' },
-	{ id: 'gpt-5-nano',             name: 'gpt-5-nano',             tier: 'low' },
 	{ id: 'gpt-5.4-nano',           name: 'gpt-5.4-nano',           tier: 'low' },
 	{ id: 'gemini-2.0-flash',       name: 'gemini-2.0-flash',       tier: 'low' },
 	{ id: 'gemini-2.0-flash-lite',  name: 'gemini-2.0-flash-lite',  tier: 'low' },
@@ -133,33 +137,38 @@ export const AI_MODELS: IAiModel[] = [
 	{ id: 'claude-haiku-4-5',       name: 'claude-haiku-4.5',       tier: 'low' },
 
 	// medium — баланс цены и качества
-	{ id: 'gpt-4.1-mini',           name: 'gpt-4.1-mini',           tier: 'medium', tag: 'rec' },
-	{ id: 'gpt-4o',                 name: 'gpt-4o',                 tier: 'medium' },
-	{ id: 'gpt-5-mini',             name: 'gpt-5-mini',             tier: 'medium' },
-	{ id: 'gpt-5.4-mini',           name: 'gpt-5.4-mini',           tier: 'medium' },
+	{ id: 'gpt-5.4-mini',           name: 'gpt-5.4-mini',           tier: 'medium', tag: 'rec' },
+	{ id: 'gpt-5.6-luna',           name: 'gpt-5.6-luna',           tier: 'medium' },
 	{ id: 'gemini-2.5-flash',       name: 'gemini-2.5-flash',       tier: 'medium', tag: 'rec' },
 	{ id: 'gemini-3-flash-preview', name: 'gemini-3-flash',         tier: 'medium' },
+	{ id: 'gemini-3.1-flash-preview', name: 'gemini-3.1-flash',     tier: 'medium' },
 	{ id: 'claude-sonnet-4-5',      name: 'claude-sonnet-4.5',      tier: 'medium' },
 
 	// high — флагманы для точности
-	{ id: 'gpt-4.1',                name: 'gpt-4.1',                tier: 'high' },
-	{ id: 'gpt-5',                  name: 'gpt-5',                  tier: 'high' },
-	{ id: 'gpt-5.1',                name: 'gpt-5.1',                tier: 'high' },
-	{ id: 'gpt-5.2',                name: 'gpt-5.2',                tier: 'high' },
-	{ id: 'gpt-5.3-chat-latest',    name: 'gpt-5.3-chat-latest',    tier: 'high' },
 	{ id: 'gpt-5.4',                name: 'gpt-5.4',                tier: 'high',   tag: 'pricey' },
-	{ id: 'o3-mini',                name: 'o3-mini',                tier: 'high',   tag: 'rec' },
-	{ id: 'o4-mini',                name: 'o4-mini',                tier: 'high',   tag: 'rec' },
+	{ id: 'gpt-5.6-terra',          name: 'gpt-5.6-terra',          tier: 'high',   tag: 'rec' },
 	{ id: 'gemini-2.5-pro',         name: 'gemini-2.5-pro',         tier: 'high' },
 	{ id: 'gemini-3.5-flash',       name: 'gemini-3.5-flash',       tier: 'high' },
 	{ id: 'claude-sonnet-4-6',      name: 'claude-sonnet-4.6',      tier: 'high',   tag: 'rec' },
+	{ id: 'claude-sonnet-5',        name: 'claude-sonnet-5',        tier: 'high',   tag: 'rec' },
 
 	// ultra — премиум reasoning / pro-модели
 	{ id: 'gpt-5.5',                name: 'gpt-5.5',                tier: 'ultra',  tag: 'pricey' },
 	{ id: 'gpt-5.4-pro',            name: 'gpt-5.4-pro',            tier: 'ultra',  tag: 'pricey' },
 	{ id: 'gpt-5.5-pro',            name: 'gpt-5.5-pro',            tier: 'ultra',  tag: 'pricey' },
-	{ id: 'o3',                     name: 'o3',                     tier: 'ultra',  tag: 'pricey' },
+	{ id: 'gpt-5.6-sol',            name: 'gpt-5.6-sol',            tier: 'ultra',  tag: 'pricey' },
+	{ id: 'gemini-3-pro-preview',   name: 'gemini-3-pro',           tier: 'ultra' },
 	{ id: 'gemini-3.1-pro-preview', name: 'gemini-3.1-pro',         tier: 'ultra' },
+	{ id: 'claude-fable-5',         name: 'claude-fable-5',         tier: 'ultra',  tag: 'pricey' },
+	{ id: 'claude-opus-4-5',        name: 'claude-opus-4.5',        tier: 'ultra' },
+	{ id: 'claude-opus-4-6',        name: 'claude-opus-4.6',        tier: 'ultra' },
 	{ id: 'claude-opus-4-7',        name: 'claude-opus-4.7',        tier: 'ultra' },
 	{ id: 'claude-opus-4-8',        name: 'claude-opus-4.8',        tier: 'ultra',  tag: 'rec' },
 ];
+
+const AI_MODEL_IDS = new Set(AI_MODELS.map(model => model.id));
+
+/** Возвращает доступную ProxyAPI-модель или актуальную модель по умолчанию. */
+export function normalizeAiModel(model: string): string {
+	return AI_MODEL_IDS.has(model) ? model : DEFAULT_AI_MODEL;
+}

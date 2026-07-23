@@ -1,13 +1,13 @@
 import type { ISourceKey } from '../types';
 import { matchQuestion, variantScore } from './matching';
 import {
-	extract24forcare,
-	extract24forcareNumberedPPlus,
-	extractRosmedH3Highlighted,
-	extractRosmedH3BrPlus,
-	extractRosmedNumberedPInlineBr,
-	extractRosmedNumberedPPerParagraph,
-	extractRosmedFlatBr,
+	extractSecondaryH3Strong,
+	extractSecondaryNumberedPPlus,
+	extractPrimaryH3Highlighted,
+	extractPrimaryH3BrPlus,
+	extractPrimaryNumberedPInlineBr,
+	extractPrimaryNumberedPPerParagraph,
+	extractPrimaryFlatBr,
 	type QaCaseRaw,
 } from './extractors';
 
@@ -30,23 +30,24 @@ const MIN_VARIANT_SCORE = 0.7;
 // ─── Публичный диспатчер ─────────────────────────────────────────────
 
 /**
- * Достаёт все вопросы из HTML-дерева источника.
- * @param source — ключ источника (24forcare / rosmedicinfo)
- * @param div    — распарсенный HTML-документ (результат `parseHtml(..., true)`)
+ * Достаёт все вопросы из данных источника.
+ * Для nmo-helper готовая модель уже собрана загрузчиком и возвращается без изменений.
+ * @param source — ключ источника
+ * @param input  — распарсенный HTML-документ либо готовая модель nmo-helper
  */
-export function extractCases(source: ISourceKey, div: HTMLElement): QaCaseModel[] {
+export function extractCases(source: ISourceKey, input: HTMLElement | QaCaseModel[]): QaCaseModel[] {
+	if (Array.isArray(input)) return input;
+
 	let raw: QaCaseRaw[] = [];
-	if (source === '24forcare') raw = [
-		...extract24forcare(div),
-		...extract24forcareNumberedPPlus(div),
-	];
-	else if (source === 'rosmedicinfo') {
+
+	if (source === 'secondary') raw = [...extractSecondaryH3Strong(input), ...extractSecondaryNumberedPPlus(input)];
+	else if (source === 'primary') {
 		raw = [
-			...extractRosmedH3Highlighted(div),
-			...extractRosmedH3BrPlus(div),
-			...extractRosmedNumberedPInlineBr(div),
-			...extractRosmedNumberedPPerParagraph(div),
-			...extractRosmedFlatBr(div),
+			...extractPrimaryH3Highlighted(input),
+			...extractPrimaryH3BrPlus(input),
+			...extractPrimaryNumberedPInlineBr(input),
+			...extractPrimaryNumberedPPerParagraph(input),
+			...extractPrimaryFlatBr(input),
 		];
 	}
 

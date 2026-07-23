@@ -1,11 +1,12 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
+import cn from 'classnames';
 import './styles.scss';
-import {AI_MODELS} from '../../utils/constants';
-import type {IAiModel} from '../../types';
-import {IconChevronDown, IconStar} from '../icons';
+import {AI_MODELS} from '../../../../utils/constants';
+import type {IAiModel} from '../../../../types';
+import {IconChevronDown, IconStar} from '../../../icons';
 
-interface IProps {
+interface IModelDropdownProps {
 	readonly model: string;
 	readonly setModel: (v: string) => void;
 	readonly disabled?: boolean;
@@ -19,9 +20,11 @@ interface IPos {
 
 const ZERO: IPos = {left: 0, top: 0, width: 0};
 
-const ModelDropdown: React.FC<IProps> = ({model, setModel, disabled}) => {
-	const [open, setOpen] = useState(false);
+const ModelDropdown: React.FC<IModelDropdownProps> = ({model, setModel, disabled}) => {
+
+	const [open, setOpen] = useState<boolean>(false);
 	const [pos, setPos] = useState<IPos>(ZERO);
+
 	const wrapRef = useRef<HTMLDivElement>(null);
 	const listRef = useRef<HTMLDivElement>(null);
 
@@ -63,14 +66,12 @@ const ModelDropdown: React.FC<IProps> = ({model, setModel, disabled}) => {
 		setOpen(false);
 	};
 
-	const list = open ? (
-		<div className="nmo-md-list nmo-fade-up"
-			ref={listRef}
-			style={{left: pos.left, top: pos.top, width: pos.width}}>
+	const list = (
+		<div ref={listRef} className="nmo-md-list nmo-fade-up" style={{left: pos.left, top: pos.top, width: pos.width}}>
 			{AI_MODELS.map(m => (
 				<button key={m.id} type="button"
-					className={`nmo-md-item ${m.id === model ? 'selected' : ''}`}
-					onClick={() => handleSelect(m)}>
+				        className={cn('nmo-md-item', {selected: m.id === model})}
+				        onClick={() => handleSelect(m)}>
 					<span className="nmo-md-item-name">
 						<span>{m.name}</span>
 						{m.tag === 'rec' && <IconStar size={9} className="nmo-md-rec"/>}
@@ -78,12 +79,12 @@ const ModelDropdown: React.FC<IProps> = ({model, setModel, disabled}) => {
 					</span>
 					<Tier tier={m.tier}/>
 				</button>
-			))}
+			))})
 		</div>
-	) : null;
+	);
 
 	return (
-		<div className={`nmo-md ${open ? 'open' : ''}`} ref={wrapRef}>
+		<div className={cn('nmo-md', {open})} ref={wrapRef}>
 			<button type="button"
 				className="nmo-md-selected"
 				disabled={disabled}
@@ -99,7 +100,7 @@ const ModelDropdown: React.FC<IProps> = ({model, setModel, disabled}) => {
 				</span>
 			</button>
 
-			{list && createPortal(list, document.body)}
+			{open && createPortal(list, document.body)}
 		</div>
 	);
 };
@@ -114,5 +115,5 @@ const TIER_LABEL: Record<string, string> = {
 };
 
 const Tier: React.FC<{tier: IAiModel['tier']}> = ({tier}) => (
-	<span className={`nmo-tier ${tier}`}>{TIER_LABEL[tier] ?? tier.toUpperCase()}</span>
+	<span className={cn('nmo-tier', tier)}>{TIER_LABEL[tier] ?? tier.toUpperCase()}</span>
 );

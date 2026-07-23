@@ -1,0 +1,55 @@
+@use '../../vars' as *;
+
+.nmo-modal-window-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 2147483646;
+	background: rgba(4, 7, 13, 0.2);
+}
+
+.nmo-modal-window {
+	position: absolute;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border: 1px solid $border-strong;
+	border-radius: $r-lg;
+	background: $bg-frame;
+	color: $text;
+	box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55);
+	font-family: $font-ui;
+	font-size: $fs-base;
+	line-height: 1.45;
+	outline: none;
+	resize: none;
+
+	&::after {
+		content: '';
+		position: absolute;
+		left: 3px;
+		bottom: 3px;
+		width: 11px;
+		height: 11px;
+		background: linear-gradient(45deg, transparent 0 44%, $text-3 45% 52%, transparent 53% 64%, $text-3 65% 72%, transparent 73%);
+		cursor: nesw-resize;
+		opacity: 0.65;
+		pointer-events: auto;
+		touch-action: none;
+	}
+
+	[data-nmo-modal-window-drag-handle] {
+		cursor: grab;
+		touch-action: none;
+		user-select: none;
+	}
+
+	&--dragging [data-nmo-modal-window-drag-handle] {
+		cursor: grabbing;
+	}
+
+	&--resizing {
+		cursor: nesw-resize;
+		user-select: none;
+	}
+}

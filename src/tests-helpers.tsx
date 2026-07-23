@@ -6,16 +6,19 @@ import { PanelStatusProvider } from '../src/contexts/PanelStatusContext';
 import { QuestionFinderProvider } from '../src/contexts/QuestionFinderContext';
 import { PdfScoreProvider } from '../src/contexts/PdfScoreContext';
 import { SettingsProvider } from '../src/contexts/SettingsContext';
-import type { IExtensionState } from '../src/types';
+import type { AiProvider, IExtensionState } from '../src/types';
+import {DEFAULT_AI_MODEL} from '../src/utils/constants';
 
 interface IProviderOptions {
 	readonly initialMode?: string;
+	readonly initialAiProvider?: AiProvider;
 	readonly initialCollapsed?: boolean;
 }
 
 const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({
 	children,
 	initialMode = 'auto',
+	initialAiProvider = 'free',
 	initialCollapsed = false,
 }) => {
 	const initialState: IExtensionState = {
@@ -24,8 +27,9 @@ const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({
 		savedRight: null,
 		savedTop: null,
 		savedMode: initialMode,
+		savedAiProvider: initialAiProvider,
 		savedApiKey: '',
-		savedModel: 'gpt-4o-mini',
+		savedModel: DEFAULT_AI_MODEL,
 		savedCustomAiUrl: '',
 		savedCustomAiToken: '',
 		savedCustomAiModel: '',
@@ -53,11 +57,14 @@ export function renderWithProviders(
 	ui: React.ReactElement,
 	options?: RenderOptions & IProviderOptions,
 ) {
-	const { initialMode, initialCollapsed, ...renderOptions } = options ?? {};
+	const { initialMode, initialAiProvider, initialCollapsed, ...renderOptions } = options ?? {};
 
 	return render(ui, {
 		wrapper: ({ children }) => (
-			<Providers initialMode={initialMode} initialCollapsed={initialCollapsed}>
+			<Providers
+				initialMode={initialMode}
+				initialAiProvider={initialAiProvider}
+				initialCollapsed={initialCollapsed}>
 				{children}
 			</Providers>
 		),

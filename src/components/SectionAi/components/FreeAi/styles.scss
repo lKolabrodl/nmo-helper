@@ -1,0 +1,51 @@
+@use '../../../../vars' as *;
+
+.nmo-ai-free-content {
+  margin-top: $gap-12;
+}
+
+.nmo-ai-free {
+  display: flex;
+  align-items: flex-start;
+  gap: $gap-10;
+  padding: 12px;
+  background: $accent-soft;
+  border: 1px solid $success-border;
+  border-radius: $r-md;
+}
+
+.nmo-ai-free-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  color: $accent;
+  background: rgba(74, 222, 155, 0.16);
+  border-radius: $r-sm + 2px;
+}
+
+.nmo-ai-free-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.nmo-ai-free-title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $gap-6;
+}
+
+.nmo-ai-free-title {
+  color: $text;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.nmo-ai-free-description {
+  margin-top: 4px;
+  color: $text-2;
+  font-size: $fs-sm;
+  line-height: 1.45;
+}

@@ -1,4 +1,5 @@
 import React, {createContext, useCallback, useMemo, useState} from 'react';
+import type {PredictionSources} from 'med-pdf-nmo/browser';
 
 const PDF_SCORE_MAX_ENTRIES = 25;
 
@@ -13,12 +14,13 @@ export interface IPdfScoreVariant {
 export interface IPdfScoreModel {
 	readonly id: string;
 	readonly scores: IPdfScoreVariant[];
+	readonly sources: PredictionSources | null;
 	readonly updatedAt: number;
 }
 
 interface IPdfScoreContextState {
 	readonly getPdfScore: (topic: string | null, question: string | null, variants: string[]) => IPdfScoreModel | null;
-	readonly setPdfScore: (topic: string, question: string, variants: string[], scores: IPdfScoreVariant[]) => IPdfScoreModel;
+	readonly setPdfScore: (topic: string, question: string, variants: string[], scores: IPdfScoreVariant[], sources?: PredictionSources | null) => IPdfScoreModel;
 	readonly clearPdfScore: (topic: string | null, question: string | null, variants: string[]) => void;
 }
 
@@ -26,9 +28,10 @@ type PdfScoreStore = Record<string, IPdfScoreModel>;
 
 const EMPTY_CONTEXT: IPdfScoreContextState = {
 	getPdfScore: () => null,
-	setPdfScore: (topic, question, variants, scores) => ({
+	setPdfScore: (topic, question, variants, scores, sources = null) => ({
 		id: makePdfScoreId(topic, question, variants),
 		scores,
+		sources,
 		updatedAt: Date.now(),
 	}),
 	clearPdfScore: () => undefined,
@@ -44,11 +47,12 @@ export const PdfScoreProvider: React.FC<React.PropsWithChildren> = ({children}) 
 		return scoresById[makePdfScoreId(topic ?? '', question, variants)] ?? null;
 	}, [scoresById]);
 
-	const setPdfScore = useCallback((topic: string, question: string, variants: string[], scores: IPdfScoreVariant[]) => {
+	const setPdfScore = useCallback((topic: string, question: string, variants: string[], scores: IPdfScoreVariant[], sources: PredictionSources | null = null) => {
 		const id = makePdfScoreId(topic, question, variants);
 		const entry: IPdfScoreModel = {
 			id,
 			scores: scores.map(normalizeScoreVariant),
+			sources,
 			updatedAt: Date.now(),
 		};
 

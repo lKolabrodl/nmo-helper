@@ -1,12 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import {
-	extract24forcare,
-	extract24forcareNumberedPPlus,
-	extractRosmedH3Highlighted,
-	extractRosmedH3BrPlus,
-	extractRosmedNumberedPInlineBr,
-	extractRosmedNumberedPPerParagraph,
-	extractRosmedFlatBr,
+	extractSecondaryH3Strong,
+	extractSecondaryNumberedPPlus,
+	extractPrimaryH3Highlighted,
+	extractPrimaryH3BrPlus,
+	extractPrimaryNumberedPInlineBr,
+	extractPrimaryNumberedPPerParagraph,
+	extractPrimaryFlatBr,
+	parseNmoSourceQuestions,
 } from './extractors';
 
 /**
@@ -27,13 +28,38 @@ function createDiv(html: string): HTMLElement {
 	return div;
 }
 
-describe('extract24forcare', () => {
+describe('parseNmoSourceQuestions', () => {
+	it('извлекает вопрос, варианты и data-docid из разметки nmo-helper', () => {
+		const questions = parseNmoSourceQuestions(makeNmoPage([
+			makeNmoQuestion('329960', '  После завершения\nпечати?  ', ['1) гипса;', 'жидких остатков смолы.']),
+		]));
+
+		expect(questions).toEqual([{
+			question: 'После завершения печати?',
+			variants: ['гипса', 'жидких остатков смолы'],
+			docId: '329960',
+		}]);
+	});
+
+	it('игнорирует неполные элементы и не считает button вариантом ответа', () => {
+		const html = makeNmoPage([
+			'<li class="vopros"><h4>Без docid</h4><ol class="answers-list"><li>A</li></ol></li>',
+			makeNmoQuestion('42', 'Валидный вопрос', ['A', 'B']),
+		]);
+
+		const questions = parseNmoSourceQuestions(html);
+		expect(questions).toHaveLength(1);
+		expect(questions[0].variants).toEqual(['A', 'B']);
+	});
+});
+
+describe('extractSecondaryH3Strong', () => {
 	it('находит вопрос + strong-варианты', () => {
 		const div = createDiv(`
 			<h3>Вопрос?</h3>
 			<p>первый<br><strong>второй</strong><br>третий</p>
 		`);
-		const out = extract24forcare(div);
+		const out = extractSecondaryH3Strong(div);
 		expect(out).toHaveLength(1);
 		expect(out[0].question).toBe('Вопрос?');
 		expect(out[0].variants).toEqual(['первый', 'второй', 'третий']);
@@ -45,7 +71,7 @@ describe('extract24forcare', () => {
 			<h3>Q</h3>
 			<p><strong>a</strong><br>b<br><strong>c</strong></p>
 		`);
-		const [c] = extract24forcare(div);
+		const [c] = extractSecondaryH3Strong(div);
 		expect(c.answers).toEqual(['a', 'c']);
 	});
 
@@ -54,7 +80,7 @@ describe('extract24forcare', () => {
 			<h3></h3>
 			<p><strong>a</strong></p>
 		`);
-		expect(extract24forcare(div)).toEqual([]);
+		expect(extractSecondaryH3Strong(div)).toEqual([]);
 	});
 
 	it('пропускает h3 если следующий sibling не <p>', () => {
@@ -62,7 +88,7 @@ describe('extract24forcare', () => {
 			<h3>Q1</h3>
 			<div><strong>a</strong></div>
 		`);
-		expect(extract24forcare(div)).toEqual([]);
+		expect(extractSecondaryH3Strong(div)).toEqual([]);
 	});
 
 	it('пропускает case без правильных (нет <strong>)', () => {
@@ -70,7 +96,7 @@ describe('extract24forcare', () => {
 			<h3>Q</h3>
 			<p>первый<br>второй</p>
 		`);
-		expect(extract24forcare(div)).toEqual([]);
+		expect(extractSecondaryH3Strong(div)).toEqual([]);
 	});
 
 	it('несколько вопросов подряд — по одному case на каждый', () => {
@@ -80,24 +106,24 @@ describe('extract24forcare', () => {
 			<h3>Q2</h3>
 			<p><strong>x</strong><br>y</p>
 		`);
-		const out = extract24forcare(div);
+		const out = extractSecondaryH3Strong(div);
 		expect(out).toHaveLength(2);
 		expect(out[0].question).toBe('Q1');
 		expect(out[1].question).toBe('Q2');
 	});
 
 	it('пустой div → []', () => {
-		expect(extract24forcare(createDiv(''))).toEqual([]);
+		expect(extractSecondaryH3Strong(createDiv(''))).toEqual([]);
 	});
 });
 
-describe('extract24forcareNumberedPPlus', () => {
+describe('extractSecondaryNumberedPPlus', () => {
 	it('находит «N. вопрос» в <strong> + варианты с `+` в следующем <p>', () => {
 		const div = createDiv(`
 			<p><strong>1. Вопрос?</strong></p>
 			<p><strong>1) первый;+</strong><br>2) второй;<br>3) третий.</p>
 		`);
-		const [c] = extract24forcareNumberedPPlus(div);
+		const [c] = extractSecondaryNumberedPPlus(div);
 		expect(c.question).toBe('Вопрос?');
 		expect(c.variants).toEqual(['первый', 'второй', 'третий']);
 		expect(c.answers).toEqual(['первый']);
@@ -108,7 +134,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>2. Q</strong></p>
 			<p><strong>1) a;+</strong><br>2) b;<br><strong>3) c;+</strong></p>
 		`);
-		const [c] = extract24forcareNumberedPPlus(div);
+		const [c] = extractSecondaryNumberedPPlus(div);
 		expect(c.answers).toEqual(['a', 'c']);
 	});
 
@@ -117,7 +143,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>3. Q</strong></p>
 			<p>1) a;<br>2) b;+<br>3) c.</p>
 		`);
-		const [c] = extract24forcareNumberedPPlus(div);
+		const [c] = extractSecondaryNumberedPPlus(div);
 		expect(c.answers).toEqual(['b']);
 	});
 
@@ -126,7 +152,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>7. Лечение ИБС</strong></p>
 			<p>1) a<br>2) b+</p>
 		`);
-		const [c] = extract24forcareNumberedPPlus(div);
+		const [c] = extractSecondaryNumberedPPlus(div);
 		expect(c.question).toBe('Лечение ИБС');
 	});
 
@@ -135,7 +161,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>1. Q</strong></p>
 			<p>один вариант</p>
 		`);
-		expect(extract24forcareNumberedPPlus(div)).toEqual([]);
+		expect(extractSecondaryNumberedPPlus(div)).toEqual([]);
 	});
 
 	it('игнорирует <p><strong> без нумерации в начале', () => {
@@ -143,7 +169,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>Просто заголовок без номера</strong></p>
 			<p>a<br>b+</p>
 		`);
-		expect(extract24forcareNumberedPPlus(div)).toEqual([]);
+		expect(extractSecondaryNumberedPPlus(div)).toEqual([]);
 	});
 
 	it('несколько вопросов подряд (включая пустые <p> между)', () => {
@@ -154,7 +180,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>2. Q2</strong></p>
 			<p>1) x;+<br>2) y;</p>
 		`);
-		const out = extract24forcareNumberedPPlus(div);
+		const out = extractSecondaryNumberedPPlus(div);
 		expect(out).toHaveLength(2);
 		expect(out[0].question).toBe('Q1');
 		expect(out[0].answers).toEqual(['b']);
@@ -163,7 +189,7 @@ describe('extract24forcareNumberedPPlus', () => {
 	});
 
 	it('пустой div → []', () => {
-		expect(extract24forcareNumberedPPlus(createDiv(''))).toEqual([]);
+		expect(extractSecondaryNumberedPPlus(createDiv(''))).toEqual([]);
 	});
 
 	it('двузначный номер вопроса', () => {
@@ -171,7 +197,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>14. Лечение дискогенной компрессии корешков конского хвоста:</strong></p>
 			<p>1) антидепрессанты;<br>2) вытяжение позвоночника;<br>3) мануальная терапия;<br>4) рефлексотерапия;<br><strong>5) хирургическое лечение.+</strong></p>
 		`);
-		const [c] = extract24forcareNumberedPPlus(div);
+		const [c] = extractSecondaryNumberedPPlus(div);
 		expect(c.question).toBe('Лечение дискогенной компрессии корешков конского хвоста:');
 		expect(c.variants).toEqual([
 			'антидепрессанты',
@@ -188,7 +214,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>1. Q</strong></p>
 			<p>1) a;<br>2) b;<br><strong class="correct-answer-highlight">3) 15 мм;+</strong><br>4) c.</p>
 		`);
-		const [c] = extract24forcareNumberedPPlus(div);
+		const [c] = extractSecondaryNumberedPPlus(div);
 		expect(c.answers).toEqual(['15 мм']);
 	});
 
@@ -197,7 +223,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>1. Q</strong></p>
 			<p>1) первый вариант;<br>2) второй.<br><strong>3) третий;+</strong></p>
 		`);
-		const [c] = extract24forcareNumberedPPlus(div);
+		const [c] = extractSecondaryNumberedPPlus(div);
 		expect(c.variants).toEqual(['первый вариант', 'второй', 'третий']);
 		expect(c.answers).toEqual(['третий']);
 	});
@@ -207,7 +233,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>1. Q</strong></p>
 			<p>1) a;<br><br><br><strong>2) b;+</strong><br><br>3) c.</p>
 		`);
-		const [c] = extract24forcareNumberedPPlus(div);
+		const [c] = extractSecondaryNumberedPPlus(div);
 		expect(c.variants).toEqual(['a', 'b', 'c']);
 		expect(c.answers).toEqual(['b']);
 	});
@@ -217,12 +243,12 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p>3. Вопрос без обёртки</p>
 			<p>1) a;<br>2) b;+</p>
 		`);
-		const [c] = extract24forcareNumberedPPlus(div);
+		const [c] = extractSecondaryNumberedPPlus(div);
 		expect(c.question).toBe('Вопрос без обёртки');
 		expect(c.answers).toEqual(['b']);
 	});
 
-	it('реальный фрагмент со страницы 24forcare (5 вопросов разных форм)', () => {
+	it('реальный фрагмент из дополнительной базы (5 вопросов разных форм)', () => {
 		const div = createDiv(`
 			<p><strong>1. Абсолютный стеноз позвоночного канала устанавливается при уменьшении расстояния от задней поверхности тела позвонка до ближайшей противоположной точки на дужке у основания остистого отростка менее:</strong></p>
 			<p><strong>1) 10 мм;+</strong><br>2) 12 мм;<br>3) 15 мм;<br>4) 17 мм;<br>5) 8 мм.</p>
@@ -235,7 +261,7 @@ describe('extract24forcareNumberedPPlus', () => {
 			<p><strong>14. Лечение дискогенной компрессии корешков конского хвоста:</strong></p>
 			<p>1) антидепрессанты;<br>2) вытяжение позвоночника;<br>3) мануальная терапия;<br>4) рефлексотерапия;<br><strong>5) хирургическое лечение.+</strong></p>
 		`);
-		const out = extract24forcareNumberedPPlus(div);
+		const out = extractSecondaryNumberedPPlus(div);
 		expect(out).toHaveLength(5);
 
 		// 1: первый правильный
@@ -259,22 +285,22 @@ describe('extract24forcareNumberedPPlus', () => {
 		expect(out[4].answers).toEqual(['хирургическое лечение']);
 	});
 
-	it('старая h3-разметка 24forcare не подхватывается (нет нумерованных <p>)', () => {
+	it('старая h3-разметка дополнительной базы не подхватывается (нет нумерованных <p>)', () => {
 		const div = createDiv(`
 			<h3>Какой метод лечения?</h3>
 			<p><strong>Лапароскопия</strong><br>Лапаротомия</p>
 		`);
-		expect(extract24forcareNumberedPPlus(div)).toEqual([]);
+		expect(extractSecondaryNumberedPPlus(div)).toEqual([]);
 	});
 });
 
-describe('extractRosmedH3Highlighted', () => {
+describe('extractPrimaryH3Highlighted', () => {
 	it('ловит fbeeb8 в style', () => {
 		const div = createDiv(`
 			<h3>Q</h3>
 			<p><span style="background-color:#fbeeb8;">правильный</span><br>неправильный</p>
 		`);
-		const [c] = extractRosmedH3Highlighted(div);
+		const [c] = extractPrimaryH3Highlighted(div);
 		expect(c.answers).toEqual(['правильный']);
 		expect(c.variants).toEqual(['правильный', 'неправильный']);
 	});
@@ -284,7 +310,7 @@ describe('extractRosmedH3Highlighted', () => {
 			<h3>Q</h3>
 			<p><span style="background: yellow">правильный</span><br>нет</p>
 		`);
-		const [c] = extractRosmedH3Highlighted(div);
+		const [c] = extractPrimaryH3Highlighted(div);
 		expect(c.answers).toEqual(['правильный']);
 	});
 
@@ -293,7 +319,7 @@ describe('extractRosmedH3Highlighted', () => {
 			<h3>Q</h3>
 			<p><span STYLE="BACKGROUND: #FBEEB8">правильный</span><br>нет</p>
 		`);
-		const [c] = extractRosmedH3Highlighted(div);
+		const [c] = extractPrimaryH3Highlighted(div);
 		expect(c.answers).toEqual(['правильный']);
 	});
 
@@ -302,22 +328,22 @@ describe('extractRosmedH3Highlighted', () => {
 			<h3>Q</h3>
 			<p>a<br>b</p>
 		`);
-		expect(extractRosmedH3Highlighted(div)).toEqual([]);
+		expect(extractPrimaryH3Highlighted(div)).toEqual([]);
 	});
 
 	it('пропускает h3 без последующего <p>', () => {
-		const div = createDiv(`<h3>Q</h3><div>x</div>`);
-		expect(extractRosmedH3Highlighted(div)).toEqual([]);
+		const div = createDiv('<h3>Q</h3><div>x</div>');
+		expect(extractPrimaryH3Highlighted(div)).toEqual([]);
 	});
 });
 
-describe('extractRosmedH3BrPlus', () => {
+describe('extractPrimaryH3BrPlus', () => {
 	it('ловит варианты с `+`, снимает плюс из текста', () => {
 		const div = createDiv(`
 			<h3>Q</h3>
 			<p>первый<br>второй+<br>третий</p>
 		`);
-		const [c] = extractRosmedH3BrPlus(div);
+		const [c] = extractPrimaryH3BrPlus(div);
 		expect(c.variants).toEqual(['первый', 'второй', 'третий']);
 		expect(c.answers).toEqual(['второй']);
 	});
@@ -327,7 +353,7 @@ describe('extractRosmedH3BrPlus', () => {
 			<h3>Q</h3>
 			<p>a+<br>b<br>c+</p>
 		`);
-		const [c] = extractRosmedH3BrPlus(div);
+		const [c] = extractPrimaryH3BrPlus(div);
 		expect(c.answers).toEqual(['a', 'c']);
 	});
 
@@ -336,17 +362,17 @@ describe('extractRosmedH3BrPlus', () => {
 			<h3>Q</h3>
 			<p>a<br>b</p>
 		`);
-		expect(extractRosmedH3BrPlus(div)).toEqual([]);
+		expect(extractPrimaryH3BrPlus(div)).toEqual([]);
 	});
 });
 
-describe('extractRosmedNumberedPInlineBr', () => {
+describe('extractPrimaryNumberedPInlineBr', () => {
 	it('находит «N. вопрос» + инлайн-<br> варианты с `+`', () => {
 		const div = createDiv(`
 			<p><b>12. Вопрос?</b></p>
 			<p>1) первый<br>2) второй+<br>3) третий</p>
 		`);
-		const [c] = extractRosmedNumberedPInlineBr(div);
+		const [c] = extractPrimaryNumberedPInlineBr(div);
 		expect(c.question).toBe('Вопрос?');
 		expect(c.variants).toEqual(['первый', 'второй', 'третий']);
 		expect(c.answers).toEqual(['второй']);
@@ -357,7 +383,7 @@ describe('extractRosmedNumberedPInlineBr', () => {
 			<p><b>7. Лечение ИБС</b></p>
 			<p>1) a<br>2) b+</p>
 		`);
-		const [c] = extractRosmedNumberedPInlineBr(div);
+		const [c] = extractPrimaryNumberedPInlineBr(div);
 		expect(c.question).toBe('Лечение ИБС');
 	});
 
@@ -366,7 +392,7 @@ describe('extractRosmedNumberedPInlineBr', () => {
 			<p><b>1. Q</b></p>
 			<p>один вариант</p>
 		`);
-		expect(extractRosmedNumberedPInlineBr(div)).toEqual([]);
+		expect(extractPrimaryNumberedPInlineBr(div)).toEqual([]);
 	});
 
 	it('игнорирует <p> без нумерации в начале', () => {
@@ -374,7 +400,7 @@ describe('extractRosmedNumberedPInlineBr', () => {
 			<p><b>Просто текст без номера</b></p>
 			<p>a<br>b+</p>
 		`);
-		expect(extractRosmedNumberedPInlineBr(div)).toEqual([]);
+		expect(extractPrimaryNumberedPInlineBr(div)).toEqual([]);
 	});
 
 	it('читает номер прямо из <p> если нет <b>', () => {
@@ -382,12 +408,12 @@ describe('extractRosmedNumberedPInlineBr', () => {
 			<p>3. Вопрос</p>
 			<p>a<br>b+</p>
 		`);
-		const [c] = extractRosmedNumberedPInlineBr(div);
+		const [c] = extractPrimaryNumberedPInlineBr(div);
 		expect(c.question).toBe('Вопрос');
 	});
 });
 
-describe('extractRosmedNumberedPPerParagraph', () => {
+describe('extractPrimaryNumberedPPerParagraph', () => {
 	it('находит вопрос + серию <p> с нумерованными вариантами', () => {
 		const div = createDiv(`
 			<p><b>5. Препарат?</b></p>
@@ -395,7 +421,7 @@ describe('extractRosmedNumberedPPerParagraph', () => {
 			<p>2) парацетамол+</p>
 			<p>3) ибупрофен</p>
 		`);
-		const [c] = extractRosmedNumberedPPerParagraph(div);
+		const [c] = extractPrimaryNumberedPPerParagraph(div);
 		expect(c.question).toBe('Препарат?');
 		expect(c.variants).toEqual(['аспирин', 'парацетамол', 'ибупрофен']);
 		expect(c.answers).toEqual(['парацетамол']);
@@ -410,7 +436,7 @@ describe('extractRosmedNumberedPPerParagraph', () => {
 			<p>1) x</p>
 			<p>2) y+</p>
 		`);
-		const out = extractRosmedNumberedPPerParagraph(div);
+		const out = extractPrimaryNumberedPPerParagraph(div);
 		expect(out).toHaveLength(2);
 		expect(out[0].variants).toEqual(['a', 'b']);
 		expect(out[1].variants).toEqual(['x', 'y']);
@@ -422,7 +448,7 @@ describe('extractRosmedNumberedPPerParagraph', () => {
 			<p>1) a<br>2) b</p>
 			<p>3) c+</p>
 		`);
-		const [c] = extractRosmedNumberedPPerParagraph(div);
+		const [c] = extractPrimaryNumberedPPerParagraph(div);
 		// <p> с <br> пропущен — остался только «3) c+»
 		expect(c.variants).toEqual(['c']);
 		expect(c.answers).toEqual(['c']);
@@ -435,16 +461,16 @@ describe('extractRosmedNumberedPPerParagraph', () => {
 			<p>1) a</p>
 			<p>2) b+</p>
 		`);
-		const [c] = extractRosmedNumberedPPerParagraph(div);
+		const [c] = extractPrimaryNumberedPPerParagraph(div);
 		expect(c.variants).toEqual(['a', 'b']);
 	});
 
 	it('пустой div → []', () => {
-		expect(extractRosmedNumberedPPerParagraph(createDiv(''))).toEqual([]);
+		expect(extractPrimaryNumberedPPerParagraph(createDiv(''))).toEqual([]);
 	});
 });
 
-describe('extractRosmedFlatBr', () => {
+describe('extractPrimaryFlatBr', () => {
 	it('находит вопрос + варианты в плоской <br>-раскладке', () => {
 		const div = createDiv(`
 			<b>1. Вопрос?</b><br>
@@ -452,7 +478,7 @@ describe('extractRosmedFlatBr', () => {
 			<b>2) второй;+</b><br>
 			3) третий
 		`);
-		const out = extractRosmedFlatBr(div);
+		const out = extractPrimaryFlatBr(div);
 		expect(out).toHaveLength(1);
 		expect(out[0].question).toBe('Вопрос?');
 		expect(out[0].variants).toEqual(['первый', 'второй', 'третий']);
@@ -467,7 +493,7 @@ describe('extractRosmedFlatBr', () => {
 			<strong>3) c</strong><br>
 			4) d
 		`);
-		const [c] = extractRosmedFlatBr(div);
+		const [c] = extractPrimaryFlatBr(div);
 		expect(c.answers).toEqual(['a', 'b', 'c']);
 	});
 
@@ -481,7 +507,7 @@ describe('extractRosmedFlatBr', () => {
 			1) x;+<br>
 			2) y
 		`);
-		const out = extractRosmedFlatBr(div);
+		const out = extractPrimaryFlatBr(div);
 		expect(out).toHaveLength(2);
 		expect(out[0].question).toBe('Первый?');
 		expect(out[0].answers).toEqual(['b']);
@@ -490,20 +516,20 @@ describe('extractRosmedFlatBr', () => {
 	});
 
 	it('склеивает кейс, разорванный между <p> через «</p>» → <br>', () => {
-		// Реальная раскладка с rosmedicinfo: последний вопрос на странице
+		// Реальная раскладка основной базы: последний вопрос на странице
 		// часто разносится по нескольким <p> (артефакт CMS).
 		const div = createDiv(`
 			<p><b>1. Вопрос?</b></p>
 			<p>1) первый;<br><b>2) второй;+</b><br><b>3) третий;+</b></p>
 			<p><b>4) четвёртый;+</b></p>
 		`);
-		const [c] = extractRosmedFlatBr(div);
+		const [c] = extractPrimaryFlatBr(div);
 		expect(c.question).toBe('Вопрос?');
 		expect(c.variants).toEqual(['первый', 'второй', 'третий', 'четвёртый']);
 		expect(c.answers).toEqual(['второй', 'третий', 'четвёртый']);
 	});
 
-	it('реальная раскладка rosmedicinfo: один <p> с вложенными <span>', () => {
+	it('реальная раскладка основной базы: один <p> с вложенными <span>', () => {
 		// Один <p class="MsoNormal"> со вложенными <span> для шрифта/размера,
 		// все вопросы и варианты разделены <br>. Сжатая версия настоящей
 		// страницы «Переломы диафиза костей предплечья».
@@ -524,7 +550,7 @@ describe('extractRosmedFlatBr', () => {
 				</span></span>
 			</p>
 		`);
-		const out = extractRosmedFlatBr(div);
+		const out = extractPrimaryFlatBr(div);
 		expect(out).toHaveLength(2);
 		expect(out[0].question).toBe('Большие операции');
 		expect(out[0].variants).toEqual(['менее 1%', 'менее 10%', '1-5%', '5-10%']);
@@ -541,7 +567,7 @@ describe('extractRosmedFlatBr', () => {
 			ещё текст<br>
 			<b>2) b;+</b>
 		`);
-		const [c] = extractRosmedFlatBr(div);
+		const [c] = extractPrimaryFlatBr(div);
 		expect(c.variants).toEqual(['a', 'b']);
 		expect(c.answers).toEqual(['b']);
 	});
@@ -553,7 +579,7 @@ describe('extractRosmedFlatBr', () => {
 			2) b<br>
 			3) c
 		`);
-		expect(extractRosmedFlatBr(div)).toEqual([]);
+		expect(extractPrimaryFlatBr(div)).toEqual([]);
 	});
 
 	it('игнорирует <b> без префикса «N. »', () => {
@@ -562,7 +588,7 @@ describe('extractRosmedFlatBr', () => {
 			1) a;+<br>
 			2) b
 		`);
-		expect(extractRosmedFlatBr(div)).toEqual([]);
+		expect(extractPrimaryFlatBr(div)).toEqual([]);
 	});
 
 	it('игнорирует «N.» без обёртки <b>/<strong>', () => {
@@ -572,11 +598,11 @@ describe('extractRosmedFlatBr', () => {
 			1) a;+<br>
 			2) b
 		`);
-		expect(extractRosmedFlatBr(div)).toEqual([]);
+		expect(extractPrimaryFlatBr(div)).toEqual([]);
 	});
 
 	it('пустой div → []', () => {
-		expect(extractRosmedFlatBr(createDiv(''))).toEqual([]);
+		expect(extractPrimaryFlatBr(createDiv(''))).toEqual([]);
 	});
 
 	it('много правильных вариантов в одном вопросе', () => {
@@ -587,7 +613,7 @@ describe('extractRosmedFlatBr', () => {
 			<b>3) многооскольчатые;+</b><br>
 			4) иррегулярные.
 		`);
-		const [c] = extractRosmedFlatBr(div);
+		const [c] = extractPrimaryFlatBr(div);
 		expect(c.answers).toEqual(['клиновидные', 'простые', 'многооскольчатые']);
 	});
 
@@ -599,17 +625,17 @@ describe('extractRosmedFlatBr', () => {
 			строки;+</b><br>
 			2) короткий
 		`);
-		const [c] = extractRosmedFlatBr(div);
+		const [c] = extractPrimaryFlatBr(div);
 		expect(c.answers).toEqual(['длинный ответ с переносом строки']);
 	});
 });
 
 describe('extractors — общие свойства', () => {
 	it('все пропускают сигнал пустой строки (нет вариантов)', () => {
-		const div = createDiv(`<h3>Q</h3><p></p>`);
-		expect(extract24forcare(div)).toEqual([]);
-		expect(extractRosmedH3Highlighted(div)).toEqual([]);
-		expect(extractRosmedH3BrPlus(div)).toEqual([]);
+		const div = createDiv('<h3>Q</h3><p></p>');
+		expect(extractSecondaryH3Strong(div)).toEqual([]);
+		expect(extractPrimaryH3Highlighted(div)).toEqual([]);
+		expect(extractPrimaryH3BrPlus(div)).toEqual([]);
 	});
 
 	it('cleanAnswer применяется к вариантам (пробелы/хвостовой `.`)', () => {
@@ -617,7 +643,7 @@ describe('extractors — общие свойства', () => {
 			<h3>Q</h3>
 			<p><strong>  первый  </strong><br>второй.<br>третий;</p>
 		`);
-		const [c] = extract24forcare(div);
+		const [c] = extractSecondaryH3Strong(div);
 		expect(c.variants).toEqual(['первый', 'второй', 'третий']);
 	});
 
@@ -626,7 +652,23 @@ describe('extractors — общие свойства', () => {
 			<h3>Q</h3>
 			<p><strong>1) первый</strong><br>2) второй</p>
 		`);
-		const [c] = extract24forcare(div);
+		const [c] = extractSecondaryH3Strong(div);
 		expect(c.variants).toEqual(['первый', 'второй']);
 	});
 });
+
+function makeNmoPage(items: readonly string[]): string {
+	return `<div id="questionListApp"><ul class="categoryListApp">${items.join('')}</ul></div>`;
+}
+
+function makeNmoQuestion(docId: string, question: string, variants: readonly string[]): string {
+	return `
+		<li class="vopros show">
+			<h4 class="fs-14">${question}</h4>
+			<ol class="answers-list">
+				${variants.map(variant => `<li><p class="line-clamp">${variant}</p></li>`).join('')}
+				<button class="get-answer" data-docid="${docId}">Показать ответ</button>
+			</ol>
+		</li>
+	`;
+}

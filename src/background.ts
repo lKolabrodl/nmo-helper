@@ -12,13 +12,48 @@ interface IFetchMessage {
   readonly method: string;
   readonly headers: Record<string, string> | null;
   readonly body: string | null;
+  readonly credentials: RequestCredentials | null;
 }
 
 /** Dev-mode auto-reload: polls dev-reload.json and reloads extension on change */
 declare const __DEV__: boolean;
 
 if (__DEV__) {
+	const devReloadMessage = {type: 'NMO_DEV_RELOAD'} as const;
+	const nmoTabUrls = [
+		'https://edu.rosminzdrav.ru/*',
+		'https://*.edu.rosminzdrav.ru/*',
+	];
 	let lastTimestamp = 0;
+
+	const prepareNmoTabsForReload = async (): Promise<void> => {
+		try {
+			const tabs = await chrome.tabs.query({url: nmoTabUrls});
+
+			await Promise.all(tabs.map(tab => {
+				if (tab.id === undefined) return Promise.resolve();
+				const tabId = tab.id;
+
+				const notification = new Promise<void>(resolve => {
+					try {
+						chrome.tabs.sendMessage(tabId, devReloadMessage, () => {
+							// Reading lastError prevents a harmless "Receiving end does not exist"
+							// warning for tabs whose content script has not started yet.
+							void chrome.runtime.lastError;
+							resolve();
+						});
+					} catch {
+						resolve();
+					}
+				});
+
+				const timeout = new Promise<void>(resolve => setTimeout(resolve, 500));
+				return Promise.race([notification, timeout]);
+			}));
+		} catch {
+			// Extension reload must still proceed if a tab disappears mid-query.
+		}
+	};
 
 	setInterval(async () => {
 		try {
@@ -29,6 +64,7 @@ if (__DEV__) {
 			if (lastTimestamp && timestamp !== lastTimestamp) {
 				// eslint-disable-next-line no-console
 				console.log('[NMO Dev] Reloading extension...');
+				await prepareNmoTabsForReload();
 				chrome.runtime.reload();
 			}
 			lastTimestamp = timestamp;
@@ -44,6 +80,7 @@ chrome.runtime.onMessage.addListener(
 			method: message.method || 'GET',
 			headers: message.headers || undefined,
 			body: message.body || undefined,
+			credentials: message.credentials || undefined,
 		})
 			.then(async (res) => {
 				const text = await res.text();

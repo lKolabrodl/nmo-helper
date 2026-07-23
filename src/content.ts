@@ -1,23 +1,33 @@
 import './content.scss';
 import type { IExtensionState } from './types';
-import { storageGet } from './utils';
+import { storageGet, storageSet } from './utils';
 import { createPanel, initPanelBehavior } from './Panel';
 import { unlockPageInteractions } from './api/page-interaction-unlock';
+import {DEFAULT_AI_MODEL, normalizeAiModel} from './utils/constants';
 import {
+	AI_PROVIDER_STORAGE_KEY,
 	AUTO_SOLVE_DELAY_MAX_STORAGE_KEY,
 	AUTO_SOLVE_DELAY_MIN_STORAGE_KEY,
 	AUTO_SOLVE_STORAGE_KEY,
 	DEFAULT_AUTO_SOLVE_DELAY_MAX_SECONDS,
 	DEFAULT_AUTO_SOLVE_DELAY_MIN_SECONDS,
+	normalizeAiProvider,
 } from './contexts/SettingsContext';
 
-/** Слушает сообщения от popup для экспорта кеша */
-function initExportListener() {
+declare const __DEV__: boolean;
+
+/** Refreshes the host page after a watch build invalidates this content script. */
+function initDevReloadListener(): void {
 	chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-		// if (msg?.type === 'EXPORT_JSON') sendResponse(answerCache.exportAll());
-		// else if (msg?.type === 'EXPORT_CSV') sendResponse(answerCache.exportCsv());
+		if (msg?.type !== 'NMO_DEV_RELOAD') return false;
+
+		window.setTimeout(() => window.location.reload(), 250);
+		sendResponse({ok: true});
+		return false;
 	});
 }
+
+if (__DEV__) initDevReloadListener();
 
 function waitForBody(): Promise<void> {
 	if (document.body) return Promise.resolve();
@@ -45,15 +55,25 @@ unlockPageInteractions();
 	'use strict';
 
 	await waitForBody();
+	const storedModel = await storageGet('aiModel', DEFAULT_AI_MODEL);
+	const savedModel = normalizeAiModel(storedModel);
+	if (savedModel !== storedModel) storageSet('aiModel', savedModel);
+	const storedMode = await storageGet('mode', 'auto');
+	const storedAiProvider = await storageGet<unknown>(AI_PROVIDER_STORAGE_KEY, null);
+	const savedMode = storedMode === 'ai-pro' ? 'ai' : storedMode;
+	const savedAiProvider = normalizeAiProvider(storedAiProvider, storedMode);
+	if (savedMode !== storedMode) storageSet('mode', savedMode);
+	if (savedAiProvider !== storedAiProvider) storageSet(AI_PROVIDER_STORAGE_KEY, savedAiProvider);
 
 	const state: IExtensionState = {
 		savedUrl: await storageGet('customUrl', ''),
 		savedCollapsed: await storageGet('panelCollapsed', true),
 		savedRight: await storageGet('panelRight', null),
 		savedTop: await storageGet('panelTop', null),
-		savedMode: await storageGet('mode', 'auto'),
+		savedMode,
+		savedAiProvider,
 		savedApiKey: await storageGet('apiKey', ''),
-		savedModel: await storageGet('aiModel', 'gpt-4o-mini'),
+		savedModel,
 		savedCustomAiUrl: await storageGet('customAiUrl', ''),
 		savedCustomAiToken: await storageGet('customAiToken', ''),
 		savedCustomAiModel: await storageGet('customAiModel', ''),

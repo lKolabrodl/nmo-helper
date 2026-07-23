@@ -1,4 +1,5 @@
 import React from 'react';
+import cn from 'classnames';
 import './ui.scss';
 import {IconCheck, IconClose, IconWarn} from '../icons';
 
@@ -10,7 +11,7 @@ export interface IToast {
 	readonly sub?: string;
 }
 
-interface IProps {
+interface IInlineToastProps {
 	readonly toast: IToast;
 	readonly onClose?: () => void;
 }
@@ -21,8 +22,8 @@ const ICONS: Record<ToastKind, React.ReactNode> = {
 	danger:  <IconClose size={13}/>,
 };
 
-const InlineToast: React.FC<IProps> = ({toast, onClose}) => (
-	<div className={`nmo-banner nmo-banner-${toast.kind} nmo-fade-up nmo-toast`}>
+const InlineToast: React.FC<IInlineToastProps> = ({toast, onClose}) => (
+	<div className={cn('nmo-banner', `nmo-banner-${toast.kind}`, 'nmo-fade-up', 'nmo-toast')}>
 		<div className="nmo-banner-icon">{ICONS[toast.kind]}</div>
 
 		<div className="nmo-banner-body">

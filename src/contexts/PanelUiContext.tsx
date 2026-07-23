@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { storageSet } from '../utils';
 import type {IExtensionState} from '../types';
 
-export type UiMode = 'sites' | 'ai' | 'auto' | 'ai-pro' | 'pdf';
+export type UiMode = 'sites' | 'ai' | 'auto' | 'pdf';
 
 interface IPanelUiState {
 	readonly collapsed: boolean;
@@ -17,13 +17,16 @@ interface IPanelUiProviderProps {
 
 const PanelUiContext = createContext<IPanelUiState>(null!);
 
-const VALID_MODES: UiMode[] = ['sites', 'ai', 'auto', 'ai-pro', 'pdf'];
+const VALID_MODES: UiMode[] = ['sites', 'ai', 'auto', 'pdf'];
+
+export function normalizeUiMode(mode: string): UiMode {
+	if (mode === 'ai-pro') return 'ai';
+	return VALID_MODES.includes(mode as UiMode) ? mode as UiMode : 'sites';
+}
 
 export const PanelUiProvider: React.FC<React.PropsWithChildren<IPanelUiProviderProps>> = ({ initialState, children }) => {
 	const [collapsed, setCollapsedRaw] = useState(initialState.savedCollapsed);
-	const [mode, setModeRaw] = useState<UiMode>(
-		VALID_MODES.includes(initialState.savedMode as UiMode) ? initialState.savedMode as UiMode : 'sites'
-	);
+	const [mode, setModeRaw] = useState<UiMode>(normalizeUiMode(initialState.savedMode));
 
 	const setCollapsed = (v: boolean) => { setCollapsedRaw(v); storageSet('panelCollapsed', v); };
 

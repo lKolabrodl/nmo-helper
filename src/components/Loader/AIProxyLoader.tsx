@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
 import { answerCache } from '../../utils/answer-cache';
-import { askAI } from '../../api/fetch';
+import { askAI } from '../../api/fetch/fetch-ai';
 import { Status } from '../../types';
 import { StatusTitle } from '../../utils/constants';
 

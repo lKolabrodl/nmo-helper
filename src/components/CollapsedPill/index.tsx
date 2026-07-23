@@ -1,4 +1,5 @@
 import React from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {usePanelUi} from '../../contexts/PanelUiContext';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
@@ -20,7 +21,7 @@ const CollapsedPill: React.FC = () => {
 		<div className="nmo-pill nmo-fade-up">
 			<div className="nmo-pill-head">
 
-				<div className={`nmo-pill-icon ${status.status}`}>
+				<div className={cn('nmo-pill-icon', status.status)}>
 					{isLoading && <span className="nmo-spinner" style={{width: 14, height: 14}}/>}
 					{!isLoading && (isWarning || isError) && <IconWarn size={13}/>}
 					{!isLoading && !isWarning && !isError && isOk && <IconCheck size={13}/>}

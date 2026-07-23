@@ -1,4 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {IconSettings} from '../icons';
 import AutoSolveSettings from './AutoSolveSettings';
@@ -42,7 +43,7 @@ const Settings: React.FC<ISettingsProps> = ({onOpen}) => {
 	return (
 		<div ref={settingsRef} className="nmo-settings">
 			<button type="button"
-				className={`nmo-icon-btn nmo-settings-trigger ${open ? 'active' : ''}`}
+				className={cn('nmo-icon-btn', 'nmo-settings-trigger', {active: open})}
 				title="Настройки"
 				aria-haspopup="menu"
 				aria-expanded={open}

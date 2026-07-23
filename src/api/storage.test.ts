@@ -73,8 +73,32 @@ describe('fn storageSet', () => {
 		const original = chrome.storage.local.set;
 		chrome.storage.local.set = spy as unknown as typeof chrome.storage.local.set;
 		storageSet('some_key', 123);
-		expect(spy).toHaveBeenCalledWith({ some_key: 123 });
+		expect(spy).toHaveBeenCalledTimes(1);
+		expect(spy.mock.calls[0][0]).toEqual({some_key: 123});
+		expect(spy.mock.calls[0][1]).toEqual(expect.any(Function));
 		chrome.storage.local.set = original;
+	});
+
+	it('не бросает, если context расширения уже invalidated', () => {
+		const original = chrome.storage.local.set;
+		chrome.storage.local.set = vi.fn(() => {
+			throw new Error('Extension context invalidated.');
+		}) as unknown as typeof chrome.storage.local.set;
+
+		expect(() => storageSet('stale_key', 1)).not.toThrow();
+		chrome.storage.local.set = original;
+	});
+});
+
+describe('invalidated extension context', () => {
+	it('storageGet возвращает defaultValue, если chrome.storage.local.get бросает', async () => {
+		const original = chrome.storage.local.get;
+		chrome.storage.local.get = vi.fn(() => {
+			throw new Error('Extension context invalidated.');
+		}) as unknown as typeof chrome.storage.local.get;
+
+		await expect(storageGet('stale_key', 'fallback')).resolves.toBe('fallback');
+		chrome.storage.local.get = original;
 	});
 });
 

@@ -4,4 +4,7 @@ node_modules
 *.zip
 drafts
 BUILD.md
-CLAUDE.md
+AGENTS.md
+repomix-output.md
+.playwright-cli/
+output/

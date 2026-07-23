@@ -3,6 +3,9 @@
  * @module types
  */
 
+/** Доступные варианты подключения AI. */
+export type AiProvider = 'free' | 'proxy' | 'custom';
+
 /** Сохранённое состояние панели расширения из chrome.storage */
 export interface IExtensionState {
   /** URL страницы с ответами */
@@ -15,6 +18,8 @@ export interface IExtensionState {
   readonly savedTop: number | null;
   /** Активный режим */
   readonly savedMode: string;
+  /** Выбранный вариант подключения AI */
+  readonly savedAiProvider: AiProvider;
   /** API-ключ ProxyAPI */
   readonly savedApiKey: string;
   /** Выбранная AI-модель */
@@ -46,15 +51,15 @@ export interface IAiModel {
 }
 
 /** Ключ источника ответов */
-export type ISourceKey = '24forcare' | 'rosmedicinfo';
+export type ISourceKey = 'primary' | 'secondary' | 'nmo-helper';
 
 /** Варианты статуса панели */
 export const Status = {
-  IDLE: 'idle',
-  OK: 'ok',
-  ERR: 'err',
-  WARN: 'warn',
-  LOADING: 'loading',
+	IDLE: 'idle',
+	OK: 'ok',
+	ERR: 'err',
+	WARN: 'warn',
+	LOADING: 'loading',
 } as const;
 
 export type StatusType = typeof Status[keyof typeof Status];

@@ -1,14 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { detectSource, matchQuestion, pickResult, similarity, variantScore } from './matching';
 import type { ISourceKey } from '../types';
+import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST} from './constants';
 
 describe('detectSource', () => {
-	it('24forcare.com → "24forcare"', () => {
-		expect(detectSource('https://24forcare.com/test/123')).toBe('24forcare');
+	it('распознаёт дополнительную базу по URL', () => {
+		expect(detectSource(`https://${SECONDARY_ANSWER_SOURCE_HOST}/test/123`)).toBe('secondary');
 	});
 
-	it('rosmedicinfo.ru → "rosmedicinfo"', () => {
-		expect(detectSource('https://rosmedicinfo.ru/answers')).toBe('rosmedicinfo');
+	it('распознаёт основную базу по URL', () => {
+		expect(detectSource(`https://${PRIMARY_ANSWER_SOURCE_HOST}/answers`)).toBe('primary');
+	});
+
+	it('распознаёт альтернативную базу по URL', () => {
+		expect(detectSource(`https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic.html`)).toBe('nmo-helper');
 	});
 
 	it('неизвестный домен → null', () => {
@@ -180,41 +185,41 @@ const mk = (source: ISourceKey, title: string): any => ({ source, title, url: `h
 describe('pickResult — фильтр по source и пограничные', () => {
 
 	it('пустой массив → undefined', () => {
-		expect(pickResult([], 'rosmedicinfo', 'любая тема')).toBeUndefined();
+		expect(pickResult([], 'primary', 'любая тема')).toBeUndefined();
 	});
 
 	it('нет результатов нужного источника → undefined', () => {
-		const results = [mk('24forcare', 'Тема А'), mk('24forcare', 'Тема Б')];
-		expect(pickResult(results, 'rosmedicinfo', 'Тема А')).toBeUndefined();
+		const results = [mk('secondary', 'Тема А'), mk('secondary', 'Тема Б')];
+		expect(pickResult(results, 'primary', 'Тема А')).toBeUndefined();
 	});
 
 	it('единственный результат source — возвращает его без проверки topic', () => {
 		const results = [
-			mk('rosmedicinfo', 'Совсем неподходящий заголовок'),
-			mk('24forcare', 'Тема А'),
+			mk('primary', 'Совсем неподходящий заголовок'),
+			mk('secondary', 'Тема А'),
 		];
-		const res = pickResult(results, 'rosmedicinfo', 'Тема А');
+		const res = pickResult(results, 'primary', 'Тема А');
 		expect(res?.title).toBe('Совсем неподходящий заголовок');
 	});
 
 	it('игнорирует результаты другого источника при ранжировании', () => {
 		const results = [
-			mk('24forcare', 'Лечение гипертонии'),                    // точное, но не тот source
-			mk('rosmedicinfo', 'Совсем другая тема про эндокринологию'),
-			mk('rosmedicinfo', 'Лечение гипертонии у взрослых'),
+			mk('secondary', 'Лечение гипертонии'),                    // точное, но не тот source
+			mk('primary', 'Совсем другая тема про эндокринологию'),
+			mk('primary', 'Лечение гипертонии у взрослых'),
 		];
-		const res = pickResult(results, 'rosmedicinfo', 'Лечение гипертонии');
-		expect(res?.source).toBe('rosmedicinfo');
+		const res = pickResult(results, 'primary', 'Лечение гипертонии');
+		expect(res?.source).toBe('primary');
 		expect(res?.title).toBe('Лечение гипертонии у взрослых');
 	});
 
 	it('сложный тест с одинаковыми названиями', () => {
 		const topic = 'Сперматоцеле (по утвержденным клиническим рекомендациям) - 2025';
 		const results = [
-			mk('rosmedicinfo', 'Гидроцеле, сперматоцеле (по утвержденным клиническим рекомендациям) - 2025'),
-			mk('rosmedicinfo', 'Сперматоцеле (по утвержденным клиническим рекомендациям) - 2025'),
+			mk('primary', 'Гидроцеле, сперматоцеле (по утвержденным клиническим рекомендациям) - 2025'),
+			mk('primary', 'Сперматоцеле (по утвержденным клиническим рекомендациям) - 2025'),
 		];
-		const res = pickResult(results, 'rosmedicinfo', topic);
+		const res = pickResult(results, 'primary', topic);
 		expect(res?.title).toBe('Сперматоцеле (по утвержденным клиническим рекомендациям) - 2025');
 	});
 
@@ -224,18 +229,18 @@ describe('pickResult — fallback на последний', () => {
 
 	it('topic = null + несколько кандидатов → последний', () => {
 		const results = [
-			mk('rosmedicinfo', 'Старая тема 2020'),
-			mk('rosmedicinfo', 'Свежая тема 2024'),
+			mk('primary', 'Старая тема 2020'),
+			mk('primary', 'Свежая тема 2024'),
 		];
-		expect(pickResult(results, 'rosmedicinfo', null)?.title).toBe('Свежая тема 2024');
+		expect(pickResult(results, 'primary', null)?.title).toBe('Свежая тема 2024');
 	});
 
 	it('ни один title не достиг MIN_TITLE_SCORE → последний', () => {
 		const results = [
-			mk('rosmedicinfo', 'Кардиология и лечение ИБС'),
-			mk('rosmedicinfo', 'Эндокринология и диабет'),
+			mk('primary', 'Кардиология и лечение ИБС'),
+			mk('primary', 'Эндокринология и диабет'),
 		];
-		const res = pickResult(results, 'rosmedicinfo', 'Травматология и переломы');
+		const res = pickResult(results, 'primary', 'Травматология и переломы');
 		expect(res?.title).toBe('Эндокринология и диабет');
 	});
 });
@@ -244,54 +249,54 @@ describe('pickResult — ранжирование по похожести', () =
 
 	it('точное совпадение topic === title → выбирает его', () => {
 		const results = [
-			mk('rosmedicinfo', 'Лечение гипертонии у пожилых'),
-			mk('rosmedicinfo', 'Диагностика инфаркта миокарда'),
-			mk('rosmedicinfo', 'Реабилитация после инсульта'),
+			mk('primary', 'Лечение гипертонии у пожилых'),
+			mk('primary', 'Диагностика инфаркта миокарда'),
+			mk('primary', 'Реабилитация после инсульта'),
 		];
-		const res = pickResult(results, 'rosmedicinfo', 'Диагностика инфаркта миокарда');
+		const res = pickResult(results, 'primary', 'Диагностика инфаркта миокарда');
 		expect(res?.title).toBe('Диагностика инфаркта миокарда');
 	});
 
 	it('title — обрезанная версия topic → побеждает (includes-ветка variantScore)', () => {
 		const topic = 'Лечение острого инфаркта миокарда у пациентов старше 65 лет (рекомендации 2024)';
 		const results = [
-			mk('rosmedicinfo', 'Лечение гипертонии у пожилых'),
-			mk('rosmedicinfo', 'Лечение острого инфаркта миокарда у пациентов старше 65 лет'),  // обрезан
-			mk('rosmedicinfo', 'Реабилитация после инсульта'),
+			mk('primary', 'Лечение гипертонии у пожилых'),
+			mk('primary', 'Лечение острого инфаркта миокарда у пациентов старше 65 лет'),  // обрезан
+			mk('primary', 'Реабилитация после инсульта'),
 		];
-		const res = pickResult(results, 'rosmedicinfo', topic);
+		const res = pickResult(results, 'primary', topic);
 		expect(res?.title).toBe('Лечение острого инфаркта миокарда у пациентов старше 65 лет');
 	});
 
 	it('стрипает префикс «Ответы к тестам НМО:» и матчит title как подстроку topic', () => {
 		const topic = 'Кардиомиопатия дилатационная (по утвержденным клиническим рекомендациям) - 2024';
 		const results = [
-			mk('rosmedicinfo', 'Ответы к тестам НМО: "Гипертоническая болезнь - 2024"'),
-			mk('rosmedicinfo', 'Ответы к тестам НМО: "Кардиомиопатия дилатационная"'),
-			mk('rosmedicinfo', 'Ответы к тестам НМО: "Инфаркт миокарда без подъёма ST"'),
+			mk('primary', 'Ответы к тестам НМО: "Гипертоническая болезнь - 2024"'),
+			mk('primary', 'Ответы к тестам НМО: "Кардиомиопатия дилатационная"'),
+			mk('primary', 'Ответы к тестам НМО: "Инфаркт миокарда без подъёма ST"'),
 		];
-		const res = pickResult(results, 'rosmedicinfo', topic);
+		const res = pickResult(results, 'primary', topic);
 		expect(res?.title).toBe('Ответы к тестам НМО: "Кардиомиопатия дилатационная"');
 	});
 
 	it('нормализация тире/кавычек/регистра — match не пропадает', () => {
 		const topic = 'Шкала Стэнфорд—Бине у детей';
 		const results = [
-			mk('rosmedicinfo', 'ШКАЛА СТЭНФОРД-БИНЕ У ДЕТЕЙ'),
-			mk('rosmedicinfo', 'Совсем другая тема'),
+			mk('primary', 'ШКАЛА СТЭНФОРД-БИНЕ У ДЕТЕЙ'),
+			mk('primary', 'Совсем другая тема'),
 		];
-		expect(pickResult(results, 'rosmedicinfo', topic)?.title).toBe('ШКАЛА СТЭНФОРД-БИНЕ У ДЕТЕЙ');
+		expect(pickResult(results, 'primary', topic)?.title).toBe('ШКАЛА СТЭНФОРД-БИНЕ У ДЕТЕЙ');
 	});
 
 	it('при нескольких пересечениях по биграммам — выигрывает наиболее похожий (Dice)', () => {
 		// Ни один title не является подстрокой topic (и наоборот) — только Dice.
 		const topic = 'Хроническая обструктивная болезнь лёгких у пожилых';
 		const results = [
-			mk('rosmedicinfo', 'Бронхиальная астма у детей'),
-			mk('rosmedicinfo', 'Хроническая обструктивная болезнь лёгких: терапия и реабилитация'),
-			mk('rosmedicinfo', 'Острый бронхит'),
+			mk('primary', 'Бронхиальная астма у детей'),
+			mk('primary', 'Хроническая обструктивная болезнь лёгких: терапия и реабилитация'),
+			mk('primary', 'Острый бронхит'),
 		];
-		const res = pickResult(results, 'rosmedicinfo', topic);
+		const res = pickResult(results, 'primary', topic);
 		expect(res?.title).toBe('Хроническая обструктивная болезнь лёгких: терапия и реабилитация');
 	});
 });
@@ -310,9 +315,9 @@ describe('pickResult — БАГ репорт', () => {
 			'Ответы к тестам НМО: "Психические и поведенческие расстройства, вызванные употреблением психоактивных веществ (алкоголя, опиоидов, каннабиноидов, седативных и снотворных веществ, кокаина, других стимуляторов (кроме кофеина), летучих растворителей',
 			'Ответы к тестам НМО: "Психические и поведенческие расстройства, вызванные употреблением психоактивных веществ Абстинентное состояние (синдром отмены) с делирием (по утвержденным клиническим рекомендациям) - 2024"',
 			'Ответы к тестам НМО: "Психические и поведенческие расстройства, вызванные употреблением психоактивных веществ. Пагубное (с вредными последствиями) употребление (по утвержденным клиническим рекомендациям) - 2024"',
-		].map(t => mk('rosmedicinfo', t));
+		].map(t => mk('primary', t));
 
-		const res = pickResult(results, 'rosmedicinfo', topic);
+		const res = pickResult(results, 'primary', topic);
 		expect(res).toBeDefined();
 		expect(res.title).toContain('Ответы к тестам НМО: "Психические и поведенческие расстройства, вызванные употреблением психоактивных веществ (алкоголя, опиоидов, каннабиноидов, седативных и снотворных веществ, кокаина, других стимуляторов (кроме кофеина), летучих растворителей');
 	});

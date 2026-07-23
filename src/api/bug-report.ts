@@ -1,22 +1,21 @@
 /**
  * Клиентская логика отправки баг-репорта на {@link BUG_REPORT_ENDPOINT}.
  *
- * Кулдаун, дневной лимит и дедупликация зеркалируются на сервере — клиентские
- * проверки нужны только для UX (показать подсказку вместо кнопки), истина на
- * сервере. Значения лимитов подобраны под серверные: 5 мин между отправками,
- * 5 отчётов в сутки, дедуп на 7 дней.
+ * Клиентские проверки нужны для UX (показать подсказку вместо кнопки), сервер
+ * независимо повторно проверяет запрос. Клиентский дневной лимит временно
+ * строже серверного: 5 мин между отправками, 1 отчёт в сутки, дедуп на 7 дней.
  *
  * @module api/bug-report
  */
 
 import { storageGet, storageSet } from './storage';
-import { fetchViaBackground } from './fetch';
+import { fetchViaBackground } from './fetch/fetch';
 import { BUG_REPORT_ENDPOINT, BUG_REPORT_STORAGE_KEY } from '../utils/constants';
 
 /** Минимальный интервал между двумя отправками с одного устройства (мс) */
 const COOLDOWN_MS = 5 * 60 * 1000;
 /** Максимум отчётов за скользящие 24 часа */
-const DAILY_CAP = 5;
+const DAILY_CAP = 1;
 /** Окно «сегодня» для дневного лимита */
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Время жизни отпечатка в `sent` — сколько дедуп помнит отправленные отчёты */
@@ -27,13 +26,13 @@ const DEDUP_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * Повторяет контракт с `/opt/nmo-feedback/server.py::_handle_bug_report`.
  */
 export interface IBugReportPayload {
-	/** Активный верхний таб панели: auto / sites / ai / ai-pro / pdf */
+	/** Активный верхний таб панели: auto / sites / ai / pdf */
 	readonly panelMode?: string;
 	/** Детализация внутри таба: auto / sites:url / sites:search / ai:proxy / etc. */
 	readonly panelTab?: string;
-	/** URL страницы-источника ответов (rosmedicinfo.ru / 24forcare.com) */
+	/** URL страницы в одной из поддерживаемых баз ответов */
 	readonly activeUrl: string;
-	/** Ключ источника: `rosmedicinfo` / `24forcare` / '' если не определён */
+	/** Внутренний ключ базы ответов или `''`, если источник не определён */
 	readonly source: string;
 	/** Тема теста как отображается у пользователя */
 	readonly topic: string;

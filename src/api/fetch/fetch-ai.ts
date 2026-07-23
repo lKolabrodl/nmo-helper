@@ -1,43 +1,6 @@
-import { AI_URL } from '../utils/constants';
-
-export interface IRequestResponse {
-	readonly error: boolean;
-	readonly status: number;
-	readonly text: string;
-	readonly message?: string;
-}
-
-interface IRequestOptions {
-	readonly method?: string;
-	readonly headers?: Record<string, string> | null;
-	readonly body?: string | null;
-}
-
-/**
- * Выполняет HTTP-запрос из content-скрипта через background service worker.
- *
- * Content-скрипты Chrome-расширения не могут делать cross-origin запросы
- * напрямую из-за CORS, поэтому запрос отправляется сообщением
- * `chrome.runtime.sendMessage({ action: 'fetch', ... })` в background.ts,
- * который уже выполняет настоящий `fetch` и шлёт ответ обратно.
- *
- * Функция никогда не бросает: сетевые ошибки приходят как `{ error: true }`.
- *
- * @param url     Абсолютный URL запроса.
- * @param options HTTP-метод, заголовки и тело. По умолчанию `GET` без заголовков и тела.
- * @returns Промис, резолвящийся ответом от background. Никогда не реджектится.
- */
-export function fetchViaBackground(url: string, options: IRequestOptions = {}): Promise<IRequestResponse> {
-	return new Promise(resolve => {
-		chrome.runtime.sendMessage({
-			action: 'fetch',
-			url,
-			method: options.method || 'GET',
-			headers: options.headers || null,
-			body: options.body || null,
-		}, resolve);
-	});
-}
+import {AI_URL} from '../../utils/constants';
+import {buildPrompt, getApiModel} from '../../components/SectionAi/utils';
+import {fetchViaBackground, type IRequestResponse} from './fetch';
 
 /**
  * Отправляет вопрос теста в LLM через ProxyAPI (или кастомный endpoint) и
@@ -52,7 +15,7 @@ export function fetchViaBackground(url: string, options: IRequestOptions = {}): 
  * @param options  Варианты ответа в порядке, в котором они показаны пользователю.
  * @param isSingle `true` — ровно один правильный; `false` — допускается несколько.
  * @param topic    Название темы курса. Пустая строка — без темы в system-prompt.
- * @param model    ID модели (`gpt-4o`, `claude-3-opus`, `o3-mini` и т.д.).
+ * @param model    ID модели (`gpt-5.4-mini`, `claude-sonnet-5`, `gemini-3.5-flash` и т.д.).
  * @param endpoint Необязательный кастомный URL (например, self-hosted OpenAI-совместимый).
  *                 Если указан, модель шлётся как есть, без префикса провайдера.
  * @returns Массив 0-индексированных номеров вариантов, помеченных моделью как правильные.
@@ -116,57 +79,13 @@ export async function validateApiKey(apiKey: string, model: string, endpoint?: s
 	return true;
 }
 
-// help fn
-
-/**
- * Добавляет префикс провайдера к имени модели, как того требует ProxyAPI:
- * `claude-*` → `anthropic/claude-*`, `gemini-*` → `gemini/gemini-*`.
- * Модели OpenAI (и прочие) возвращаются без изменений.
- *
- * Для кастомных endpoint'ов префикс не нужен — вызывающий код сам решает,
- * применять ли эту функцию.
- *
- * @param model ID модели в том виде, как он хранится в настройках.
- * @returns Имя модели, готовое к отправке в ProxyAPI.
- */
-export function getApiModel(model: string): string {
-	if (model.startsWith('claude')) return 'anthropic/' + model;
-	if (model.startsWith('gemini')) return 'gemini/' + model;
-	return model;
-}
-
-/**
- * Собирает пару system/user-промптов для запроса к LLM.
- *
- * System-prompt делает модель «врачом-экспертом» по теме курса (если тема задана)
- * и задаёт клинический контекст (РФ-рекомендации). User-prompt содержит вопрос,
- * пронумерованные варианты и инструкцию по формату ответа — одна цифра или несколько
- * через запятую, в зависимости от {@link isSingle}.
- *
- * @param question Текст вопроса.
- * @param options  Варианты ответа (будут пронумерованы с 1).
- * @param isSingle Ожидается один ответ или несколько.
- * @param topic    Название темы. Пустая строка — без темы в system-prompt.
- * @returns `{ systemPrompt, userPrompt }` — готовые строки для поля `messages`.
- */
-export function buildPrompt(question: string, options: string[], isSingle: boolean, topic: string) {
-	const countHint = isSingle
-		? 'Правильный ответ ТОЛЬКО ОДИН. Ответь ОДНИМ номером, без пояснений. Например: 2'
-		: 'Правильных ответов может быть несколько. Ответь номерами через запятую, без пояснений. Например: 1,3';
-	const systemPrompt = topic
-		? `Ты врач-эксперт. Тема: ${topic}. Отвечай на вопросы теста, опираясь на актуальные клинические рекомендации РФ.`
-		: 'Ты эксперт. Отвечай на вопросы теста.';
-	const userPrompt = `Вопрос: ${question}\n\nВарианты:\n${options.map((o, i) => `${i + 1}) ${o}`).join('\n')}\n\n${countHint}`;
-
-	return { systemPrompt, userPrompt };
-}
-
 /**
  * Собирает URL и `RequestInit` для chat-completion запроса.
  *
- * Reasoning-модели (`o1`/`o3`/`gpt-5`) не принимают поле `temperature` —
- * для них оно не включается в тело. Для кастомного endpoint'а модель шлётся
- * как есть, без префикса провайдера (см. {@link getApiModel}).
+ * `temperature` намеренно не задаётся: она не нужна для ответа одним номером,
+ * а новые Claude отклоняют её нестандартное значение с HTTP 400. Для кастомного
+ * endpoint'а модель шлётся как есть, без префикса провайдера
+ * (см. {@link getApiModel}).
  *
  * @param apiKey       Bearer-токен.
  * @param model        ID модели.
@@ -176,8 +95,6 @@ export function buildPrompt(question: string, options: string[], isSingle: boole
  * @returns `{ url, init }` для передачи в {@link fetchViaBackground}.
  */
 export function buildRequest(apiKey: string, model: string, systemPrompt: string, userPrompt: string, endpoint?: string) {
-	const isReasoning = /^o\d/.test(model) || /^gpt-5/.test(model);
-
 	const body: Record<string, unknown> = {
 		model: endpoint ? model : getApiModel(model),
 		messages: [
@@ -185,7 +102,6 @@ export function buildRequest(apiKey: string, model: string, systemPrompt: string
 			{ role: 'user', content: userPrompt },
 		],
 	};
-	if (!isReasoning) body.temperature = 0.2;
 
 	return {
 		url: endpoint || AI_URL,

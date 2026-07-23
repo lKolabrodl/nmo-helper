@@ -1,5 +1,6 @@
 import { SELECTORS } from '../utils/constants';
 
+/** Ключ группы fallback-селекторов из {@link SELECTORS}. */
 type SelectorKey = keyof typeof SELECTORS;
 
 /**
@@ -144,6 +145,9 @@ export function isSingleAnswer(): boolean {
  * В Material-разметке текст варианта лежит внутри label, а input — соседним
  * элементом в `.mdc-form-field`. Этот helper инкапсулирует обход разметки,
  * чтобы loader'ы не дублировали селекторы.
+ *
+ * @param variantElement DOM-элемент варианта из {@link getVariantElements}.
+ * @returns Связанный radio/checkbox input или `null`, если он не найден.
  */
 export function getAnswerInput(variantElement: HTMLElement): HTMLInputElement | null {
 	const field = variantElement.closest<HTMLElement>('.mdc-form-field');
@@ -156,14 +160,19 @@ export function getAnswerInput(variantElement: HTMLElement): HTMLInputElement | 
 		if (isAnswerInput(input)) return input;
 	}
 
-	const root = variantElement.closest<HTMLElement>(
-		'mat-radio-button, mat-checkbox, mat-list-item, .radio-button_answer, .checkbox-button_answer'
-	);
+	const root = variantElement.closest<HTMLElement>('mat-radio-button, mat-checkbox, mat-list-item, .radio-button_answer, .checkbox-button_answer');
 	return root ? queryFirst<HTMLInputElement>('answerInput', root) : null;
 }
 
 /**
  * Лучший кликабельный элемент для выбора варианта.
+ *
+ * Приоритет поиска: связанный `label`, `label` внутри `.mdc-form-field`,
+ * Material touch target, нативный input и, в последнюю очередь, сам вариант.
+ * Последний fallback гарантирует, что функция всегда вернёт элемент.
+ *
+ * @param variantElement DOM-элемент варианта из {@link getVariantElements}.
+ * @returns Элемент, клик по которому выбирает переданный вариант.
  */
 export function getAnswerClickTarget(variantElement: HTMLElement): HTMLElement {
 	const field = variantElement.closest<HTMLElement>('.mdc-form-field');
@@ -177,14 +186,20 @@ export function getAnswerClickTarget(variantElement: HTMLElement): HTMLElement {
 
 /**
  * Кнопка перехода после ответа: «Следующий вопрос» или финальная «Завершить тестирование».
+ *
+ * @returns Первая подходящая кнопка навигации или `null`, если её нет на странице.
  */
 export function getNextQuestionButton(): HTMLButtonElement | null {
-	return queryAll<HTMLButtonElement>('nextQuestionButton')
-		.find(isQuestionForwardButton) ?? null;
+	return queryAll<HTMLButtonElement>('nextQuestionButton').find(isQuestionForwardButton) ?? null;
 }
 
 /**
  * Блок действий теста рядом с кнопкой «Завершить тестирование».
+ *
+ * Сначала ищет контейнер найденной кнопки завершения, затем использует
+ * fallback-цепочку `quizActions` для совместимости с другой версией вёрстки.
+ *
+ * @returns Контейнер действий теста или `null`, если он не найден.
  */
 export function getQuizActionsElement(): HTMLElement | null {
 	const finishButton = getFinishQuizButton();
@@ -194,6 +209,12 @@ export function getQuizActionsElement(): HTMLElement | null {
 
 /**
  * Кнопка «Завершить тестирование».
+ *
+ * Кандидаты дополнительно проверяются по тексту и служебным классам, чтобы
+ * широкий fallback-селектор не вернул постороннюю кнопку.
+ *
+ * @param root Корень поиска. По умолчанию — весь `document`.
+ * @returns Первая подходящая кнопка или `null`, если она не найдена.
  */
 export function getFinishQuizButton(root: ParentNode = document): HTMLButtonElement | null {
 	return queryAll<HTMLButtonElement>('finishQuizButton', root)
@@ -202,39 +223,82 @@ export function getFinishQuizButton(root: ParentNode = document): HTMLButtonElem
 
 /**
  * Кнопка «Да» в модалке подтверждения завершения тестирования.
+ *
+ * Помимо текста кнопки проверяет текст родительского диалога, чтобы не выбрать
+ * другое подтверждение «Да», которое одновременно появилось на странице.
+ *
+ * @param root Корень поиска. По умолчанию — весь `document`.
+ * @returns Кнопка подтверждения или `null`, если нужная модалка не открыта.
  */
 export function getFinishQuizConfirmButton(root: ParentNode = document): HTMLButtonElement | null {
 	return queryAll<HTMLButtonElement>('finishQuizConfirmButton', root)
 		.find(isFinishQuizConfirmButton) ?? null;
 }
 
+/**
+ * Проверяет, что элемент — нативный переключатель варианта ответа.
+ *
+ * @param element Проверяемый DOM-элемент.
+ * @returns `true`, если это radio- или checkbox-input.
+ */
 function isAnswerInput(element: HTMLElement | null): element is HTMLInputElement {
 	return element instanceof HTMLInputElement && (element.type === 'radio' || element.type === 'checkbox');
 }
 
+/**
+ * Распознаёт кнопку «Следующий вопрос» по тексту или иконке стрелки вправо.
+ *
+ * @param button Проверяемая кнопка.
+ * @returns `true`, если кнопка переводит к следующему вопросу.
+ */
 function isNextQuestionButton(button: HTMLButtonElement): boolean {
 	const text = button.textContent?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
 	if (text.includes('следующий вопрос')) return true;
 	return !!button.querySelector('[svgicon="arrow-right"]');
 }
 
+/**
+ * Проверяет, продолжает ли кнопка прохождение теста после текущего ответа.
+ *
+ * @param button Проверяемая кнопка.
+ * @returns `true` для перехода к следующему вопросу или завершения последнего.
+ */
 function isQuestionForwardButton(button: HTMLButtonElement): boolean {
 	return isNextQuestionButton(button) || isQuestionFinishButton(button);
 }
 
+/**
+ * Распознаёт финальную кнопку в блоке навигации текущего вопроса.
+ *
+ * @param button Проверяемая кнопка.
+ * @returns `true`, если кнопка завершает тест после последнего вопроса.
+ */
 function isQuestionFinishButton(button: HTMLButtonElement): boolean {
 	const text = button.textContent?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
 	return text.includes('завершить тестирование')
 		&& !!button.closest('.question-buttons');
 }
 
+/**
+ * Отфильтровывает кнопку завершения теста среди кандидатов fallback-селекторов.
+ *
+ * @param button Проверяемая кнопка.
+ * @returns `true`, если текст или сочетание класса и контейнера указывают на кнопку завершения.
+ */
 function isFinishQuizButton(button: HTMLButtonElement): boolean {
 	const text = button.textContent?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
 	if (text.includes('завершить тестирование')) return true;
+
 	return button.classList.contains('quiz-buttons-primary')
 		&& !!button.closest('mat-card-actions, .mat-mdc-card-actions, .mdc-card__actions');
 }
 
+/**
+ * Проверяет, что кнопка «Да» принадлежит диалогу выхода из тестирования.
+ *
+ * @param button Проверяемая кнопка подтверждения.
+ * @returns `true`, если кнопка подтверждает завершение текущего теста.
+ */
 function isFinishQuizConfirmButton(button: HTMLButtonElement): boolean {
 	const text = button.textContent?.replace(/\s+/g, ' ').trim().toLowerCase() ?? '';
 	if (text !== 'да') return false;

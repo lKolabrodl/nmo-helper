@@ -4,7 +4,7 @@
  */
 
 export { storageGet, storageSet } from '../api/storage';
-export { fetchViaBackground } from '../api/fetch';
+export { fetchViaBackground } from '../api/fetch/fetch';
 export { parseHtml } from './html';
 export { cleanTopic, normalizeDashes, normalizeText } from './text';
 export { similarity, detectSource, pickResult } from './matching';

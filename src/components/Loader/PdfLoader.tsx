@@ -65,15 +65,12 @@ const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
 				const {answerQuestion} = await loadMedPdfNmo();
 				if (cancelled) return;
 
-				const result = await answerQuestion(new Uint8Array(pdfData.slice(0)), {
-					question,
-					variants,
-					type: isSingle ? 'single' : 'multi',
-				});
+				const options = {question, variants, type: isSingle ? 'single' : 'multi', includeSources: true};
+				const result = await answerQuestion(new Uint8Array(pdfData.slice(0)), options);
 
 				if (cancelled) return;
 
-				setPdfScore(topic ?? '', question, variants, toPdfScoreVariants(variants, result.scores, result.selected));
+				setPdfScore(topic ?? '', question, variants, toPdfScoreVariants(variants, result.scores, result.selected), result.sources);
 
 				if (!result.selected.length) {
 					setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
@@ -106,6 +103,18 @@ const PdfLoader = ({pdfData, onChange}: IPdfLoaderProps) => {
 
 export default PdfLoader;
 
+/**
+ * Преобразует результаты анализа PDF в варианты ответов для отображения.
+ *
+ * Сопоставляет оценки с исходными вариантами по нормализованному тексту,
+ * сохраняя их порядок. Если тексты не совпали, использует оценку с тем же
+ * индексом; для отсутствующей оценки подставляет идентификатор индекса и ноль.
+ *
+ * @param variants Исходные варианты ответа.
+ * @param scores Оценки вариантов, полученные при анализе PDF.
+ * @param selected Тексты вариантов, выбранных анализатором.
+ * @returns Варианты ответа с оценками и признаком выбора.
+ */
 function toPdfScoreVariants(variants: string[], scores: Array<{readonly id: string; readonly variant: string; readonly score: number; readonly raw: number}>, selected: string[]): IPdfScoreVariant[] {
 	const scoreByTitle = new Map(scores.map(score => [norm(score.variant), score]));
 	const selectedTitles = new Set(selected.map(norm));

@@ -1,17 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-vi.mock('./fetch', () => ({
+vi.mock('./fetch/fetch', () => ({
 	fetchViaBackground: vi.fn(),
 }));
 
-import { fetchViaBackground } from './fetch';
-import { BUG_REPORT_STORAGE_KEY } from '../utils/constants';
-import {
-	computeFingerprint,
-	canSubmitBugReport,
-	submitBugReport,
-	type IBugReportPayload,
-} from './bug-report';
+import {fetchViaBackground} from './fetch/fetch';
+import {BUG_REPORT_STORAGE_KEY} from '../utils/constants';
+import {computeFingerprint, canSubmitBugReport, submitBugReport, type IBugReportPayload} from './bug-report';
 
 const mockFetch = fetchViaBackground as unknown as ReturnType<typeof vi.fn>;
 
@@ -26,12 +21,12 @@ function makePayload(overrides: Partial<IBugReportPayload> = {}): IBugReportPayl
 		panelMode: 'auto',
 		panelTab: 'auto',
 		activeUrl: 'https://example.com/test',
-		source: 'rosmedicinfo',
+		source: 'primary',
 		topic: 'Кардиология - 2024',
 		question: 'Какой диагноз?',
 		questionHtml: '<p>Какой диагноз?</p>',
 		variants: ['A', 'B', 'C'],
-		extVersion: '4.0.0',
+		extVersion: '4.3.0',
 		userAgent: 'Test/1.0',
 		...overrides,
 	};
@@ -106,12 +101,12 @@ describe('canSubmitBugReport', () => {
 		expect(gate).toEqual({ ok: true });
 	});
 
-	it('history.length >= 5 за 24ч → daily_cap', async () => {
+	it('history.length >= 1 за 24ч → daily_cap', async () => {
 		const now = Date.now();
-		// пять недавних отправок + старый lastSentAt (чтобы не триггерить cooldown)
+		// недавняя отправка + старый lastSentAt (чтобы не триггерить cooldown)
 		await resetStorage({
 			sent: {},
-			history: [now - 1000, now - 2000, now - 3000, now - 4000, now - 5000],
+			history: [now - 1000],
 			lastSentAt: now - 10 * 60_000,
 		});
 		const gate = await canSubmitBugReport('fp1');
@@ -123,7 +118,7 @@ describe('canSubmitBugReport', () => {
 		const dayMs = 24 * 60 * 60 * 1000;
 		await resetStorage({
 			sent: {},
-			history: [now - dayMs - 1000, now - dayMs - 2000, now - dayMs - 3000, now - dayMs - 4000, now - dayMs - 5000],
+			history: [now - dayMs - 1000],
 			lastSentAt: now - 10 * 60_000,
 		});
 		const gate = await canSubmitBugReport('fp1');

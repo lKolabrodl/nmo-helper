@@ -22,11 +22,12 @@ export function createPanel(state: IExtensionState): HTMLElement {
 
 const DRAG_HANDLES = '.nmo-titlebar, .nmo-pill, .nmo-footer';
 const INTERACTIVE = 'button, a, input, textarea, select, label';
+const MIN_VISIBLE_SIZE = 8;
 
 export function initPanelBehavior(panel: HTMLElement): void {
 	let isDragging = false;
 	let dx = 0, dy = 0;
-	let panelWidth = 0;
+	let panelWidth = 0, panelHeight = 0;
 
 	panel.addEventListener('mousedown', (e: MouseEvent) => {
 		const target = e.target as HTMLElement;
@@ -39,6 +40,7 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		dx = e.clientX - rect.left;
 		dy = e.clientY - rect.top;
 		panelWidth = rect.width;
+		panelHeight = rect.height;
 		isDragging = true;
 		panel.style.willChange = 'right, top';
 	});
@@ -47,11 +49,17 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		if (!isDragging) return;
 		e.preventDefault();
 		requestAnimationFrame(() => {
-			const newLeft = e.clientX - dx;
-			const right = document.documentElement.clientWidth - (newLeft + panelWidth);
-			panel.style.right = right + 'px';
-			panel.style.left = 'auto';
-			panel.style.top = (e.clientY - dy) + 'px';
+			const viewportWidth = document.documentElement.clientWidth;
+			const viewportHeight = document.documentElement.clientHeight;
+			const position = constrainPanelPosition(
+				e.clientX - dx,
+				e.clientY - dy,
+				panelWidth,
+				panelHeight,
+				viewportWidth,
+				viewportHeight,
+			);
+			applyPanelPosition(panel, position.left, position.top, panelWidth, viewportWidth);
 		});
 	});
 
@@ -64,4 +72,29 @@ export function initPanelBehavior(panel: HTMLElement): void {
 		storageSet('panelRight', right);
 		storageSet('panelTop', rect.top);
 	});
+}
+
+interface IPanelPosition {
+	readonly left: number;
+	readonly top: number;
+}
+
+export function constrainPanelPosition(left: number, top: number, panelWidth: number, panelHeight: number, viewportWidth: number, viewportHeight: number): IPanelPosition {
+	const visibleWidth = Math.min(MIN_VISIBLE_SIZE, panelWidth, viewportWidth);
+	const visibleHeight = Math.min(MIN_VISIBLE_SIZE, panelHeight, viewportHeight);
+	const minLeft = visibleWidth - panelWidth;
+	const maxLeft = viewportWidth - visibleWidth;
+	const maxTop = viewportHeight - visibleHeight;
+
+	return {
+		left: Math.min(Math.max(left, minLeft), maxLeft),
+		// Заголовок расположен сверху: не даём ему уйти за верхнюю границу.
+		top: Math.min(Math.max(top, 0), maxTop),
+	};
+}
+
+function applyPanelPosition(panel: HTMLElement, left: number, top: number, panelWidth: number, viewportWidth: number): void {
+	panel.style.right = viewportWidth - (left + panelWidth) + 'px';
+	panel.style.left = 'auto';
+	panel.style.top = top + 'px';
 }

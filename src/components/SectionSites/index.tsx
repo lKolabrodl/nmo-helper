@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import cn from 'classnames';
 import './styles.scss';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
@@ -10,25 +11,29 @@ import {findAnswers, extractCases} from '../../utils/cases';
 import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
-import type {IVariantModel} from '../Loader/VariantLoader';
+import type {ISearchResult, IVariantModel} from '../Loader/VariantLoader';
 import {Status} from '../../types';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
-import {IconPlay, IconSearch, IconStar} from '../icons';
-import InlineToast, {type IToast} from '../ui/InlineToast';
+import {IconPlay, IconSearch} from '../icons';
+import InlineToast from '../ui/InlineToast';
+import SearchResults from './components/SearchResults';
+import {formatUrlForDisplay, SOURCE_DETAILS, statusToToast} from './utils';
 
 type Tab = 'url' | 'search';
 
-const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
+const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
+	// context
 	const {status, setStatus} = usePanelStatus();
 	const {question, variants, topic} = useQuestionFinder();
 	const {setBugReportContext} = useBugReportContext();
 
+	// url
 	const [tab, setTab] = useState<Tab>('search');
 	const [url, setUrlRaw] = useState(initialUrl);
 	const [activeUrl, setActiveUrl] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeSearch, setActiveSearch] = useState('');
-
+	//
 	const [variantModel, setVariantModel] = useState<IVariantModel>({loading: false, error: null, data: []});
 	const [answerModel, setAnswerModel] = useState<IAnswerModel>({loading: false, error: null, data: null});
 
@@ -47,7 +52,7 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		else if (state.data) setStatus({title: StatusTitle.RUNNING, status: Status.OK});
 	};
 
-	const _updateSearchUrl = (state: IVariantModel) => {
+	const _updateSearchUrl = (state: IVariantModel): void => {
 		setVariantModel(state);
 		if (state.loading) setStatus({title: StatusTitle.SEARCHING, status: Status.LOADING});
 		else if (state.error) setStatus({title: state.error, status: Status.WARN});
@@ -59,20 +64,17 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		setActiveSearch(searchQuery.trim());
 	};
 
-	const selectResult = (result: {url: string}) => {
+	const _onSelectResult = (result: ISearchResult): void => {
 		setUrl(result.url);
-		setActiveSearch('');
-		setVariantModel({loading: false, error: null, data: []});
 		setActiveUrl(result.url);
-		setTab('url');
 	};
 
-	const run = () => {
+	const _run = (): void => {
 		if (!url.trim()) return setStatus({title: StatusTitle.ENTER_URL, status: Status.ERR});
 		setActiveUrl(url.trim());
 	};
 
-	const stop = () => {
+	const _stop = (): void => {
 		setActiveUrl('');
 		setAnswerModel({loading: false, error: null, data: null});
 		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
@@ -87,12 +89,13 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 		const model = extractCases(source, answerModel.data);
 		const found = findAnswers(model, question, variants);
+
 		if (!found) return setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
 		if (!found.answers.length) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});
 
 		answerCache.set(topic ?? '', question, variants, found.answers);
 
-		const label = source === 'rosmedicinfo' ? 'rosmed' : '24forcare';
+		const label = SOURCE_DETAILS[source].label;
 
 		if (found.score < LOW_CONFIDENCE_THRESHOLD) {
 			setStatus({title: `${StatusTitle.ANSWER_LOW_CONFIDENCE} • ${label}`, status: Status.WARN});
@@ -112,12 +115,6 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const isError = status.status === Status.ERR;
 	const isOk = status.status === Status.OK;
 
-	const results = [...variantModel.data].sort((a, b) => {
-		const ar = a.source === 'rosmedicinfo' ? 0 : 1;
-		const br = b.source === 'rosmedicinfo' ? 0 : 1;
-		return ar - br;
-	});
-
 	const canSearch = searchQuery.trim().length > 0 && !variantModel.loading;
 
 	return (
@@ -127,12 +124,12 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 			<div className="nmo-section-inner">
 				<div className="nmo-sub-tabs">
-					<button type="button"
-						className={tab === 'search' ? 'active' : ''}
-						onClick={() => setTab('search')}>Найти тест</button>
-					<button type="button"
-						className={tab === 'url' ? 'active' : ''}
-						onClick={() => setTab('url')}>URL</button>
+					<button type="button" className={cn({active: tab === 'search'})} onClick={() => setTab('search')}>
+						Найти тест
+					</button>
+					<button type="button" className={cn({active: tab === 'url'})}	onClick={() => setTab('url')}>
+						URL
+					</button>
 				</div>
 
 				{tab === 'url' ? (
@@ -141,15 +138,15 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 						<input type="text"
 							className="nmo-input mono"
 							placeholder="https://example.com/answers"
-							value={url}
+							value={formatUrlForDisplay(url)}
 							onChange={e => setUrl(e.target.value)}/>
 						<div className="nmo-sites-help">
-							Поддерживаются только на rosmedicinfo, 24force
+							Поддерживаются базы поиска ответов и nmo-helper
 						</div>
 					</div>
 				) : (
 					<div className="nmo-fade-up">
-						<label className="nmo-label">Вставьте текст или название теста</label>
+						<label className="nmo-label">Вставьте название теста</label>
 						<textarea className="nmo-input"
 							rows={2}
 							value={searchQuery}
@@ -173,29 +170,10 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 							)}
 						</button>
 
-						{results.length > 0 && (
-							<div className="nmo-results nmo-fade-up">
-								<div className="nmo-results-meta">
-									Найдено: {results.length} {plural(results.length)}
-								</div>
-								<div className="nmo-results-list">
-									{results.map((r, i) => (
-										<button key={i} type="button"
-											className="nmo-results-item"
-											title={r.title}
-											onClick={() => selectResult(r)}>
-											<div className="nmo-results-title">{r.title}</div>
-											<div className="nmo-results-meta-row">
-												<span className={`nmo-results-src ${r.source === 'rosmedicinfo' ? 'rosmed' : 'fc'}`}>
-													{r.source === 'rosmedicinfo' ? 'rosmed' : '24fc'}
-													{r.source === 'rosmedicinfo' && <> <IconStar size={9}/></>}
-												</span>
-											</div>
-										</button>
-									))}
-								</div>
-							</div>
-						)}
+						<SearchResults
+							results={variantModel.data}
+							selectedUrl={url}
+							onSelect={_onSelectResult}/>
 					</div>
 				)}
 			</div>
@@ -204,36 +182,23 @@ const SitesSection: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 			{(tab === 'url' || isRunning) && (
 				<div className="nmo-footer">
-					{!isRunning ? (
+					{!isRunning &&
 						<button type="button"
 							className="nmo-btn nmo-btn-primary nmo-btn-cta"
 							disabled={!url.trim() || answerModel.loading}
-							onClick={run}>
+							onClick={_run}>
 							<IconPlay size={14}/>Запустить
 						</button>
-					) : (
-						<button type="button"
-							className="nmo-btn nmo-btn-stop nmo-btn-cta"
-							onClick={stop}>
+					}
+					{isRunning &&
+						<button type="button" className="nmo-btn nmo-btn-stop nmo-btn-cta" onClick={_stop}>
 							Остановить
 						</button>
-					)}
+					}
 				</div>
 			)}
 		</div>
 	);
 };
 
-export default SitesSection;
-
-function plural(n: number): string {
-	if (n === 1) return 'тест';
-	if (n < 5) return 'теста';
-	return 'тестов';
-}
-
-function statusToToast(title: string, status: typeof Status[keyof typeof Status]): IToast {
-	if (status === Status.OK)   return {kind: 'success', title};
-	if (status === Status.ERR)  return {kind: 'danger',  title};
-	return {kind: 'warning', title};
-}
+export default SectionSites;
