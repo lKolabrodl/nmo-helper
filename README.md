@@ -8,7 +8,7 @@
 [![Downloads](https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper/releases)
 [![Stars](https://img.shields.io/github/stars/lKolabrodl/nmo-helper?style=flat-square&color=fbbf24&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/lKolabrodl/nmo-helper/blob/main/LICENSE)
-[![VirusTotal](https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/fb6bee3d7fe89b5d6f69d5d4e1353f793f43aba5970573b1906ed87db2908721?nocache=1)
+[![VirusTotal](https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/dd746259d7a4eefdaadd88e33c2fec39eca2ee848b05cee036a6713b29459c7d?nocache=1)
 
 🌐 **Сайт:** [nmo-helper.ru](https://nmo-helper.ru)<br>
 📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)<br>
@@ -141,61 +141,19 @@
 
 ```
 src/
-├── content.ts                  # Точка входа (content-script)
-├── content.scss                # Общие стили панели
-├── vars.scss                   # SCSS-переменные (цвета, размеры, шрифты)
-├── App.tsx                     # Корневой React-компонент
-├── Panel.tsx                   # Создание панели + drag
-├── background.ts               # Service worker (CORS proxy)
-├── types.ts                    # Типы и интерфейсы
-├── popup.html / popup.css / popup.js # Popup при клике на иконку
-├── manifest.*.json             # Манифесты Chrome / Firefox / AMO
-│
-├── components/
-│   ├── Header/                 # Хедер с индикатором статуса
-│   ├── VersionCheck/           # Проверка доступной версии
-│   ├── TabBar/                 # Таб-бар (Авто / Сайты / AI / PDF)
-│   ├── CollapsedPill/          # Свернутая плавающая панель
-│   ├── AutoSection/            # Авто-режим
-│   ├── SitesSection/           # Ручной режим
-│   ├── AiSection/              # AI-режим (ProxyAPI + свой endpoint)
-│   ├── PdfSection/             # PDF-режим: поиск по клиническим рекомендациям
-│   ├── ModelDropdown/          # Выбор AI-модели
-│   ├── BugReportButton/        # Кнопка отправки баг-репорта
-│   ├── ErrorBoundary/          # Перехват ошибок рендера
-│   ├── Loader/                 # Headless-компоненты (загрузка, подсветка)
-│   ├── ui/                     # Общие UI-компоненты панели
-│   └── icons.tsx               # SVG-иконки интерфейса
-│
-├── contexts/
-│   ├── PanelUiContext.tsx       # UI-состояние (режим, свёрнутость)
-│   ├── PanelStatusContext.tsx   # Статус per-mode
-│   ├── PdfScoreContext.tsx      # Score вариантов в PDF-режиме (только в памяти)
-│   ├── BugReportContext.tsx     # Контекст текущего tab/mode для баг-репортов
-│   └── QuestionFinderContext.tsx # Отслеживание вопроса на странице
-│
-├── api/                         # Обёртки над браузерными API и сетью
-│   ├── dom.ts                   # DOM-запросы с fallback-цепочками селекторов
-│   ├── fetch.ts                 # Fetch через background (CORS bypass)
-│   ├── storage.ts               # Обёртки chrome.storage
-│   ├── version-check.ts         # Проверка новых релизов
-│   └── bug-report.ts            # Отправка баг-репортов на сервер
-│
-├── libs/                        # Локальные мини-утилиты (замена npm-зависимостям)
-│   ├── debounce.ts              # debounce без lodash — обходим CSP в Firefox MV3
-│   └── index.ts                 # Реэкспорты локальных библиотек
-│
-├── icons/                       # Иконки расширения для manifest/action
-│
-└── utils/                       # Чистые функции без сайд-эффектов
-    ├── answer-cache.ts          # Кеш ответов (topic, question, variants) → answers
-    ├── cases.ts                 # Диспатчер: extractCases + findAnswers (top-1 assignment)
-    ├── extractors.ts            # Парсеры раскладок баз ответов
-    ├── matching.ts              # matchQuestion / variantScore / similarity
-    ├── text.ts                  # Нормализация (тире, омоглифы, кавычки, пробелы)
-    ├── html.ts                  # HTML-санитизация и парсинг
-    ├── constants.ts             # Константы (селекторы, статусы, модели)
-    └── index.ts                 # Реэкспорты для удобного импорта
+├── api/               # DOM, сеть, хранилище, обновления и баг-репорты
+├── components/        # React-компоненты режимов Авто, Сайты, AI и PDF
+├── contexts/          # Общее состояние панели и текущего вопроса
+├── icons/             # Иконки расширения
+├── libs/              # Локальные вспомогательные библиотеки
+├── utils/             # Парсинг, сопоставление и нормализация текста
+├── App.tsx            # Корневой React-компонент
+├── Panel.tsx          # Панель расширения
+├── content.ts         # Точка входа content script
+├── background.ts      # Service worker и сетевой proxy
+└── manifest.*.json    # Манифесты Chrome, Firefox и AMO
+
+build.js               # Сборка расширения
 ```
 
 ### Сборка
@@ -214,7 +172,7 @@ npm test            # Запустить тесты
 Расширение **не собирает данные**, **не требует регистрации**, **не отправляет аналитику** и **не подсовывает реферальные ссылки**. Но не верьте на слово — проверьте сами:
 
 - Исходный код открыт на GitHub
-- Проверено через [VirusTotal](https://www.virustotal.com/gui/file/fb6bee3d7fe89b5d6f69d5d4e1353f793f43aba5970573b1906ed87db2908721?nocache=1)
+- Проверено через [VirusTotal](https://www.virustotal.com/gui/file/dd746259d7a4eefdaadd88e33c2fec39eca2ee848b05cee036a6713b29459c7d?nocache=1)
 - Подписано и опубликовано в [Firefox Add-ons](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/)
 - PDF-файлы обрабатываются локально в браузере и не отправляются на сервер
 - Баг-репорт отправляется только вручную после подтверждения пользователя
@@ -231,6 +189,7 @@ npm test            # Запустить тесты
 
 Ниже только последние релизы минорных веток. Полная история доступна в [GitHub Releases](https://github.com/lKolabrodl/nmo-helper/releases).
 
+- [v4.2.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.2.0) — автоответ с настраиваемым интервалом
 - [v4.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v4.1.1) — обновление подписанного Firefox-пакета
 - [v4.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.0.0) — крупное обновление панели и подготовка к релизам 4.x
 - [v3.1.5](https://github.com/lKolabrodl/nmo-helper/tree/v3.1.5) — мелкие правки extractor'ов и баг-репорта
