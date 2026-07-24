@@ -332,7 +332,7 @@ describe('extractPrimaryH3Highlighted', () => {
 	});
 
 	it('пропускает h3 без последующего <p>', () => {
-		const div = createDiv(`<h3>Q</h3><div>x</div>`);
+		const div = createDiv('<h3>Q</h3><div>x</div>');
 		expect(extractPrimaryH3Highlighted(div)).toEqual([]);
 	});
 });
@@ -632,7 +632,7 @@ describe('extractPrimaryFlatBr', () => {
 
 describe('extractors — общие свойства', () => {
 	it('все пропускают сигнал пустой строки (нет вариантов)', () => {
-		const div = createDiv(`<h3>Q</h3><p></p>`);
+		const div = createDiv('<h3>Q</h3><p></p>');
 		expect(extractSecondaryH3Strong(div)).toEqual([]);
 		expect(extractPrimaryH3Highlighted(div)).toEqual([]);
 		expect(extractPrimaryH3BrPlus(div)).toEqual([]);

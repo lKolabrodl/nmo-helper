@@ -55,11 +55,11 @@ export type ISourceKey = 'primary' | 'secondary' | 'nmo-helper';
 
 /** Варианты статуса панели */
 export const Status = {
-  IDLE: 'idle',
-  OK: 'ok',
-  ERR: 'err',
-  WARN: 'warn',
-  LOADING: 'loading',
+	IDLE: 'idle',
+	OK: 'ok',
+	ERR: 'err',
+	WARN: 'warn',
+	LOADING: 'loading',
 } as const;
 
 export type StatusType = typeof Status[keyof typeof Status];

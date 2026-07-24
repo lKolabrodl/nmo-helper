@@ -21,8 +21,8 @@ const CustomEndpoint: React.FC<ICustomEndpointProps> = ({onBusyChange}) => {
 	const {status, setStatus} = usePanelStatus();
 
 	// state
-	const [aiRunning, setAiRunning] = useState<Boolean>(false);
-	const [aiDisabled, setAiDisabled] = useState<Boolean>(false);
+	const [aiRunning, setAiRunning] = useState<boolean>(false);
+	const [aiDisabled, setAiDisabled] = useState<boolean>(false);
 
 	const _run = async (): Promise<void> => {
 		if (!customAiUrl.trim())   return setStatus({title: 'введите API endpoint', status: Status.ERR});
