@@ -39,13 +39,11 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 	const setUrl = (v: string) => { setUrlRaw(v); storageSet('customUrl', v); };
 
+	// для дебаг мода
+	useEffect(() => setBugReportContext({mode: `sites:${tab}`, url: activeUrl}), [activeUrl, setBugReportContext, tab]);
+
 	const _updateHtml = (state: IAnswerModel) => {
 		setAnswerModel(state);
-		
-		// баг лог
-		if (activeUrl) {
-			setBugReportContext({panelMode: 'sites', panelTab: tab === 'search' ? 'sites:search' : 'sites:url',	activeUrl});
-		}
 
 		if (state.loading) setStatus({title: StatusTitle.LOADING_ANSWERS, status: Status.LOADING});
 		else if (state.error) setStatus({title: state.error, status: Status.ERR});

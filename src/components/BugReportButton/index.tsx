@@ -8,23 +8,15 @@ import {useBugReportContext} from '../../contexts/BugReportContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {getQuestionHtml} from '../../utils';
 import {detectSource} from '../../utils/matching';
-import {
-	canSubmitBugReport,
-	computeFingerprint,
-	submitBugReport,
-	type BugReportGate,
-	type BugReportResult,
-} from '../../api/bug-report';
+import {canSubmitBugReport, computeFingerprint, submitBugReport} from '../../api/bug-report';
 import {checkVersion, isOutdated} from '../../api/version-check';
 import {IconBug, IconCheck, IconClose, IconWarn} from '../icons';
 import {formatUrlForDisplay} from '../SectionSites/utils';
+import {formatReportMode, gateStatus, getBrowserInfo, resolveBugReportContext, resultStatus} from './utils';
 
 const EXT_VERSION = (typeof chrome !== 'undefined' && chrome.runtime?.getManifest?.()?.version) || '';
 
-
-
 interface IBugReportButtonProps {
-	readonly activeUrl?: string;
 	/** Контролируемый режим: открыт ли диалог. Если undefined — компонент управляет сам через свой trigger-pill */
 	readonly isOpen?: boolean;
 	/** Запрос на закрытие (controlled режим) */
@@ -33,9 +25,9 @@ interface IBugReportButtonProps {
 	readonly hideTrigger?: boolean;
 }
 
-const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlProp, isOpen: openProp, onClose, hideTrigger}) => {
+const BugReportButton: React.FC<IBugReportButtonProps> = ({isOpen: openProp, onClose, hideTrigger}) => {
 	// context
-	const {mode} = usePanelUi();
+	const {mode: panelMode} = usePanelUi();
 	const {aiProvider} = useSettings();
 	const reportContext = useBugReportContext();
 	const {rawTopic, question, variants} = useQuestionFinder();
@@ -46,15 +38,9 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlP
 	const [message, setMessage] = useState<string>('');
 	const [openLocal, setOpenLocal] = useState<boolean>(false);
 
+	const {mode: reportMode, url} = resolveBugReportContext(reportContext, panelMode, aiProvider);
 
-	const contextMatchesMode = reportContext.panelMode === mode;
-	const activeUrl = activeUrlProp ?? (contextMatchesMode ? reportContext.activeUrl : '');
-
-	const panelTab = mode === 'ai'
-		? `ai:${aiProvider}`
-		: contextMatchesMode ? reportContext.panelTab : mode;
-
-	const source = detectSource(activeUrl) ?? '';
+	const source = detectSource(url) ?? '';
 
 	const controlled = openProp !== undefined;
 
@@ -63,7 +49,7 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlP
 
 	useEffect(() => {
 		let cancelled = false;
-		const fp = computeFingerprint({topic: rawTopic ?? '', question: question ?? '', activeUrl});
+		const fp = computeFingerprint({topic: rawTopic ?? '', question: question ?? '', url});
 
 		// Сначала проверка версии (cached, обычно мгновенно), потом клиентский гейт.
 		checkVersion(false).then(info => {
@@ -75,7 +61,7 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlP
 		});
 
 		return () => { cancelled = true; };
-	}, [rawTopic, question, activeUrl]);
+	}, [rawTopic, question, url]);
 
 	// после успешной отправки — авто-закрытие через 1.5с (закрываем форму И сбрасываем статус,
 	// иначе success-banner остаётся видимым в hideTrigger-режиме)
@@ -95,9 +81,8 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlP
 		setSending(true);
 
 		const res = await submitBugReport({
-			panelMode: mode,
-			panelTab,
-			activeUrl,
+			mode: reportMode,
+			url,
 			source,
 			topic: rawTopic ?? '',
 			question: question ?? '',
@@ -140,6 +125,7 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlP
 
 	return (
 		<div className="nmo-bug-form nmo-fade-up">
+
 			<div className="nmo-bug-form-head">
 				<div className="nmo-bug-form-title">
 					<IconBug size={12}/>Сообщить о проблеме
@@ -162,9 +148,9 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlP
 					<div>• Тема: <span>{rawTopic || '—'}</span></div>
 					<div>• Вопрос: <span>{question}</span></div>
 					<div>• Вариантов: <span>{variants.length}</span></div>
-					<div>• Таб: <span>{formatPanelTab(mode, panelTab)}</span></div>
+					<div>• Таб: <span>{formatReportMode(reportMode)}</span></div>
 					<div>• Источник: <span>{source || '—'}</span></div>
-					<div>• Ссылка: <span>{formatUrlForDisplay(activeUrl || '—')}</span></div>
+					<div>• Ссылка: <span>{formatUrlForDisplay(url || '—')}</span></div>
 					<div>• Версия: <span>{EXT_VERSION} · {getBrowserInfo()}</span></div>
 				</div>
 			</div>
@@ -174,9 +160,7 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlP
 					<div className="nmo-bug-rate-icon"><IconWarn size={12}/></div>
 					<div className="nmo-bug-rate-body">
 						<div className="nmo-bug-rate-title">{STATUSES[status].text}</div>
-						{['COOLDOWN', 'DAILY_CAP', 'DUPLICATE'].includes(status) &&
-							<div className="nmo-bug-rate-sub">Лимит: 1 отчёт / сутки</div>
-						}
+						{['COOLDOWN', 'DAILY_CAP', 'DUPLICATE'].includes(status) &&	<div className="nmo-bug-rate-sub">Лимит: 1 отчёт / сутки</div>}
 					</div>
 				</div>
 			)}
@@ -197,41 +181,3 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({activeUrl: activeUrlP
 };
 
 export default BugReportButton;
-
-
-function gateStatus(gate: BugReportGate): BugReportStatus | null {
-	if (gate.ok) return null;
-	if (gate.reason === 'duplicate') return 'DUPLICATE';
-	if (gate.reason === 'cooldown')  return 'COOLDOWN';
-	return 'DAILY_CAP';
-}
-
-function resultStatus(res: BugReportResult): BugReportStatus {
-	if (res.ok) return 'SENT';
-	if (res.error === 'duplicate')         return 'DUPLICATE';
-	if (res.error === 'cooldown')          return 'COOLDOWN';
-	if (res.error === 'daily_cap')         return 'DAILY_CAP';
-	if (res.error === 'outdated')          return 'OUTDATED';
-	if (res.error === 'payload_too_large') return 'PAYLOAD_LARGE';
-	if (res.error === 'network')           return 'NETWORK';
-	return 'SERVER';
-}
-
-function formatPanelTab(mode: string, panelTab: string): string {
-	if (mode === 'auto') return 'Авто';
-	if (mode === 'sites' && panelTab === 'sites:search') return 'Сайты / поиск';
-	if (mode === 'sites') return 'Сайты / URL';
-	if (mode === 'ai' && panelTab === 'ai:free') return 'AI / бесплатно';
-	if (mode === 'ai' && panelTab === 'ai:custom') return 'AI / свой endpoint';
-	if (mode === 'ai') return 'AI / ProxyAPI';
-	if (mode === 'pdf') return 'PDF';
-	return panelTab || mode || '—';
-}
-
-function getBrowserInfo(): string {
-	const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
-	const m = ua.match(/(Firefox|Edg|OPR|Chrome|Safari)\/(\d+(?:\.\d+)?)/);
-	if (!m) return 'неизвестно';
-	const name = m[1] === 'Edg' ? 'Edge' : m[1] === 'OPR' ? 'Opera' : m[1];
-	return `${name} ${m[2]}`;
-}

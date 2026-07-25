@@ -6,6 +6,14 @@
 /** Доступные варианты подключения AI. */
 export type AiProvider = 'free' | 'proxy' | 'custom';
 
+/** Раздел панели и, если он есть, активный подраздел для баг-репорта. */
+export type BugReportMode =
+	| 'auto'
+	| 'sites:search'
+	| 'sites:url'
+	| `ai:${AiProvider}`
+	| 'pdf';
+
 /** Сохранённое состояние панели расширения из chrome.storage */
 export interface IExtensionState {
   /** URL страницы с ответами */

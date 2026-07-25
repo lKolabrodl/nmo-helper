@@ -159,9 +159,8 @@ describe('SectionAuto', () => {
 			);
 			expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • база 2', status: 'ok'});
 			expect(testState.setBugReportContext).toHaveBeenLastCalledWith({
-				panelMode: 'auto',
-				panelTab: 'auto',
-				activeUrl: SECONDARY_SOURCE_URL,
+				mode: 'auto',
+				url: SECONDARY_SOURCE_URL,
 			});
 		});
 	});
@@ -246,9 +245,8 @@ describe('SectionAuto', () => {
 			);
 			expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • nmo-helper', status: 'ok'});
 			expect(testState.setBugReportContext).toHaveBeenLastCalledWith({
-				panelMode: 'auto',
-				panelTab: 'auto',
-				activeUrl: NMO_HELPER_URL,
+				mode: 'auto',
+				url: NMO_HELPER_URL,
 			});
 		});
 	});

@@ -48,7 +48,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			setSecondarySourceModel(EMPTY_ANSWER_MODEL);
 			setNmoHelperModel(EMPTY_ANSWER_MODEL);
 			// init status
-			setBugReportContext({panelMode: 'auto', panelTab: 'auto', activeUrl: ''});
+			setBugReportContext({mode: 'auto', url: ''});
 			return setStatus({title: StatusTitle.SEARCHING_ANSWERS, status: Status.LOADING});
 		}
 
@@ -72,7 +72,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		setNmoHelperModel({...EMPTY_ANSWER_MODEL, loading: !!nextNmoHelperUrl});
 
 		// update report
-		setBugReportContext({panelMode: 'auto',	panelTab: 'auto', activeUrl: nextPrimarySourceUrl || nextSecondarySourceUrl || nextNmoHelperUrl});
+		setBugReportContext({mode: 'auto', url: nextPrimarySourceUrl || nextSecondarySourceUrl || nextNmoHelperUrl});
 
 		// ничего не нашли =`(
 		if (!primaryResult && !secondaryResult && !nmo) setStatus({title: StatusTitle.NOT_FOUND, status: Status.WARN});
@@ -119,7 +119,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			}
 
 			answerCache.set(topic ?? '', question, variants, found.answers);
-			setBugReportContext({panelMode: 'auto', panelTab: 'auto', activeUrl: source.url});
+			setBugReportContext({mode: 'auto', url: source.url});
 
 			if (found.score < LOW_CONFIDENCE_THRESHOLD) {
 				setStatus({title: `${StatusTitle.ANSWER_LOW_CONFIDENCE} • ${source.label}`, status: Status.WARN});
@@ -174,9 +174,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 
 			{isLoading && <ThinkingStrip title={status.title} steps={[]}/>}
 
-			{(isWarning || isError || isOk) && status.title && (
-				<InlineToast toast={statusToToast(status.title, status.status)}/>
-			)}
+			{(isWarning || isError || isOk) && status.title && <InlineToast toast={statusToToast(status.title, status.status)}/>}
 		</div>
 	);
 };
