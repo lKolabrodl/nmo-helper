@@ -67,12 +67,12 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		setActiveUrl(result.url);
 	};
 
-	const _run = (): void => {
+	const _onRun = (): void => {
 		if (!url.trim()) return setStatus({title: StatusTitle.ENTER_URL, status: Status.ERR});
 		setActiveUrl(url.trim());
 	};
 
-	const _stop = (): void => {
+	const _onStop = (): void => {
 		setActiveUrl('');
 		setAnswerModel({loading: false, error: null, data: null});
 		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
@@ -113,7 +113,13 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const isError = status.status === Status.ERR;
 	const isOk = status.status === Status.OK;
 
-	const canSearch = searchQuery.trim().length > 0 && !variantModel.loading;
+	const isLoadingAll = variantModel.loading || answerModel.loading;
+	const canSearch = searchQuery.trim().length;
+
+	// теxt =/
+	let searchButtonText = 'Проверить базу';
+	if (variantModel.loading) searchButtonText = 'Ищу в базе…';
+	if (answerModel.loading) searchButtonText = 'Загружаю ответы…';
 
 	return (
 		<div className="nmo-section">
@@ -147,6 +153,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 						<label className="nmo-label">Вставьте название теста</label>
 						<textarea className="nmo-input"
 							rows={2}
+							disabled={isRunning || isLoadingAll}
 							value={searchQuery}
 							onChange={e => setSearchQuery(e.target.value)}
 							onKeyDown={handleKeyDown}
@@ -154,24 +161,15 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 						<button type="button"
 							className="nmo-btn nmo-btn-ghost nmo-search-btn"
-							disabled={!canSearch}
+							disabled={!canSearch || isRunning || isLoadingAll}
+							aria-busy={isLoadingAll}
 							onClick={search}>
-							{variantModel.loading ? (
-								<>
-									<span className="nmo-spinner" style={{width: 11, height: 11, color: 'currentColor'}}/>
-									Ищу в базе…
-								</>
-							) : (
-								<>
-									<IconSearch size={11}/>Проверить базу
-								</>
-							)}
+							{isLoadingAll && <span className="nmo-spinner" style={{width: 11, height: 11, color: 'currentColor'}}/>}
+							{!isLoadingAll && <IconSearch size={11}/>}
+							{searchButtonText}
 						</button>
 
-						<SearchResults
-							results={variantModel.data}
-							selectedUrl={url}
-							onSelect={_onSelectResult}/>
+						<SearchResults results={variantModel.data} selectedUrl={url} onSelect={_onSelectResult}/>
 					</div>
 				)}
 			</div>
@@ -184,12 +182,12 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 						<button type="button"
 							className="nmo-btn nmo-btn-primary nmo-btn-cta"
 							disabled={!url.trim() || answerModel.loading}
-							onClick={_run}>
+							onClick={_onRun}>
 							<IconPlay size={14}/>Запустить
 						</button>
 					}
 					{isRunning &&
-						<button type="button" className="nmo-btn nmo-btn-stop nmo-btn-cta" onClick={_stop}>
+						<button type="button" className="nmo-btn nmo-btn-stop nmo-btn-cta" onClick={_onStop}>
 							Остановить
 						</button>
 					}
