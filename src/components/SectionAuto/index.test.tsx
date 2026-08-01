@@ -35,7 +35,6 @@ const testState = vi.hoisted(() => ({
 	foundBySource: new Map<string, ITestFoundAnswer | null>(),
 	setStatus: vi.fn(),
 	setBugReportContext: vi.fn(),
-	cacheHas: vi.fn(() => false),
 	cacheSet: vi.fn(),
 }));
 
@@ -61,7 +60,6 @@ vi.mock('../../contexts/BugReportContext', () => ({
 
 vi.mock('../../utils/answer-cache', () => ({
 	answerCache: {
-		has: testState.cacheHas,
 		set: testState.cacheSet,
 	},
 }));
@@ -101,7 +99,15 @@ describe('SectionAuto', () => {
 		testState.variantChange = null;
 		testState.answerChanges.clear();
 		testState.foundBySource.clear();
-		testState.cacheHas.mockReturnValue(false);
+	});
+
+	it('отдельно инициализирует контекст при входе в режим «Авто»', async () => {
+		render(<SectionAuto/>);
+
+		await waitFor(() => {
+			expect(testState.setBugReportContext).toHaveBeenCalledWith({mode: 'auto', url: ''});
+			expect(testState.variantChange).not.toBeNull();
+		});
 	});
 
 	it('запускает загрузку всех найденных источников одновременно', async () => {

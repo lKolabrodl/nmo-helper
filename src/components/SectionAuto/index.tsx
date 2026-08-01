@@ -22,7 +22,7 @@ const EMPTY_ANSWER_MODEL: IAnswerModel = {loading: false, error: null, data: nul
 const SectionAuto: React.FC = (): React.JSX.Element => {
 	// контекст всяктй
 	const {status, setStatus} = usePanelStatus();
-	const {topic, rawTopic, question, variants} = useQuestionFinder();
+	const {topic, question, variants} = useQuestionFinder();
 	const {setBugReportContext} = useBugReportContext();
 
 	// url save
@@ -34,6 +34,9 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 	const [primarySourceModel, setPrimarySourceModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 	const [secondarySourceModel, setSecondarySourceModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 	const [nmoHelperModel, setNmoHelperModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
+
+	// Инициализация контекста при каждом входе в режим «Авто».
+	useEffect(() => setBugReportContext({mode: 'auto', url: ''}), [setBugReportContext]);
 
 	const _updateSearchUrl = (state: IVariantModel): void => {
 		if (!question) return;
@@ -53,7 +56,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		}
 
 		if (state.error) return setStatus({title: state.error, status: Status.WARN});
-		if (!state.data.length && !rawTopic) return;
+		if (!state.data.length) return;
 
 		const primaryResult = pickResult(state.data, 'primary', topic);
 		const secondaryResult = pickResult(state.data, 'secondary', topic);
@@ -80,7 +83,6 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 
 	useEffect(() => {
 		if (!question || !variants.length) return;
-		if (answerCache.has(topic, question, variants)) return;
 
 		const sources = [
 			{key: 'primary' as const, label: 'база 1', url: primarySourceUrl, state: primarySourceModel},
