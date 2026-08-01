@@ -4,7 +4,13 @@ import type {ISearchResult} from '../../../Loader/VariantLoader';
 import SearchResults from './index';
 
 const RESULTS: ISearchResult[] = [
-	{source: 'nmo-helper', title: 'Результат NMO Helper', url: 'https://nmo-helper.ru/result'},
+	{
+		source: 'nmo-helper',
+		title: 'Результат NMO Helper',
+		url: 'https://nmo-helper.ru/result',
+		ticket: 'short-lived.ticket',
+		questionCount: 46,
+	},
 	{source: 'secondary', title: 'Результат 24forcare', url: 'https://24forcare.com/result'},
 	{source: 'primary', title: 'Результат Rosmed', url: 'https://rosmedicinfo.ru/result'},
 ];
@@ -33,5 +39,24 @@ describe('SearchResults', () => {
 
 		fireEvent.click(buttons[1]);
 		expect(onSelect).toHaveBeenCalledWith(RESULTS[1]);
+	});
+
+	it('различает API-результаты с одинаковым URL по тикету', () => {
+		const apiResults: ISearchResult[] = [
+			{source: 'nmo-helper', title: 'Первый', url: 'https://nmo-helper.ru/api/nmo/topic', ticket: 'ticket.one'},
+			{source: 'nmo-helper', title: 'Второй', url: 'https://nmo-helper.ru/api/nmo/topic', ticket: 'ticket.two'},
+		];
+
+		render(
+			<SearchResults
+				results={apiResults}
+				selectedUrl={apiResults[1].url}
+				selectedTicket="ticket.two"
+				onSelect={vi.fn()}/>,
+		);
+
+		const buttons = screen.getAllByRole('button');
+		expect(buttons[0]).toHaveAttribute('aria-pressed', 'false');
+		expect(buttons[1]).toHaveAttribute('aria-pressed', 'true');
 	});
 });

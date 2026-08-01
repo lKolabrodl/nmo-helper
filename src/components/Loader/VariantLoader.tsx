@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { fetchViaBackground, parseHtml } from '../../utils';
-import {ISourceKey} from '../../types';
+import type {AnswerLoaderMode, ISourceKey} from '../../types';
 import {ALTERNATIVE_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, SECONDARY_ANSWER_SOURCE_HOST} from '../../utils/constants';
+import {NMO_API_TOPIC_ENDPOINT, searchNmoApi} from '../../api/fetch/fetch-nmo-api';
 
 export interface IVariantModel {
 	readonly loading: boolean;
@@ -13,6 +14,9 @@ export interface ISearchResult {
 	readonly source: ISourceKey;
 	readonly title: string;
 	readonly url: string;
+	readonly mode?: AnswerLoaderMode;
+	readonly ticket?: string;
+	readonly questionCount?: number;
 }
 
 const INIT_STATE: IVariantModel = { loading: false, error: null, data: [] };
@@ -41,13 +45,14 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 			const secondarySearchUrl = new URL('/search/', SECONDARY_SOURCE_URL);
 			secondarySearchUrl.searchParams.set('query', query);
 
-			const [secondaryRes, primaryRes, alternativeRes] = await Promise.all([
+			const [secondaryRes, primaryRes, nmoApiItems, alternativeRes] = await Promise.all([
 				fetchViaBackground(secondarySearchUrl.toString()).catch(() => null),
 				fetchViaBackground(PRIMARY_SOURCE_URL, {
 					method: 'POST',
 					headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 					body: 'do=search&subaction=search&story=' + encoded,
 				}).catch(() => null),
+				searchNmoApi(query).catch(() => []),
 				fetchViaBackground(ALTERNATIVE_BASE_URL + '/api/search/suggestions/categories?query=' + encoded).catch(() => null),
 			]);
 
@@ -60,6 +65,16 @@ const VariantLoader = ({ text, onChange }: IVariantLoaderProps) => {
 
 			// Результаты основной базы
 			if (primaryRes && !primaryRes.error && primaryRes.text) results.push(...parsePrimarySourceUrls(primaryRes.text));
+
+			// Собственная база NMO Helper: тикет остаётся только в памяти.
+			results.push(...nmoApiItems.map(item => ({
+				source: 'nmo-helper' as const,
+				title: item.title,
+				url: NMO_API_TOPIC_ENDPOINT,
+				mode: 'nmo-api' as const,
+				ticket: item.ticket,
+				questionCount: item.questionCount,
+			})));
 
 			if (alternativeRes && !alternativeRes.error && alternativeRes.text) {
 				results.push(...parseForAlternativeUrl(alternativeRes.text));

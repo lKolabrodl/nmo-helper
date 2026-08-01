@@ -8,10 +8,11 @@ import {SOURCE_DETAILS} from '../../utils';
 interface ISearchResultsProps {
 	readonly results: readonly ISearchResult[];
 	readonly selectedUrl: string;
+	readonly selectedTicket?: string;
 	readonly onSelect: (result: ISearchResult) => void;
 }
 
-const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, onSelect}) => {
+const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, selectedTicket = '', onSelect}) => {
 	if (!results.length) return null;
 
 	const sortedResults = [...results].sort((a, b) => {
@@ -23,11 +24,12 @@ const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, onS
 			<div className="nmo-results-list">
 				{sortedResults.map(result => {
 					const source = SOURCE_DETAILS[result.source];
-					const isSelected = result.url === selectedUrl;
+					const resultTicket = result.ticket ?? '';
+					const isSelected = result.url === selectedUrl && resultTicket === selectedTicket;
 
 					return (
 						<button
-							key={`${result.source}:${result.url}`}
+							key={`${result.source}:${result.url}:${resultTicket}`}
 							type="button"
 							className={cn('nmo-results-item', source.className, {selected: isSelected})}
 							title={result.title}
@@ -39,6 +41,7 @@ const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, onS
 									{source.label}
 									{result.source === 'primary' && <> <IconStar size={9}/></>}
 								</span>
+								{result.questionCount !== undefined && <span>• {result.questionCount} вопросов</span>}
 							</div>
 						</button>
 					);

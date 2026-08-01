@@ -12,7 +12,7 @@ import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
 import type {ISearchResult, IVariantModel} from '../Loader/VariantLoader';
-import {Status} from '../../types';
+import {Status, type AnswerLoaderMode} from '../../types';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
 import {IconPlay, IconSearch} from '../icons';
 import InlineToast from '../ui/InlineToast';
@@ -31,13 +31,22 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const [tab, setTab] = useState<Tab>('search');
 	const [url, setUrlRaw] = useState(initialUrl);
 	const [activeUrl, setActiveUrl] = useState('');
+	const [loaderMode, setLoaderMode] = useState<AnswerLoaderMode>('page');
+	const [ticket, setTicket] = useState('');
+	const [activeLoaderMode, setActiveLoaderMode] = useState<AnswerLoaderMode>('page');
+	const [activeTicket, setActiveTicket] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeSearch, setActiveSearch] = useState('');
 	//
 	const [variantModel, setVariantModel] = useState<IVariantModel>({loading: false, error: null, data: []});
 	const [answerModel, setAnswerModel] = useState<IAnswerModel>({loading: false, error: null, data: null});
 
-	const setUrl = (v: string) => { setUrlRaw(v); storageSet('customUrl', v); };
+	const setUrl = (v: string) => {
+		setUrlRaw(v);
+		setLoaderMode('page');
+		setTicket('');
+		storageSet('customUrl', v);
+	};
 
 	// для дебаг мода
 	useEffect(() => setBugReportContext({mode: `sites:${tab}`, url: activeUrl}), [activeUrl, setBugReportContext, tab]);
@@ -63,17 +72,29 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	};
 
 	const _onSelectResult = (result: ISearchResult): void => {
-		setUrl(result.url);
+		const nextMode = result.mode ?? 'page';
+		const nextTicket = result.ticket ?? '';
+		setUrlRaw(result.url);
+		setLoaderMode(nextMode);
+		setTicket(nextTicket);
+		// Короткоживущий тикет и неработающий без него API URL не сохраняем.
+		if (nextMode === 'page') storageSet('customUrl', result.url);
 		setActiveUrl(result.url);
+		setActiveLoaderMode(nextMode);
+		setActiveTicket(nextTicket);
 	};
 
 	const _onRun = (): void => {
 		if (!url.trim()) return setStatus({title: StatusTitle.ENTER_URL, status: Status.ERR});
 		setActiveUrl(url.trim());
+		setActiveLoaderMode(loaderMode);
+		setActiveTicket(ticket);
 	};
 
 	const _onStop = (): void => {
 		setActiveUrl('');
+		setActiveLoaderMode('page');
+		setActiveTicket('');
 		setAnswerModel({loading: false, error: null, data: null});
 		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
 	};
@@ -123,7 +144,11 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 	return (
 		<div className="nmo-section">
-			<AnswerLoader url={activeUrl} onChange={_updateHtml}/>
+			<AnswerLoader
+				url={activeUrl}
+				mode={activeLoaderMode}
+				ticket={activeTicket}
+				onChange={_updateHtml}/>
 			<VariantLoader text={activeSearch} onChange={_updateSearchUrl}/>
 
 			<div className="nmo-section-inner">
@@ -169,7 +194,11 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 							{searchButtonText}
 						</button>
 
-						<SearchResults results={variantModel.data} selectedUrl={url} onSelect={_onSelectResult}/>
+						<SearchResults
+							results={variantModel.data}
+							selectedUrl={url}
+							selectedTicket={ticket}
+							onSelect={_onSelectResult}/>
 					</div>
 				)}
 			</div>

@@ -4,7 +4,7 @@ import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {useBugReportContext} from '../../contexts/BugReportContext';
 import {answerCache} from '../../utils/answer-cache';
-import {Status} from '../../types';
+import {Status, type AnswerLoaderMode} from '../../types';
 import VariantLoader from '../Loader/VariantLoader';
 import AnswerLoader from '../Loader/AnswerLoader';
 import type {IVariantModel} from '../Loader/VariantLoader';
@@ -29,6 +29,8 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 	const [primarySourceUrl, setPrimarySourceUrl] = useState<string>('');
 	const [secondarySourceUrl, setSecondarySourceUrl] = useState<string>('');
 	const [nmoHelperUrl, setNmoHelperUrl] = useState<string>('');
+	const [nmoHelperMode, setNmoHelperMode] = useState<AnswerLoaderMode>('page');
+	const [nmoHelperTicket, setNmoHelperTicket] = useState<string>('');
 
 	// models
 	const [primarySourceModel, setPrimarySourceModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
@@ -46,6 +48,8 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			setPrimarySourceUrl('');
 			setSecondarySourceUrl('');
 			setNmoHelperUrl('');
+			setNmoHelperMode('page');
+			setNmoHelperTicket('');
 			// clen model
 			setPrimarySourceModel(EMPTY_ANSWER_MODEL);
 			setSecondarySourceModel(EMPTY_ANSWER_MODEL);
@@ -69,6 +73,8 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		setPrimarySourceUrl(nextPrimarySourceUrl);
 		setSecondarySourceUrl(nextSecondarySourceUrl);
 		setNmoHelperUrl(nextNmoHelperUrl);
+		setNmoHelperMode(nmo?.mode ?? 'page');
+		setNmoHelperTicket(nmo?.ticket ?? '');
 		// clean model
 		setPrimarySourceModel({...EMPTY_ANSWER_MODEL, loading: !!nextPrimarySourceUrl});
 		setSecondarySourceModel({...EMPTY_ANSWER_MODEL, loading: !!nextSecondarySourceUrl});
@@ -160,7 +166,11 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			<VariantLoader text={_topc} onChange={_updateSearchUrl}/>
 			<AnswerLoader url={primarySourceUrl} onChange={setPrimarySourceModel}/>
 			<AnswerLoader url={secondarySourceUrl} onChange={setSecondarySourceModel}/>
-			<AnswerLoader url={nmoHelperUrl} onChange={setNmoHelperModel}/>
+			<AnswerLoader
+				url={nmoHelperUrl}
+				mode={nmoHelperMode}
+				ticket={nmoHelperTicket}
+				onChange={setNmoHelperModel}/>
 
 			<div className="nmo-section-inner">
 				<div className="nmo-auto-hero nmo-fade-up">

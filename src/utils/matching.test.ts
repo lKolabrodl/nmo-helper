@@ -1,7 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { detectSource, matchQuestion, pickResult, similarity, variantScore } from './matching';
 import type { ISourceKey } from '../types';
-import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST} from './constants';
+import {
+	SECONDARY_ANSWER_SOURCE_HOST,
+	PRIMARY_ANSWER_SOURCE_HOST,
+	ALTERNATIVE_ANSWER_SOURCE_HOST,
+	NMO_API_HOST,
+} from './constants';
 
 describe('detectSource', () => {
 	it('распознаёт дополнительную базу по URL', () => {
@@ -14,6 +19,10 @@ describe('detectSource', () => {
 
 	it('распознаёт альтернативную базу по URL', () => {
 		expect(detectSource(`https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic.html`)).toBe('nmo-helper');
+	});
+
+	it('распознаёт серверный NMO API как источник nmo-helper', () => {
+		expect(detectSource(`https://${NMO_API_HOST}/api/nmo/topic`)).toBe('nmo-helper');
 	});
 
 	it('неизвестный домен → null', () => {

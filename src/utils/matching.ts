@@ -1,6 +1,12 @@
 import type { ISourceKey } from '../types';
 import { normalizeDashes, stripQuotes } from './text';
-import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST, SIMILARITY_THRESHOLD} from './constants';
+import {
+	SECONDARY_ANSWER_SOURCE_HOST,
+	PRIMARY_ANSWER_SOURCE_HOST,
+	ALTERNATIVE_ANSWER_SOURCE_HOST,
+	NMO_API_HOST,
+	SIMILARITY_THRESHOLD,
+} from './constants';
 
 /**
  * Определяет, к какому из поддерживаемых сайтов-источников относится URL.
@@ -12,6 +18,7 @@ export function detectSource(url: string): ISourceKey | null {
 	if (url.includes(SECONDARY_ANSWER_SOURCE_HOST)) return 'secondary';
 	if (url.includes(PRIMARY_ANSWER_SOURCE_HOST)) return 'primary';
 	if (url.includes(ALTERNATIVE_ANSWER_SOURCE_HOST)) return 'nmo-helper';
+	if (url.includes(NMO_API_HOST)) return 'nmo-helper';
 	return null;
 }
 

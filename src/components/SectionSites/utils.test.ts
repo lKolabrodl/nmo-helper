@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {Status} from '../../types';
-import {PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
+import {PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_HOST} from '../../utils/constants';
 import {formatUrlForDisplay, statusToToast} from './utils';
 
 const NMO_BASE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
@@ -17,6 +17,12 @@ describe('formatUrlForDisplay', () => {
 	it('создаёт разные ID для разных настоящих ссылок', () => {
 		expect(formatUrlForDisplay(`${NMO_BASE_URL}/test-one`))
 			.not.toBe(formatUrlForDisplay(`${NMO_BASE_URL}/test-two`));
+	});
+
+	it('скрывает внутренний endpoint серверного NMO API', () => {
+		const displayed = formatUrlForDisplay(`https://${NMO_API_HOST}/api/nmo/topic`);
+
+		expect(displayed).toMatch(/^nmo-helper\/id\/[a-z0-9]{10}$/);
 	});
 
 	it.each([

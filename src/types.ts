@@ -61,6 +61,9 @@ export interface IAiModel {
 /** Ключ источника ответов */
 export type ISourceKey = 'primary' | 'secondary' | 'nmo-helper';
 
+/** Сетевой сценарий, по которому AnswerLoader получает готовые ответы. */
+export type AnswerLoaderMode = 'page' | 'nmo-api';
+
 /** Варианты статуса панели */
 export const Status = {
 	IDLE: 'idle',

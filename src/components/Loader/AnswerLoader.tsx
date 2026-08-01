@@ -2,7 +2,9 @@ import { useEffect } from 'react';
 import { fetchViaBackground, parseHtml } from '../../utils';
 import { detectSource } from '../../utils';
 import {fetchNmoSource} from '../../api/fetch/fetch-nmo-source';
+import {fetchNmoApiTopic, NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
 import type {QaCaseModel} from '../../utils/cases';
+import type {AnswerLoaderMode} from '../../types';
 
 export interface IAnswerModel {
 	readonly loading: boolean;
@@ -14,10 +16,12 @@ const INIT_STATE: IAnswerModel = { loading: false, error: null, data: null };
 
 interface IAnswerLoaderProps {
 	readonly url: string;
+	readonly mode?: AnswerLoaderMode;
+	readonly ticket?: string;
 	readonly onChange: (state: IAnswerModel) => void;
 }
 
-const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
+const AnswerLoader = ({url, mode = 'page', ticket = '', onChange}: IAnswerLoaderProps) => {
 
 	useEffect(() => {
 		const trimmed = url.trim();
@@ -31,7 +35,18 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 			return;
 		}
 
-		const sourceKey = detectSource(valid.href);
+		if (mode === 'nmo-api' && valid.href !== NMO_API_TOPIC_ENDPOINT) {
+			onChange({loading: false, error: 'некорректный URL NMO API', data: null});
+			return;
+		}
+
+		const normalizedTicket = ticket.trim();
+		if (mode === 'nmo-api' && !normalizedTicket) {
+			onChange({loading: false, error: 'отсутствует тикет NMO API — повторите поиск', data: null});
+			return;
+		}
+
+		const sourceKey = mode === 'nmo-api' ? 'nmo-helper' : detectSource(valid.href);
 		if (!sourceKey) return onChange({loading: false, error: 'URL не относится к поддерживаемой базе ответов', data: null});
 
 		onChange({ loading: true, error: null, data: null });
@@ -40,6 +55,12 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 
 		async function load() {
 			try {
+				if (mode === 'nmo-api') {
+					const model = await fetchNmoApiTopic(normalizedTicket);
+					if (cancelled) return;
+					onChange({loading: false, error: null, data: model});
+					return;
+				}
 
 				// отдельная обработка
 				if (sourceKey === 'nmo-helper') {
@@ -66,7 +87,12 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 
 			} catch (error) {
 				if (cancelled) return;
-				onChange({loading: false, error: `ошибка парсинга: ${(error as Error).message}`, data: null});
+				const message = (error as Error).message;
+				onChange({
+					loading: false,
+					error: mode === 'nmo-api' ? message : `ошибка парсинга: ${message}`,
+					data: null,
+				});
 			}
 		}
 
@@ -74,7 +100,7 @@ const AnswerLoader = ({ url, onChange }: IAnswerLoaderProps) => {
 
 		return () => { cancelled = true; };
 
-	}, [url]);
+	}, [url, mode, ticket]);
 
 	return null;
 };

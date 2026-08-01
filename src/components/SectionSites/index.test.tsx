@@ -1,11 +1,14 @@
 import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
 import SectionSites from './index';
 
 interface ITestSearchResult {
 	readonly source: 'primary' | 'secondary' | 'nmo-helper';
 	readonly title: string;
 	readonly url: string;
+	readonly mode?: 'page' | 'nmo-api';
+	readonly ticket?: string;
 }
 
 interface ITestVariantModel {
@@ -26,6 +29,7 @@ type AnswerChange = (state: ITestAnswerModel) => void;
 const testState = vi.hoisted(() => ({
 	variantChange: null as VariantChange | null,
 	answerChange: null as AnswerChange | null,
+	answerRequest: null as null | {readonly url: string; readonly mode?: string; readonly ticket?: string},
 	setStatus: vi.fn(),
 	setBugReportContext: vi.fn(),
 	storageSet: vi.fn(),
@@ -78,8 +82,16 @@ vi.mock('../Loader/VariantLoader', () => ({
 }));
 
 vi.mock('../Loader/AnswerLoader', () => ({
-	default: ({url, onChange}: {url: string; onChange: AnswerChange}) => {
-		if (url) testState.answerChange = onChange;
+	default: ({url, mode, ticket, onChange}: {
+		url: string;
+		mode?: string;
+		ticket?: string;
+		onChange: AnswerChange;
+	}) => {
+		if (url) {
+			testState.answerChange = onChange;
+			testState.answerRequest = {url, mode, ticket};
+		}
 		return null;
 	},
 }));
@@ -89,6 +101,7 @@ describe('SectionSites', () => {
 		vi.clearAllMocks();
 		testState.variantChange = null;
 		testState.answerChange = null;
+		testState.answerRequest = null;
 	});
 
 	it('показывает загрузку ответов в кнопке после выбора результата', async () => {
@@ -126,5 +139,31 @@ describe('SectionSites', () => {
 		const searchButton = screen.getByRole('button', {name: 'Загружаю ответы…'});
 		expect(searchButton).toBeDisabled();
 		expect(searchButton).toHaveAttribute('aria-busy', 'true');
+	});
+
+	it('передаёт выбранный API-тикет загрузчику и не сохраняет его в storage', async () => {
+		const result = {
+			source: 'nmo-helper' as const,
+			title: 'Вариант из NMO API',
+			url: NMO_API_TOPIC_ENDPOINT,
+			mode: 'nmo-api' as const,
+			ticket: 'short-lived.ticket',
+		};
+
+		render(<SectionSites initialUrl=""/>);
+
+		act(() => {
+			testState.variantChange?.({loading: false, error: null, data: [result]});
+		});
+		fireEvent.click(screen.getByRole('button', {name: /Вариант из NMO API/}));
+
+		await waitFor(() => {
+			expect(testState.answerRequest).toEqual({
+				url: NMO_API_TOPIC_ENDPOINT,
+				mode: 'nmo-api',
+				ticket: 'short-lived.ticket',
+			});
+		});
+		expect(testState.storageSet).not.toHaveBeenCalled();
 	});
 });

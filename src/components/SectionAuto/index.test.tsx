@@ -1,6 +1,7 @@
 import {act, render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
+import {NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
 import SectionAuto from './index';
 
 interface ITestAnswerModel {
@@ -13,6 +14,8 @@ interface ITestSearchResult {
 	readonly source: 'primary' | 'secondary' | 'nmo-helper';
 	readonly title: string;
 	readonly url: string;
+	readonly mode?: 'page' | 'nmo-api';
+	readonly ticket?: string;
 }
 
 interface ITestVariantModel {
@@ -32,6 +35,7 @@ type VariantChange = (state: ITestVariantModel) => void;
 const testState = vi.hoisted(() => ({
 	variantChange: null as VariantChange | null,
 	answerChanges: new Map<string, AnswerChange>(),
+	answerRequests: new Map<string, {readonly mode?: string; readonly ticket?: string}>(),
 	foundBySource: new Map<string, ITestFoundAnswer | null>(),
 	setStatus: vi.fn(),
 	setBugReportContext: vi.fn(),
@@ -83,8 +87,16 @@ vi.mock('../Loader/VariantLoader', () => ({
 }));
 
 vi.mock('../Loader/AnswerLoader', () => ({
-	default: ({url, onChange}: {url: string; onChange: AnswerChange}) => {
-		if (url) testState.answerChanges.set(url, onChange);
+	default: ({url, mode, ticket, onChange}: {
+		url: string;
+		mode?: string;
+		ticket?: string;
+		onChange: AnswerChange;
+	}) => {
+		if (url) {
+			testState.answerChanges.set(url, onChange);
+			testState.answerRequests.set(url, {mode, ticket});
+		}
 		return null;
 	},
 }));
@@ -98,6 +110,7 @@ describe('SectionAuto', () => {
 		vi.clearAllMocks();
 		testState.variantChange = null;
 		testState.answerChanges.clear();
+		testState.answerRequests.clear();
 		testState.foundBySource.clear();
 	});
 
@@ -107,6 +120,25 @@ describe('SectionAuto', () => {
 		await waitFor(() => {
 			expect(testState.setBugReportContext).toHaveBeenCalledWith({mode: 'auto', url: ''});
 			expect(testState.variantChange).not.toBeNull();
+		});
+	});
+
+	it('передаёт AnswerLoader режим API и короткоживущий тикет', async () => {
+		render(<SectionAuto/>);
+
+		startSourceLoading({
+			source: 'nmo-helper',
+			title: 'Тема API',
+			url: NMO_API_TOPIC_ENDPOINT,
+			mode: 'nmo-api',
+			ticket: 'short-lived.ticket',
+		});
+
+		await waitFor(() => {
+			expect(testState.answerRequests.get(NMO_API_TOPIC_ENDPOINT)).toEqual({
+				mode: 'nmo-api',
+				ticket: 'short-lived.ticket',
+			});
 		});
 	});
 
@@ -296,7 +328,11 @@ describe('SectionAuto', () => {
 	});
 });
 
-function startSourceLoading(): void {
+function startSourceLoading(nmoResult: ITestSearchResult = {
+	source: 'nmo-helper',
+	title: 'Тема',
+	url: NMO_HELPER_URL,
+}): void {
 	act(() => {
 		testState.variantChange?.({
 			loading: false,
@@ -304,7 +340,7 @@ function startSourceLoading(): void {
 			data: [
 				{source: 'primary', title: 'Тема', url: PRIMARY_SOURCE_URL},
 				{source: 'secondary', title: 'Тема', url: SECONDARY_SOURCE_URL},
-				{source: 'nmo-helper', title: 'Тема', url: NMO_HELPER_URL},
+				nmoResult,
 			],
 		});
 	});
