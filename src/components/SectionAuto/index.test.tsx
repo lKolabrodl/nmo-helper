@@ -14,7 +14,6 @@ interface ITestSearchResult {
 	readonly source: 'primary' | 'secondary' | 'nmo-helper' | 'foo';
 	readonly title: string;
 	readonly url: string;
-	readonly uid?: string;
 }
 
 interface ITestVariantModel {
@@ -34,7 +33,6 @@ type VariantChange = (state: ITestVariantModel) => void;
 const testState = vi.hoisted(() => ({
 	variantChange: null as VariantChange | null,
 	answerChanges: new Map<string, AnswerChange>(),
-	answerRequests: new Map<string, {readonly ticket?: string}>(),
 	foundBySource: new Map<string, ITestFoundAnswer | null>(),
 	setStatus: vi.fn(),
 	setBugReportContext: vi.fn(),
@@ -86,14 +84,12 @@ vi.mock('../Loader/VariantLoader', () => ({
 }));
 
 vi.mock('../Loader/AnswerLoader', () => ({
-	default: ({url, ticket, onChange}: {
+	default: ({url, onChange}: {
 		url: string;
-		ticket?: string;
 		onChange: AnswerChange;
 	}) => {
 		if (url) {
 			testState.answerChanges.set(url, onChange);
-			testState.answerRequests.set(url, {ticket});
 		}
 		return null;
 	},
@@ -101,6 +97,7 @@ vi.mock('../Loader/AnswerLoader', () => ({
 
 const PRIMARY_SOURCE_URL = `https://${PRIMARY_ANSWER_SOURCE_HOST}/test`;
 const SECONDARY_SOURCE_URL = `https://${SECONDARY_ANSWER_SOURCE_HOST}/test`;
+const NMO_API_RESULT_URL = `${NMO_API_TOPIC_ENDPOINT}/short-lived.uid`;
 const FOO_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/test.html`;
 
 describe('SectionAuto', () => {
@@ -108,7 +105,6 @@ describe('SectionAuto', () => {
 		vi.clearAllMocks();
 		testState.variantChange = null;
 		testState.answerChanges.clear();
-		testState.answerRequests.clear();
 		testState.foundBySource.clear();
 	});
 
@@ -121,20 +117,17 @@ describe('SectionAuto', () => {
 		});
 	});
 
-	it('передаёт AnswerLoader короткоживущий UID результата API', async () => {
+	it('передаёт AnswerLoader URL результата вместе с UID', async () => {
 		render(<SectionAuto/>);
 
 		startSourceLoading({
 			source: 'nmo-helper',
 			title: 'Тема API',
-			url: NMO_API_TOPIC_ENDPOINT,
-			uid: 'short-lived.uid',
+			url: NMO_API_RESULT_URL,
 		});
 
 		await waitFor(() => {
-			expect(testState.answerRequests.get(NMO_API_TOPIC_ENDPOINT)).toEqual({
-				ticket: 'short-lived.uid',
-			});
+			expect(testState.answerChanges.has(NMO_API_RESULT_URL)).toBe(true);
 		});
 	});
 
@@ -145,18 +138,15 @@ describe('SectionAuto', () => {
 			{
 				source: 'nmo-helper',
 				title: 'Тема API',
-				url: NMO_API_TOPIC_ENDPOINT,
-				uid: 'short-lived.uid',
+				url: NMO_API_RESULT_URL,
 			},
 			{source: 'foo', title: 'Тема foo', url: FOO_URL},
 		);
 
 		await waitFor(() => {
 			expect(testState.answerChanges.size).toBe(4);
-			expect(testState.answerRequests.get(NMO_API_TOPIC_ENDPOINT)).toEqual({
-				ticket: 'short-lived.uid',
-			});
-			expect(testState.answerRequests.get(FOO_URL)).toEqual({ticket: undefined});
+			expect(testState.answerChanges.has(NMO_API_RESULT_URL)).toBe(true);
+			expect(testState.answerChanges.has(FOO_URL)).toBe(true);
 		});
 	});
 

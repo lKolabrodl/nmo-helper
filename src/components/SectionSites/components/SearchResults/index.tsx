@@ -8,11 +8,10 @@ import {SOURCE_DETAILS} from '../../utils';
 interface ISearchResultsProps {
 	readonly results: readonly ISearchResult[];
 	readonly selectedUrl: string;
-	readonly selectedTicket?: string;
 	readonly onSelect: (result: ISearchResult) => void;
 }
 
-const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, selectedTicket = '', onSelect}) => {
+const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, onSelect}) => {
 	if (!results.length) return null;
 
 	const sortedResults = [...results].sort((a, b) => {
@@ -24,12 +23,11 @@ const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, sel
 			<div className="nmo-results-list">
 				{sortedResults.map(result => {
 					const source = SOURCE_DETAILS[result.source];
-					const resultUid = result.uid ?? '';
-					const isSelected = result.url === selectedUrl && resultUid === selectedTicket;
+					const isSelected = result.url === selectedUrl;
 
 					return (
 						<button
-							key={`${result.source}:${result.url}:${resultUid}`}
+							key={`${result.source}:${result.url}`}
 							type="button"
 							className={cn('nmo-results-item', source.className, {selected: isSelected})}
 							title={result.title}

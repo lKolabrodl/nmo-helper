@@ -1,7 +1,7 @@
 /**
- * Клиент серверного NMO API с короткоживущими тикетами.
+ * Клиент серверного NMO API с короткоживущими UID.
  *
- * Полный вариант загружается одним запросом по короткоживущему тикету,
+ * Полный вариант загружается одним запросом по короткоживущему UID,
  * после чего преобразуется в общую модель matcher'а.
  *
  * @module api/fetch/fetch-nmo-api
@@ -9,38 +9,43 @@
 
 import {NMO_API_HOST} from '../../utils/constants';
 import type {QaCaseModel} from '../../utils/cases';
-import {fetchViaBackground, type IRequestResponse} from './fetch';
+import {fetchViaBackground} from './fetch';
 
 const NMO_API_BASE_URL = `https://${NMO_API_HOST}/api/nmo`;
 
-/** Ticket-only endpoint полного варианта. */
+/** Фиксированный endpoint загрузки полного варианта. */
 export const NMO_API_TOPIC_ENDPOINT = `${NMO_API_BASE_URL}/topic`;
 
 /**
- * Загружает полный вариант по короткоживущему тикету одним запросом.
- * Тикет передаётся только в заголовке и никогда не попадает в URL.
+ * Загружает полный вариант по внутреннему URL результата поиска.
+ * UID извлекается из последнего сегмента URL и передаётся API только в заголовке;
+ * сам сетевой запрос всегда выполняется на фиксированный endpoint.
  *
- * @param ticket Тикет из результата поиска NMO API.
+ * @param url URL результата NMO API в формате `/api/nmo/topic/<uid>`.
  * @returns Готовая модель всех вопросов и правильных ответов варианта.
- * @throws {Error} Если тикет истёк, запрос не удался или ответ невалиден.
+ * @throws {Error} Если URL невалиден, UID истёк, запрос не удался или ответ невалиден.
  */
-export async function fetchNmoApiTopic(ticket: string): Promise<QaCaseModel[]> {
-	const normalizedTicket = ticket.trim();
-	if (!normalizedTicket) throw new Error('отсутствует тикет NMO API — повторите поиск');
+export async function fetchNmoApiTopic(url: string): Promise<QaCaseModel[]> {
+	const uid = url.trim().match(/\/api\/nmo\/topic\/([^/?#]+)$/)?.[1];
+	if (!uid) throw new Error('некорректный URL NMO API');
 
 	const response = await fetchViaBackground(NMO_API_TOPIC_ENDPOINT, {
 		method: 'GET',
 		headers: {
 			'Accept': 'application/json',
-			'X-NMO-Ticket': normalizedTicket,
+			'X-NMO-Ticket': uid,
 		},
 		credentials: 'omit',
 	});
 
 	if (!response.error && response.status === 404) {
-		throw new Error('тикет NMO API истёк — повторите поиск');
+		throw new Error('UID NMO API истёк — повторите поиск');
 	}
-	assertSuccessfulResponse(response, 'загрузка варианта NMO API');
+	if (response.error) throw new Error('загрузка варианта NMO API: ошибка сети');
+	if (response.status < 200 || response.status >= 400) {
+		throw new Error(`загрузка варианта NMO API: сервер вернул ошибку ${response.status}`);
+	}
+	if (!response.text.trim()) throw new Error('загрузка варианта NMO API: сервер вернул пустой ответ');
 
 	const payload = parseJsonObject(response.text, 'загрузка варианта NMO API');
 	if (!Array.isArray(payload.questions) || !payload.questions.length) {
@@ -99,15 +104,6 @@ function parseQuestion(input: unknown, idx: number): QaCaseModel {
 		answers,
 		idx,
 	};
-}
-
-/** Проверяет транспортный результат background fetch. */
-function assertSuccessfulResponse(response: IRequestResponse, action: string): void {
-	if (response.error) throw new Error(`${action}: ошибка сети`);
-	if (response.status < 200 || response.status >= 400) {
-		throw new Error(`${action}: сервер вернул ошибку ${response.status}`);
-	}
-	if (!response.text.trim()) throw new Error(`${action}: сервер вернул пустой ответ`);
 }
 
 /** Разбирает JSON и проверяет, что корень является объектом. */

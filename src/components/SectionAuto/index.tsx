@@ -29,7 +29,6 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 	const [primarySourceUrl, setPrimarySourceUrl] = useState<string>('');
 	const [secondarySourceUrl, setSecondarySourceUrl] = useState<string>('');
 	const [nmoHelperUrl, setNmoHelperUrl] = useState<string>('');
-	const [nmoHelperUid, setNmoHelperUid] = useState<string>('');
 	const [fooUrl, setFooUrl] = useState<string>('');
 
 	// models
@@ -49,7 +48,6 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			setPrimarySourceUrl('');
 			setSecondarySourceUrl('');
 			setNmoHelperUrl('');
-			setNmoHelperUid('');
 			setFooUrl('');
 			// clen model
 			setPrimarySourceModel(EMPTY_ANSWER_MODEL);
@@ -77,7 +75,6 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		setPrimarySourceUrl(nextPrimarySourceUrl);
 		setSecondarySourceUrl(nextSecondarySourceUrl);
 		setNmoHelperUrl(nextNmoHelperUrl);
-		setNmoHelperUid(nmoHelperResult?.uid ?? '');
 		setFooUrl(nextFooUrl);
 		// clean model
 		setPrimarySourceModel({...EMPTY_ANSWER_MODEL, loading: !!nextPrimarySourceUrl});
@@ -179,10 +176,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			<VariantLoader text={_topc} onChange={_updateSearchUrl}/>
 			<AnswerLoader url={primarySourceUrl} onChange={setPrimarySourceModel}/>
 			<AnswerLoader url={secondarySourceUrl} onChange={setSecondarySourceModel}/>
-			<AnswerLoader
-				url={nmoHelperUrl}
-				ticket={nmoHelperUid}
-				onChange={setNmoHelperModel}/>
+			<AnswerLoader url={nmoHelperUrl} onChange={setNmoHelperModel}/>
 			<AnswerLoader url={fooUrl} onChange={setFooModel}/>
 
 			<div className="nmo-section-inner">

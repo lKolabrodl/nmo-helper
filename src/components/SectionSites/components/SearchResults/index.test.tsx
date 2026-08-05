@@ -7,8 +7,7 @@ const RESULTS: ISearchResult[] = [
 	{
 		source: 'nmo-helper',
 		title: 'Результат NMO Helper',
-		url: 'https://nmo-helper.ru/result',
-		uid: 'short-lived.uid',
+		url: 'https://nmo-helper.ru/api/nmo/topic/short-lived.uid',
 	},
 	{source: 'secondary', title: 'Результат 24forcare', url: 'https://24forcare.com/result'},
 	{source: 'primary', title: 'Результат Rosmed', url: 'https://rosmedicinfo.ru/result'},
@@ -42,17 +41,16 @@ describe('SearchResults', () => {
 		expect(onSelect).toHaveBeenCalledWith(RESULTS[1]);
 	});
 
-	it('различает API-результаты с одинаковым URL по UID', () => {
+	it('различает API-результаты по URL с UID', () => {
 		const apiResults: ISearchResult[] = [
-			{source: 'nmo-helper', title: 'Первый', url: 'https://nmo-helper.ru/api/nmo/topic', uid: 'uid.one'},
-			{source: 'nmo-helper', title: 'Второй', url: 'https://nmo-helper.ru/api/nmo/topic', uid: 'uid.two'},
+			{source: 'nmo-helper', title: 'Первый', url: 'https://nmo-helper.ru/api/nmo/topic/uid.one'},
+			{source: 'nmo-helper', title: 'Второй', url: 'https://nmo-helper.ru/api/nmo/topic/uid.two'},
 		];
 
 		render(
 			<SearchResults
 				results={apiResults}
 				selectedUrl={apiResults[1].url}
-				selectedTicket="uid.two"
 				onSelect={vi.fn()}/>,
 		);
 

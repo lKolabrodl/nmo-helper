@@ -66,7 +66,6 @@ export interface ISearchResult {
 	readonly source: ISourceKey;
 	readonly title: string;
 	readonly url: string;
-	readonly uid?: string;
 }
 
 /** Варианты статуса панели */

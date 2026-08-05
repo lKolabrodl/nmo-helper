@@ -105,8 +105,7 @@ describe('searchNmoApi', () => {
 		await expect(searchNmoSource('  диагностика  ')).resolves.toEqual([{
 			source: 'nmo-helper',
 			title: 'Диагностика заболевания',
-			url: NMO_API_TOPIC_ENDPOINT,
-			uid: 'short-lived.uid',
+			url: `${NMO_API_TOPIC_ENDPOINT}/short-lived.uid`,
 		}]);
 
 		const expectedUrl = new URL(`https://${NMO_API_HOST}/api/nmo/topics`);

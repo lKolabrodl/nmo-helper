@@ -31,8 +31,6 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const [tab, setTab] = useState<Tab>('search');
 	const [url, setUrlRaw] = useState(initialUrl);
 	const [activeUrl, setActiveUrl] = useState('');
-	const [ticket, setTicket] = useState('');
-	const [activeTicket, setActiveTicket] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeSearch, setActiveSearch] = useState('');
 	//
@@ -41,7 +39,6 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 	const setUrl = (v: string) => {
 		setUrlRaw(v);
-		setTicket('');
 		storageSet('customUrl', v);
 	};
 
@@ -69,24 +66,19 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	};
 
 	const _onSelectResult = (result: ISearchResult): void => {
-		const nextTicket = result.uid ?? '';
 		setUrlRaw(result.url);
-		setTicket(nextTicket);
-		// Короткоживущий тикет и неработающий без него API URL не сохраняем.
+		// Короткоживущий URL серверного API не сохраняем.
 		if (result.source !== 'nmo-helper') storageSet('customUrl', result.url);
 		setActiveUrl(result.url);
-		setActiveTicket(nextTicket);
 	};
 
 	const _onRun = (): void => {
 		if (!url.trim()) return setStatus({title: StatusTitle.ENTER_URL, status: Status.ERR});
 		setActiveUrl(url.trim());
-		setActiveTicket(ticket);
 	};
 
 	const _onStop = (): void => {
 		setActiveUrl('');
-		setActiveTicket('');
 		setAnswerModel({loading: false, error: null, data: null});
 		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
 	};
@@ -136,10 +128,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 	return (
 		<div className="nmo-section">
-			<AnswerLoader
-				url={activeUrl}
-				ticket={activeTicket}
-				onChange={_updateHtml}/>
+			<AnswerLoader url={activeUrl} onChange={_updateHtml}/>
 			<VariantLoader text={activeSearch} onChange={_updateSearchUrl}/>
 
 			<div className="nmo-section-inner">
@@ -188,7 +177,6 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 						<SearchResults
 							results={variantModel.data}
 							selectedUrl={url}
-							selectedTicket={ticket}
 							onSelect={_onSelectResult}/>
 					</div>
 				)}

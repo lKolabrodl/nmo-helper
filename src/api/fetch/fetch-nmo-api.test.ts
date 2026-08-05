@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 
 describe('fetchNmoApiTopic', () => {
-	it('загружает весь вариант одним запросом и передаёт тикет только в заголовке', async () => {
+	it('извлекает UID из URL и передаёт его только в заголовке', async () => {
 		mockFetch.mockResolvedValue(ok(JSON.stringify({
 			schema_version: 1,
 			id: 'hidden-topic-id',
@@ -40,7 +40,7 @@ describe('fetchNmoApiTopic', () => {
 			],
 		})));
 
-		await expect(fetchNmoApiTopic('  short-lived.ticket  ')).resolves.toEqual([
+		await expect(fetchNmoApiTopic(`  ${NMO_API_TOPIC_ENDPOINT}/short-lived.uid  `)).resolves.toEqual([
 			{question: 'Первый вопрос', variants: ['Нет', 'Да'], answers: ['Да'], idx: 0},
 			{question: 'Второй вопрос', variants: ['A', 'B', 'C'], answers: ['A', 'C'], idx: 1},
 		]);
@@ -50,17 +50,23 @@ describe('fetchNmoApiTopic', () => {
 			method: 'GET',
 			headers: {
 				'Accept': 'application/json',
-				'X-NMO-Ticket': 'short-lived.ticket',
+				'X-NMO-Ticket': 'short-lived.uid',
 			},
 			credentials: 'omit',
 		});
-		expect(mockFetch.mock.calls[0][0]).not.toContain('short-lived.ticket');
+		expect(mockFetch.mock.calls[0][0]).not.toContain('short-lived.uid');
 	});
 
-	it('просит повторить поиск для истёкшего тикета', async () => {
+	it('просит повторить поиск для истёкшего UID', async () => {
 		mockFetch.mockResolvedValue(failure(404, '{"detail":"topic_not_found"}'));
 
-		await expect(fetchNmoApiTopic('expired.ticket')).rejects.toThrow('тикет NMO API истёк — повторите поиск');
+		await expect(fetchNmoApiTopic(`${NMO_API_TOPIC_ENDPOINT}/expired.uid`))
+			.rejects.toThrow('UID NMO API истёк — повторите поиск');
+	});
+
+	it('не отправляет запрос, если UID отсутствует в URL', async () => {
+		await expect(fetchNmoApiTopic(NMO_API_TOPIC_ENDPOINT)).rejects.toThrow('некорректный URL NMO API');
+		expect(mockFetch).not.toHaveBeenCalled();
 	});
 
 	it('отклоняет рассинхронизированные правильные ответы', async () => {
@@ -73,7 +79,8 @@ describe('fetchNmoApiTopic', () => {
 			}],
 		})));
 
-		await expect(fetchNmoApiTopic('valid.ticket')).rejects.toThrow('некорректный ответ сервера');
+		await expect(fetchNmoApiTopic(`${NMO_API_TOPIC_ENDPOINT}/valid.uid`))
+			.rejects.toThrow('некорректный ответ сервера');
 	});
 });
 

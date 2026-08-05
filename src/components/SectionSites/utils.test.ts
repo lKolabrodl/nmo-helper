@@ -20,7 +20,7 @@ describe('formatUrlForDisplay', () => {
 	});
 
 	it('скрывает внутренний endpoint серверного NMO API', () => {
-		const displayed = formatUrlForDisplay(`https://${NMO_API_HOST}/api/nmo/topic`);
+		const displayed = formatUrlForDisplay(`https://${NMO_API_HOST}/api/nmo/topic/short-lived.uid`);
 
 		expect(displayed).toMatch(/^nmo-helper\/id\/[a-z0-9]{10}$/);
 	});

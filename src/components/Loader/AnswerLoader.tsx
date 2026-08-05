@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { fetchViaBackground, parseHtml } from '../../utils';
 import { detectSource } from '../../utils';
 import {fetchNmoSource} from '../../api/fetch/fetch-nmo-source';
-import {fetchNmoApiTopic, NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
+import {fetchNmoApiTopic} from '../../api/fetch/fetch-nmo-api';
 import type {QaCaseModel} from '../../utils/cases';
 
 export interface IAnswerModel {
@@ -15,11 +15,10 @@ const INIT_STATE: IAnswerModel = { loading: false, error: null, data: null };
 
 interface IAnswerLoaderProps {
 	readonly url: string;
-	readonly ticket?: string;
 	readonly onChange: (state: IAnswerModel) => void;
 }
 
-const AnswerLoader = ({url, ticket = '', onChange}: IAnswerLoaderProps) => {
+const AnswerLoader = ({url, onChange}: IAnswerLoaderProps) => {
 
 	useEffect(() => {
 		const trimmed = url.trim();
@@ -36,17 +35,6 @@ const AnswerLoader = ({url, ticket = '', onChange}: IAnswerLoaderProps) => {
 		const sourceKey = detectSource(valid.href);
 		if (!sourceKey) return onChange({loading: false, error: 'URL не относится к поддерживаемой базе ответов', data: null});
 
-		if (sourceKey === 'nmo-helper' && valid.href !== NMO_API_TOPIC_ENDPOINT) {
-			onChange({loading: false, error: 'некорректный URL NMO API', data: null});
-			return;
-		}
-
-		const normalizedTicket = ticket.trim();
-		if (sourceKey === 'nmo-helper' && !normalizedTicket) {
-			onChange({loading: false, error: 'отсутствует тикет NMO API — повторите поиск', data: null});
-			return;
-		}
-
 		onChange({ loading: true, error: null, data: null });
 
 		let cancelled = false;
@@ -54,7 +42,7 @@ const AnswerLoader = ({url, ticket = '', onChange}: IAnswerLoaderProps) => {
 		async function load() {
 			try {
 				if (sourceKey === 'nmo-helper') {
-					const model = await fetchNmoApiTopic(normalizedTicket);
+					const model = await fetchNmoApiTopic(valid.href);
 					if (cancelled) return;
 					onChange({loading: false, error: null, data: model});
 					return;
@@ -98,7 +86,7 @@ const AnswerLoader = ({url, ticket = '', onChange}: IAnswerLoaderProps) => {
 
 		return () => { cancelled = true; };
 
-	}, [url, ticket]);
+	}, [url]);
 
 	return null;
 };

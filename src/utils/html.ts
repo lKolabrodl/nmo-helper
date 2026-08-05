@@ -174,7 +174,7 @@ export function parseThirdSourceResults(text: string): ISearchResult[] {
  * и короткоживущий UID очищаются от пробелов по краям.
  *
  * @param text Сырое JSON-тело ответа поиска NMO API.
- * @returns Результаты NMO API с URL загрузки полного варианта.
+ * @returns Результаты NMO API с UID в последнем сегменте URL.
  */
 export function parseNmoApiSearchResults(text: string): ISearchResult[] {
 	let payload: INmoApiSearchResponse | null;
@@ -190,7 +190,6 @@ export function parseNmoApiSearchResults(text: string): ISearchResult[] {
 	return payload.items.map(item => ({
 		source: 'nmo-helper',
 		title: item.title.trim(),
-		url: NMO_API_TOPIC_URL,
-		uid: item.uid.trim(),
+		url: `${NMO_API_TOPIC_URL}/${encodeURIComponent(item.uid.trim())}`,
 	}));
 }

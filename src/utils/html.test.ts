@@ -180,14 +180,12 @@ describe('parseNmoApiSearchResults', () => {
 			{
 				source: 'nmo-helper',
 				title: 'Диагностика заболевания',
-				url: `https://${NMO_API_HOST}/api/nmo/topic`,
-				uid: 'short-lived.uid',
+				url: `https://${NMO_API_HOST}/api/nmo/topic/short-lived.uid`,
 			},
 			{
 				source: 'nmo-helper',
 				title: 'Вторая тема',
-				url: `https://${NMO_API_HOST}/api/nmo/topic`,
-				uid: 'second.uid',
+				url: `https://${NMO_API_HOST}/api/nmo/topic/second.uid`,
 			},
 		]);
 	});

@@ -40,8 +40,7 @@ describe('VariantLoader', () => {
 		const nmoApi: ISearchResult = {
 			source: 'nmo-helper',
 			title: 'Результат NMO API',
-			url: NMO_API_TOPIC_ENDPOINT,
-			uid: 'short-lived.uid',
+			url: `${NMO_API_TOPIC_ENDPOINT}/short-lived.uid`,
 		};
 		const third: ISearchResult = {
 			source: 'foo',

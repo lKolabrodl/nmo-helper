@@ -5,6 +5,7 @@ import {NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
 import AnswerLoader from './AnswerLoader';
 
 const NMO_TEST_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic.html`;
+const NMO_API_RESULT_URL = `${NMO_API_TOPIC_ENDPOINT}/short-lived.uid`;
 
 const mocks = vi.hoisted(() => ({
 	detectSource: vi.fn(),
@@ -70,8 +71,7 @@ describe('AnswerLoader', () => {
 
 		render(
 			<AnswerLoader
-				url={NMO_API_TOPIC_ENDPOINT}
-				ticket="short-lived.ticket"
+				url={NMO_API_RESULT_URL}
 				onChange={onChange}/>,
 		);
 
@@ -79,22 +79,25 @@ describe('AnswerLoader', () => {
 		await waitFor(() => {
 			expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: model});
 		});
-		expect(mocks.fetchNmoApiTopic).toHaveBeenCalledWith('short-lived.ticket');
+		expect(mocks.fetchNmoApiTopic).toHaveBeenCalledWith(NMO_API_RESULT_URL);
 		expect(mocks.fetchNmoSource).not.toHaveBeenCalled();
 		expect(mocks.fetchViaBackground).not.toHaveBeenCalled();
 	});
 
-	it('не запускает API-запрос без тикета', () => {
+	it('передаёт проверку URL в fetchNmoApiTopic и показывает её ошибку', async () => {
 		mocks.detectSource.mockReturnValue('nmo-helper');
+		mocks.fetchNmoApiTopic.mockRejectedValue(new Error('некорректный URL NMO API'));
 		const onChange = vi.fn();
 
 		render(<AnswerLoader url={NMO_API_TOPIC_ENDPOINT} onChange={onChange}/>);
 
-		expect(onChange).toHaveBeenLastCalledWith({
-			loading: false,
-			error: 'отсутствует тикет NMO API — повторите поиск',
-			data: null,
+		await waitFor(() => {
+			expect(onChange).toHaveBeenLastCalledWith({
+				loading: false,
+				error: 'некорректный URL NMO API',
+				data: null,
+			});
 		});
-		expect(mocks.fetchNmoApiTopic).not.toHaveBeenCalled();
+		expect(mocks.fetchNmoApiTopic).toHaveBeenCalledWith(NMO_API_TOPIC_ENDPOINT);
 	});
 });
