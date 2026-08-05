@@ -21,6 +21,7 @@ export const SOURCE_DETAILS: Record<ISourceKey, {
 	'primary': {label: 'rosmed', className: 'primary', priority: 0},
 	'secondary': {label: '24fc', className: 'secondary', priority: 1},
 	'nmo-helper': {label: 'nmo-helper', className: 'secondary', priority: 2},
+	'foo': {label: 'foo', className: 'secondary', priority: 3},
 };
 
 /**

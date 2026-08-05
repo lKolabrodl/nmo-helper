@@ -76,7 +76,7 @@ describe('searchThirdSource', () => {
 		})));
 
 		await expect(searchThirdSource('  КОВИД  ')).resolves.toEqual([{
-			source: 'nmo-helper',
+			source: 'foo',
 			title: 'Особенности реабилитации',
 			url: `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic%2F42.html`,
 		}]);
@@ -94,11 +94,11 @@ describe('searchThirdSource', () => {
 });
 
 describe('searchNmoApi', () => {
-	it('возвращает результаты с короткоживущими тикетами', async () => {
+	it('возвращает результаты с короткоживущими UID', async () => {
 		mockFetch.mockResolvedValue(ok(JSON.stringify({
 			items: [{
 				title: ' Диагностика заболевания ',
-				ticket: ' short-lived.ticket ',
+				uid: ' short-lived.uid ',
 			}],
 		})));
 
@@ -106,8 +106,7 @@ describe('searchNmoApi', () => {
 			source: 'nmo-helper',
 			title: 'Диагностика заболевания',
 			url: NMO_API_TOPIC_ENDPOINT,
-			mode: 'nmo-api',
-			ticket: 'short-lived.ticket',
+			uid: 'short-lived.uid',
 		}]);
 
 		const expectedUrl = new URL(`https://${NMO_API_HOST}/api/nmo/topics`);

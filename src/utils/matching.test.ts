@@ -18,7 +18,7 @@ describe('detectSource', () => {
 	});
 
 	it('распознаёт альтернативную базу по URL', () => {
-		expect(detectSource(`https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic.html`)).toBe('nmo-helper');
+		expect(detectSource(`https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic.html`)).toBe('foo');
 	});
 
 	it('распознаёт серверный NMO API как источник nmo-helper', () => {

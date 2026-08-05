@@ -41,8 +41,8 @@ describe('extractCases — дополнительная база', () => {
 	});
 });
 
-describe('extractCases — nmo-helper', () => {
-	it('возвращает уже собранную модель без повторной обработки', () => {
+describe('extractCases — готовая модель', () => {
+	it.each(['nmo-helper', 'foo'] as const)('возвращает модель %s без повторной обработки', source => {
 		const model: QaCaseModel[] = [{
 			question: 'Готовый вопрос',
 			variants: ['Первый', 'Второй'],
@@ -50,7 +50,7 @@ describe('extractCases — nmo-helper', () => {
 			idx: 7,
 		}];
 
-		expect(extractCases('nmo-helper', model)).toBe(model);
+		expect(extractCases(source, model)).toBe(model);
 		expect(model[0].idx).toBe(7);
 	});
 });

@@ -34,7 +34,7 @@ beforeEach(() => {
 });
 
 describe('AnswerLoader', () => {
-	it('для sourceKey=nmo-helper использует отдельный загрузчик и возвращает готовую модель', async () => {
+	it('для sourceKey=foo использует отдельный загрузчик и возвращает готовую модель', async () => {
 		const model = [{
 			question: 'Вопрос',
 			variants: ['A', 'B'],
@@ -43,7 +43,7 @@ describe('AnswerLoader', () => {
 			docId: '329960',
 			idx: 0,
 		}];
-		mocks.detectSource.mockReturnValue('nmo-helper');
+		mocks.detectSource.mockReturnValue('foo');
 		mocks.fetchNmoSource.mockResolvedValue(model);
 		const onChange = vi.fn();
 
@@ -57,20 +57,20 @@ describe('AnswerLoader', () => {
 		expect(mocks.fetchViaBackground).not.toHaveBeenCalled();
 	});
 
-	it('в режиме nmo-api загружает готовый вариант по тикету', async () => {
+	it('для sourceKey=nmo-helper загружает готовый вариант по тикету', async () => {
 		const model = [{
 			question: 'Вопрос API',
 			variants: ['Нет', 'Да'],
 			answers: ['Да'],
 			idx: 0,
 		}];
+		mocks.detectSource.mockReturnValue('nmo-helper');
 		mocks.fetchNmoApiTopic.mockResolvedValue(model);
 		const onChange = vi.fn();
 
 		render(
 			<AnswerLoader
 				url={NMO_API_TOPIC_ENDPOINT}
-				mode="nmo-api"
 				ticket="short-lived.ticket"
 				onChange={onChange}/>,
 		);
@@ -85,9 +85,10 @@ describe('AnswerLoader', () => {
 	});
 
 	it('не запускает API-запрос без тикета', () => {
+		mocks.detectSource.mockReturnValue('nmo-helper');
 		const onChange = vi.fn();
 
-		render(<AnswerLoader url={NMO_API_TOPIC_ENDPOINT} mode="nmo-api" onChange={onChange}/>);
+		render(<AnswerLoader url={NMO_API_TOPIC_ENDPOINT} onChange={onChange}/>);
 
 		expect(onChange).toHaveBeenLastCalledWith({
 			loading: false,

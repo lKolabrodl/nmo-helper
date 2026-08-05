@@ -12,7 +12,7 @@ import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
 import type {IVariantModel} from '../Loader/VariantLoader';
-import {Status, type AnswerLoaderMode, type ISearchResult} from '../../types';
+import {Status, type ISearchResult} from '../../types';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
 import {IconPlay, IconSearch} from '../icons';
 import InlineToast from '../ui/InlineToast';
@@ -31,9 +31,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const [tab, setTab] = useState<Tab>('search');
 	const [url, setUrlRaw] = useState(initialUrl);
 	const [activeUrl, setActiveUrl] = useState('');
-	const [loaderMode, setLoaderMode] = useState<AnswerLoaderMode>('page');
 	const [ticket, setTicket] = useState('');
-	const [activeLoaderMode, setActiveLoaderMode] = useState<AnswerLoaderMode>('page');
 	const [activeTicket, setActiveTicket] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
 	const [activeSearch, setActiveSearch] = useState('');
@@ -43,7 +41,6 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 
 	const setUrl = (v: string) => {
 		setUrlRaw(v);
-		setLoaderMode('page');
 		setTicket('');
 		storageSet('customUrl', v);
 	};
@@ -72,28 +69,23 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	};
 
 	const _onSelectResult = (result: ISearchResult): void => {
-		const nextMode = result.mode ?? 'page';
-		const nextTicket = result.ticket ?? '';
+		const nextTicket = result.uid ?? '';
 		setUrlRaw(result.url);
-		setLoaderMode(nextMode);
 		setTicket(nextTicket);
 		// Короткоживущий тикет и неработающий без него API URL не сохраняем.
-		if (nextMode === 'page') storageSet('customUrl', result.url);
+		if (result.source !== 'nmo-helper') storageSet('customUrl', result.url);
 		setActiveUrl(result.url);
-		setActiveLoaderMode(nextMode);
 		setActiveTicket(nextTicket);
 	};
 
 	const _onRun = (): void => {
 		if (!url.trim()) return setStatus({title: StatusTitle.ENTER_URL, status: Status.ERR});
 		setActiveUrl(url.trim());
-		setActiveLoaderMode(loaderMode);
 		setActiveTicket(ticket);
 	};
 
 	const _onStop = (): void => {
 		setActiveUrl('');
-		setActiveLoaderMode('page');
 		setActiveTicket('');
 		setAnswerModel({loading: false, error: null, data: null});
 		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
@@ -146,7 +138,6 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		<div className="nmo-section">
 			<AnswerLoader
 				url={activeUrl}
-				mode={activeLoaderMode}
 				ticket={activeTicket}
 				onChange={_updateHtml}/>
 			<VariantLoader text={activeSearch} onChange={_updateSearchUrl}/>

@@ -24,12 +24,12 @@ const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, sel
 			<div className="nmo-results-list">
 				{sortedResults.map(result => {
 					const source = SOURCE_DETAILS[result.source];
-					const resultTicket = result.ticket ?? '';
-					const isSelected = result.url === selectedUrl && resultTicket === selectedTicket;
+					const resultUid = result.uid ?? '';
+					const isSelected = result.url === selectedUrl && resultUid === selectedTicket;
 
 					return (
 						<button
-							key={`${result.source}:${result.url}:${resultTicket}`}
+							key={`${result.source}:${result.url}:${resultUid}`}
 							type="button"
 							className={cn('nmo-results-item', source.className, {selected: isSelected})}
 							title={result.title}

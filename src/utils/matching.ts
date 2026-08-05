@@ -17,7 +17,7 @@ import {
 export function detectSource(url: string): ISourceKey | null {
 	if (url.includes(SECONDARY_ANSWER_SOURCE_HOST)) return 'secondary';
 	if (url.includes(PRIMARY_ANSWER_SOURCE_HOST)) return 'primary';
-	if (url.includes(ALTERNATIVE_ANSWER_SOURCE_HOST)) return 'nmo-helper';
+	if (url.includes(ALTERNATIVE_ANSWER_SOURCE_HOST)) return 'foo';
 	if (url.includes(NMO_API_HOST)) return 'nmo-helper';
 	return null;
 }

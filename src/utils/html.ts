@@ -7,7 +7,7 @@ const NMO_API_TOPIC_URL = `https://${NMO_API_HOST}/api/nmo/topic`;
 
 interface INmoApiSearchItem {
 	readonly title: string;
-	readonly ticket: string;
+	readonly uid: string;
 }
 
 interface INmoApiSearchResponse {
@@ -129,8 +129,8 @@ export function parsePrimarySourceResults(html: string): ISearchResult[] {
  * превращаются в пустой массив.
  *
  * @param text Сырое JSON-тело ответа третьего источника.
- * @returns Валидные результаты в порядке массива `categories`. Для совместимости
- * с существующей моделью источника используется ключ `nmo-helper`.
+ * @returns Валидные результаты в порядке массива `categories` с ключом
+ * источника `foo`.
  */
 export function parseThirdSourceResults(text: string): ISearchResult[] {
 	let payload: unknown;
@@ -155,7 +155,7 @@ export function parseThirdSourceResults(text: string): ISearchResult[] {
 		if (!title || !normalizedSlug) return [];
 
 		return [{
-			source: 'nmo-helper' as const,
+			source: 'foo' as const,
 			title,
 			url: THIRD_SOURCE_URL
 				+ '/test-medik/nmo/'
@@ -171,10 +171,10 @@ export function parseThirdSourceResults(text: string): ISearchResult[] {
  * Ожидается объект с массивом `items`. Повреждённый JSON или отсутствие массива
  * безопасно превращаются в пустой результат. Поля элементов не проверяются
  * повторно и считаются соответствующими серверному контракту NMO API; заголовок
- * и короткоживущий тикет очищаются от пробелов по краям.
+ * и короткоживущий UID очищаются от пробелов по краям.
  *
  * @param text Сырое JSON-тело ответа поиска NMO API.
- * @returns Результаты в режиме `nmo-api` с URL загрузки полного варианта.
+ * @returns Результаты NMO API с URL загрузки полного варианта.
  */
 export function parseNmoApiSearchResults(text: string): ISearchResult[] {
 	let payload: INmoApiSearchResponse | null;
@@ -191,7 +191,6 @@ export function parseNmoApiSearchResults(text: string): ISearchResult[] {
 		source: 'nmo-helper',
 		title: item.title.trim(),
 		url: NMO_API_TOPIC_URL,
-		mode: 'nmo-api',
-		ticket: item.ticket.trim(),
+		uid: item.uid.trim(),
 	}));
 }

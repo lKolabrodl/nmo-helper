@@ -4,7 +4,7 @@ import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
 import {useBugReportContext} from '../../contexts/BugReportContext';
 import {answerCache} from '../../utils/answer-cache';
-import {Status, type AnswerLoaderMode} from '../../types';
+import {Status} from '../../types';
 import VariantLoader from '../Loader/VariantLoader';
 import AnswerLoader from '../Loader/AnswerLoader';
 import type {IVariantModel} from '../Loader/VariantLoader';
@@ -29,13 +29,14 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 	const [primarySourceUrl, setPrimarySourceUrl] = useState<string>('');
 	const [secondarySourceUrl, setSecondarySourceUrl] = useState<string>('');
 	const [nmoHelperUrl, setNmoHelperUrl] = useState<string>('');
-	const [nmoHelperMode, setNmoHelperMode] = useState<AnswerLoaderMode>('page');
-	const [nmoHelperTicket, setNmoHelperTicket] = useState<string>('');
+	const [nmoHelperUid, setNmoHelperUid] = useState<string>('');
+	const [fooUrl, setFooUrl] = useState<string>('');
 
 	// models
 	const [primarySourceModel, setPrimarySourceModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 	const [secondarySourceModel, setSecondarySourceModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 	const [nmoHelperModel, setNmoHelperModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
+	const [fooModel, setFooModel] = useState<IAnswerModel>(EMPTY_ANSWER_MODEL);
 
 	// Инициализация контекста при каждом входе в режим «Авто».
 	useEffect(() => setBugReportContext({mode: 'auto', url: ''}), [setBugReportContext]);
@@ -48,12 +49,13 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			setPrimarySourceUrl('');
 			setSecondarySourceUrl('');
 			setNmoHelperUrl('');
-			setNmoHelperMode('page');
-			setNmoHelperTicket('');
+			setNmoHelperUid('');
+			setFooUrl('');
 			// clen model
 			setPrimarySourceModel(EMPTY_ANSWER_MODEL);
 			setSecondarySourceModel(EMPTY_ANSWER_MODEL);
 			setNmoHelperModel(EMPTY_ANSWER_MODEL);
+			setFooModel(EMPTY_ANSWER_MODEL);
 			// init status
 			setBugReportContext({mode: 'auto', url: ''});
 			return setStatus({title: StatusTitle.SEARCHING_ANSWERS, status: Status.LOADING});
@@ -64,36 +66,45 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 
 		const primaryResult = pickResult(state.data, 'primary', topic);
 		const secondaryResult = pickResult(state.data, 'secondary', topic);
-		const nmo = pickResult(state.data, 'nmo-helper', topic);
+		const nmoHelperResult = pickResult(state.data, 'nmo-helper', topic);
+		const fooResult = pickResult(state.data, 'foo', topic);
 
 		const nextPrimarySourceUrl = primaryResult?.url ?? '';
 		const nextSecondarySourceUrl = secondaryResult?.url ?? '';
-		const nextNmoHelperUrl = nmo?.url ?? '';
+		const nextNmoHelperUrl = nmoHelperResult?.url ?? '';
+		const nextFooUrl = fooResult?.url ?? '';
 		// upd url
 		setPrimarySourceUrl(nextPrimarySourceUrl);
 		setSecondarySourceUrl(nextSecondarySourceUrl);
 		setNmoHelperUrl(nextNmoHelperUrl);
-		setNmoHelperMode(nmo?.mode ?? 'page');
-		setNmoHelperTicket(nmo?.ticket ?? '');
+		setNmoHelperUid(nmoHelperResult?.uid ?? '');
+		setFooUrl(nextFooUrl);
 		// clean model
 		setPrimarySourceModel({...EMPTY_ANSWER_MODEL, loading: !!nextPrimarySourceUrl});
 		setSecondarySourceModel({...EMPTY_ANSWER_MODEL, loading: !!nextSecondarySourceUrl});
 		setNmoHelperModel({...EMPTY_ANSWER_MODEL, loading: !!nextNmoHelperUrl});
+		setFooModel({...EMPTY_ANSWER_MODEL, loading: !!nextFooUrl});
 
 		// update report
-		setBugReportContext({mode: 'auto', url: nextPrimarySourceUrl || nextSecondarySourceUrl || nextNmoHelperUrl});
+		setBugReportContext({
+			mode: 'auto',
+			url: nextPrimarySourceUrl || nextSecondarySourceUrl || nextNmoHelperUrl || nextFooUrl,
+		});
 
 		// ничего не нашли =`(
-		if (!primaryResult && !secondaryResult && !nmo) setStatus({title: StatusTitle.NOT_FOUND, status: Status.WARN});
+		if (!primaryResult && !secondaryResult && !nmoHelperResult && !fooResult) {
+			setStatus({title: StatusTitle.NOT_FOUND, status: Status.WARN});
+		}
 	};
 
 	useEffect(() => {
 		if (!question || !variants.length) return;
 
 		const sources = [
+			{key: 'nmo-helper' as const, label: 'nmo-helper', url: nmoHelperUrl, state: nmoHelperModel},
 			{key: 'primary' as const, label: 'база 1', url: primarySourceUrl, state: primarySourceModel},
 			{key: 'secondary' as const, label: 'база 2', url: secondarySourceUrl, state: secondarySourceModel},
-			{key: 'nmo-helper' as const, label: 'nmo-helper', url: nmoHelperUrl, state: nmoHelperModel},
+			{key: 'foo' as const, label: 'foo', url: fooUrl, state: fooModel},
 		].filter(source => source.url);
 
 		// пока пусто
@@ -147,9 +158,11 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		primarySourceUrl,
 		secondarySourceUrl,
 		nmoHelperUrl,
+		fooUrl,
 		primarySourceModel,
 		secondarySourceModel,
 		nmoHelperModel,
+		fooModel,
 		setBugReportContext,
 		setStatus,
 	]);
@@ -168,9 +181,9 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			<AnswerLoader url={secondarySourceUrl} onChange={setSecondarySourceModel}/>
 			<AnswerLoader
 				url={nmoHelperUrl}
-				mode={nmoHelperMode}
-				ticket={nmoHelperTicket}
+				ticket={nmoHelperUid}
 				onChange={setNmoHelperModel}/>
+			<AnswerLoader url={fooUrl} onChange={setFooModel}/>
 
 			<div className="nmo-section-inner">
 				<div className="nmo-auto-hero nmo-fade-up">

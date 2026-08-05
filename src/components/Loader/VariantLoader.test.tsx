@@ -41,11 +41,10 @@ describe('VariantLoader', () => {
 			source: 'nmo-helper',
 			title: 'Результат NMO API',
 			url: NMO_API_TOPIC_ENDPOINT,
-			mode: 'nmo-api',
-			ticket: 'short-lived.ticket',
+			uid: 'short-lived.uid',
 		};
 		const third: ISearchResult = {
-			source: 'nmo-helper',
+			source: 'foo',
 			title: 'Результат третьего источника',
 			url: 'https://third.example/topic',
 		};
@@ -62,7 +61,7 @@ describe('VariantLoader', () => {
 			expect(onChange).toHaveBeenLastCalledWith({
 				loading: false,
 				error: null,
-				data: [secondary, primary, nmoApi, third],
+				data: [nmoApi, secondary, primary, third],
 			});
 		});
 

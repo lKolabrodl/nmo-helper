@@ -26,9 +26,9 @@ const VariantLoader = ({text, onChange}: IVariantLoaderProps) => {
 
 		async function search() {
 			const resultGroups = await Promise.all([
+				searchNmoSource(query).catch(() => []),
 				searchSecondarySource(query).catch(() => []),
 				searchFirstSource(query).catch(() => []),
-				searchNmoSource(query).catch(() => []),
 				searchThirdSource(query).catch(() => []),
 			]);
 

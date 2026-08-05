@@ -59,18 +59,14 @@ export interface IAiModel {
 }
 
 /** Ключ источника ответов */
-export type ISourceKey = 'primary' | 'secondary' | 'nmo-helper';
-
-/** Сетевой сценарий, по которому AnswerLoader получает готовые ответы. */
-export type AnswerLoaderMode = 'page' | 'nmo-api';
+export type ISourceKey = 'primary' | 'secondary' | 'nmo-helper' | 'foo';
 
 /** Найденный вариант источника ответов. */
 export interface ISearchResult {
 	readonly source: ISourceKey;
 	readonly title: string;
 	readonly url: string;
-	readonly mode?: AnswerLoaderMode;
-	readonly ticket?: string;
+	readonly uid?: string;
 }
 
 /** Варианты статуса панели */

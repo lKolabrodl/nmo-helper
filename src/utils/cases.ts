@@ -31,9 +31,10 @@ const MIN_VARIANT_SCORE = 0.7;
 
 /**
  * Достаёт все вопросы из данных источника.
- * Для nmo-helper готовая модель уже собрана загрузчиком и возвращается без изменений.
+ * Готовая модель от nmo-helper или foo уже собрана загрузчиком и возвращается
+ * без изменений.
  * @param source — ключ источника
- * @param input  — распарсенный HTML-документ либо готовая модель nmo-helper
+ * @param input  — распарсенный HTML-документ либо готовая модель источника
  */
 export function extractCases(source: ISourceKey, input: HTMLElement | QaCaseModel[]): QaCaseModel[] {
 	if (Array.isArray(input)) return input;

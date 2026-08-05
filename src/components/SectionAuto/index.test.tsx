@@ -11,11 +11,10 @@ interface ITestAnswerModel {
 }
 
 interface ITestSearchResult {
-	readonly source: 'primary' | 'secondary' | 'nmo-helper';
+	readonly source: 'primary' | 'secondary' | 'nmo-helper' | 'foo';
 	readonly title: string;
 	readonly url: string;
-	readonly mode?: 'page' | 'nmo-api';
-	readonly ticket?: string;
+	readonly uid?: string;
 }
 
 interface ITestVariantModel {
@@ -35,7 +34,7 @@ type VariantChange = (state: ITestVariantModel) => void;
 const testState = vi.hoisted(() => ({
 	variantChange: null as VariantChange | null,
 	answerChanges: new Map<string, AnswerChange>(),
-	answerRequests: new Map<string, {readonly mode?: string; readonly ticket?: string}>(),
+	answerRequests: new Map<string, {readonly ticket?: string}>(),
 	foundBySource: new Map<string, ITestFoundAnswer | null>(),
 	setStatus: vi.fn(),
 	setBugReportContext: vi.fn(),
@@ -87,15 +86,14 @@ vi.mock('../Loader/VariantLoader', () => ({
 }));
 
 vi.mock('../Loader/AnswerLoader', () => ({
-	default: ({url, mode, ticket, onChange}: {
+	default: ({url, ticket, onChange}: {
 		url: string;
-		mode?: string;
 		ticket?: string;
 		onChange: AnswerChange;
 	}) => {
 		if (url) {
 			testState.answerChanges.set(url, onChange);
-			testState.answerRequests.set(url, {mode, ticket});
+			testState.answerRequests.set(url, {ticket});
 		}
 		return null;
 	},
@@ -103,7 +101,7 @@ vi.mock('../Loader/AnswerLoader', () => ({
 
 const PRIMARY_SOURCE_URL = `https://${PRIMARY_ANSWER_SOURCE_HOST}/test`;
 const SECONDARY_SOURCE_URL = `https://${SECONDARY_ANSWER_SOURCE_HOST}/test`;
-const NMO_HELPER_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/test.html`;
+const FOO_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/test.html`;
 
 describe('SectionAuto', () => {
 	beforeEach(() => {
@@ -123,22 +121,42 @@ describe('SectionAuto', () => {
 		});
 	});
 
-	it('передаёт AnswerLoader режим API и короткоживущий тикет', async () => {
+	it('передаёт AnswerLoader короткоживущий UID результата API', async () => {
 		render(<SectionAuto/>);
 
 		startSourceLoading({
 			source: 'nmo-helper',
 			title: 'Тема API',
 			url: NMO_API_TOPIC_ENDPOINT,
-			mode: 'nmo-api',
-			ticket: 'short-lived.ticket',
+			uid: 'short-lived.uid',
 		});
 
 		await waitFor(() => {
 			expect(testState.answerRequests.get(NMO_API_TOPIC_ENDPOINT)).toEqual({
-				mode: 'nmo-api',
-				ticket: 'short-lived.ticket',
+				ticket: 'short-lived.uid',
 			});
+		});
+	});
+
+	it('раздельно загружает результаты nmo-helper и foo', async () => {
+		render(<SectionAuto/>);
+
+		startSourceLoading(
+			{
+				source: 'nmo-helper',
+				title: 'Тема API',
+				url: NMO_API_TOPIC_ENDPOINT,
+				uid: 'short-lived.uid',
+			},
+			{source: 'foo', title: 'Тема foo', url: FOO_URL},
+		);
+
+		await waitFor(() => {
+			expect(testState.answerChanges.size).toBe(4);
+			expect(testState.answerRequests.get(NMO_API_TOPIC_ENDPOINT)).toEqual({
+				ticket: 'short-lived.uid',
+			});
+			expect(testState.answerRequests.get(FOO_URL)).toEqual({ticket: undefined});
 		});
 	});
 
@@ -150,7 +168,7 @@ describe('SectionAuto', () => {
 		await waitFor(() => {
 			expect(testState.answerChanges.has(PRIMARY_SOURCE_URL)).toBe(true);
 			expect(testState.answerChanges.has(SECONDARY_SOURCE_URL)).toBe(true);
-			expect(testState.answerChanges.has(NMO_HELPER_URL)).toBe(true);
+			expect(testState.answerChanges.has(FOO_URL)).toBe(true);
 		});
 	});
 
@@ -172,7 +190,7 @@ describe('SectionAuto', () => {
 		expect(testState.cacheSet).not.toHaveBeenCalled();
 
 		act(() => {
-			testState.answerChanges.get(NMO_HELPER_URL)?.({
+			testState.answerChanges.get(FOO_URL)?.({
 				loading: false,
 				error: null,
 				data: null,
@@ -229,7 +247,7 @@ describe('SectionAuto', () => {
 		expect(testState.cacheSet).not.toHaveBeenCalled();
 
 		act(() => {
-			testState.answerChanges.get(NMO_HELPER_URL)?.({
+			testState.answerChanges.get(FOO_URL)?.({
 				loading: false,
 				error: null,
 				data: null,
@@ -247,10 +265,10 @@ describe('SectionAuto', () => {
 		});
 	});
 
-	it('использует nmo-helper, если другие источники не нашли ответ', async () => {
+	it('использует foo, если другие источники не нашли ответ', async () => {
 		testState.foundBySource.set('primary', null);
 		testState.foundBySource.set('secondary', null);
-		testState.foundBySource.set('nmo-helper', {answers: ['Ответ B'], score: 1});
+		testState.foundBySource.set('foo', {answers: ['Ответ B'], score: 1});
 		render(<SectionAuto/>);
 		startSourceLoading();
 
@@ -267,7 +285,7 @@ describe('SectionAuto', () => {
 				error: null,
 				data: document.createElement('div'),
 			});
-			testState.answerChanges.get(NMO_HELPER_URL)?.({
+			testState.answerChanges.get(FOO_URL)?.({
 				loading: false,
 				error: null,
 				data: document.createElement('div'),
@@ -281,10 +299,10 @@ describe('SectionAuto', () => {
 				['Ответ A', 'Ответ B'],
 				['Ответ B'],
 			);
-			expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • nmo-helper', status: 'ok'});
+			expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • foo', status: 'ok'});
 			expect(testState.setBugReportContext).toHaveBeenLastCalledWith({
 				mode: 'auto',
-				url: NMO_HELPER_URL,
+				url: FOO_URL,
 			});
 		});
 	});
@@ -292,7 +310,7 @@ describe('SectionAuto', () => {
 	it('сохраняет приоритет основной базы, когда ответ есть в обоих источниках', async () => {
 		testState.foundBySource.set('primary', {answers: ['Ответ A'], score: 1});
 		testState.foundBySource.set('secondary', {answers: ['Ответ B'], score: 1});
-		testState.foundBySource.set('nmo-helper', {answers: ['Ответ B'], score: 1});
+		testState.foundBySource.set('foo', {answers: ['Ответ B'], score: 1});
 		render(<SectionAuto/>);
 		startSourceLoading();
 
@@ -309,7 +327,7 @@ describe('SectionAuto', () => {
 				error: null,
 				data: document.createElement('div'),
 			});
-			testState.answerChanges.get(NMO_HELPER_URL)?.({
+			testState.answerChanges.get(FOO_URL)?.({
 				loading: false,
 				error: null,
 				data: document.createElement('div'),
@@ -328,11 +346,11 @@ describe('SectionAuto', () => {
 	});
 });
 
-function startSourceLoading(nmoResult: ITestSearchResult = {
-	source: 'nmo-helper',
-	title: 'Тема',
-	url: NMO_HELPER_URL,
-}): void {
+function startSourceLoading(...sourceResults: ITestSearchResult[]): void {
+	const results = sourceResults.length
+		? sourceResults
+		: [{source: 'foo' as const, title: 'Тема', url: FOO_URL}];
+
 	act(() => {
 		testState.variantChange?.({
 			loading: false,
@@ -340,7 +358,7 @@ function startSourceLoading(nmoResult: ITestSearchResult = {
 			data: [
 				{source: 'primary', title: 'Тема', url: PRIMARY_SOURCE_URL},
 				{source: 'secondary', title: 'Тема', url: SECONDARY_SOURCE_URL},
-				nmoResult,
+				...results,
 			],
 		});
 	});

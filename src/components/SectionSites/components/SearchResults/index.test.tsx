@@ -8,10 +8,11 @@ const RESULTS: ISearchResult[] = [
 		source: 'nmo-helper',
 		title: 'Результат NMO Helper',
 		url: 'https://nmo-helper.ru/result',
-		ticket: 'short-lived.ticket',
+		uid: 'short-lived.uid',
 	},
 	{source: 'secondary', title: 'Результат 24forcare', url: 'https://24forcare.com/result'},
 	{source: 'primary', title: 'Результат Rosmed', url: 'https://rosmedicinfo.ru/result'},
+	{source: 'foo', title: 'Результат foo', url: 'https://foo.example/result'},
 ];
 
 describe('SearchResults', () => {
@@ -30,6 +31,7 @@ describe('SearchResults', () => {
 			'Результат Rosmed',
 			'Результат 24forcare',
 			'Результат NMO Helper',
+			'Результат foo',
 		]);
 
 		expect(buttons[0]).toHaveAttribute('aria-pressed', 'false');
@@ -40,17 +42,17 @@ describe('SearchResults', () => {
 		expect(onSelect).toHaveBeenCalledWith(RESULTS[1]);
 	});
 
-	it('различает API-результаты с одинаковым URL по тикету', () => {
+	it('различает API-результаты с одинаковым URL по UID', () => {
 		const apiResults: ISearchResult[] = [
-			{source: 'nmo-helper', title: 'Первый', url: 'https://nmo-helper.ru/api/nmo/topic', ticket: 'ticket.one'},
-			{source: 'nmo-helper', title: 'Второй', url: 'https://nmo-helper.ru/api/nmo/topic', ticket: 'ticket.two'},
+			{source: 'nmo-helper', title: 'Первый', url: 'https://nmo-helper.ru/api/nmo/topic', uid: 'uid.one'},
+			{source: 'nmo-helper', title: 'Второй', url: 'https://nmo-helper.ru/api/nmo/topic', uid: 'uid.two'},
 		];
 
 		render(
 			<SearchResults
 				results={apiResults}
 				selectedUrl={apiResults[1].url}
-				selectedTicket="ticket.two"
+				selectedTicket="uid.two"
 				onSelect={vi.fn()}/>,
 		);
 

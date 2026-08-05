@@ -122,12 +122,12 @@ describe('parseThirdSourceResults', () => {
 
 		expect(parseThirdSourceResults(text)).toEqual([
 			{
-				source: 'nmo-helper',
+				source: 'foo',
 				title: 'Особенности реабилитации',
 				url: `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic%2F42.html`,
 			},
 			{
-				source: 'nmo-helper',
+				source: 'foo',
 				title: 'Вторая тема',
 				url: `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/${encodeURIComponent('тема с пробелом')}.html`,
 			},
@@ -161,17 +161,17 @@ describe('parseThirdSourceResults', () => {
 });
 
 describe('parseNmoApiSearchResults', () => {
-	it('преобразует элементы API и нормализует заголовок с тикетом', () => {
+	it('преобразует элементы API и нормализует заголовок с UID', () => {
 		const text = JSON.stringify({
 			items: [
 				{
 					id: 'internal-id-is-ignored',
 					title: ' Диагностика заболевания ',
-					ticket: ' short-lived.ticket ',
+					uid: ' short-lived.uid ',
 				},
 				{
 					title: 'Вторая тема',
-					ticket: 'second.ticket',
+					uid: 'second.uid',
 				},
 			],
 		});
@@ -181,15 +181,13 @@ describe('parseNmoApiSearchResults', () => {
 				source: 'nmo-helper',
 				title: 'Диагностика заболевания',
 				url: `https://${NMO_API_HOST}/api/nmo/topic`,
-				mode: 'nmo-api',
-				ticket: 'short-lived.ticket',
+				uid: 'short-lived.uid',
 			},
 			{
 				source: 'nmo-helper',
 				title: 'Вторая тема',
 				url: `https://${NMO_API_HOST}/api/nmo/topic`,
-				mode: 'nmo-api',
-				ticket: 'second.ticket',
+				uid: 'second.uid',
 			},
 		]);
 	});

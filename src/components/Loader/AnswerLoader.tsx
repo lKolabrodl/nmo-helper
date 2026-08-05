@@ -4,7 +4,6 @@ import { detectSource } from '../../utils';
 import {fetchNmoSource} from '../../api/fetch/fetch-nmo-source';
 import {fetchNmoApiTopic, NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
 import type {QaCaseModel} from '../../utils/cases';
-import type {AnswerLoaderMode} from '../../types';
 
 export interface IAnswerModel {
 	readonly loading: boolean;
@@ -16,12 +15,11 @@ const INIT_STATE: IAnswerModel = { loading: false, error: null, data: null };
 
 interface IAnswerLoaderProps {
 	readonly url: string;
-	readonly mode?: AnswerLoaderMode;
 	readonly ticket?: string;
 	readonly onChange: (state: IAnswerModel) => void;
 }
 
-const AnswerLoader = ({url, mode = 'page', ticket = '', onChange}: IAnswerLoaderProps) => {
+const AnswerLoader = ({url, ticket = '', onChange}: IAnswerLoaderProps) => {
 
 	useEffect(() => {
 		const trimmed = url.trim();
@@ -35,19 +33,19 @@ const AnswerLoader = ({url, mode = 'page', ticket = '', onChange}: IAnswerLoader
 			return;
 		}
 
-		if (mode === 'nmo-api' && valid.href !== NMO_API_TOPIC_ENDPOINT) {
+		const sourceKey = detectSource(valid.href);
+		if (!sourceKey) return onChange({loading: false, error: 'URL не относится к поддерживаемой базе ответов', data: null});
+
+		if (sourceKey === 'nmo-helper' && valid.href !== NMO_API_TOPIC_ENDPOINT) {
 			onChange({loading: false, error: 'некорректный URL NMO API', data: null});
 			return;
 		}
 
 		const normalizedTicket = ticket.trim();
-		if (mode === 'nmo-api' && !normalizedTicket) {
+		if (sourceKey === 'nmo-helper' && !normalizedTicket) {
 			onChange({loading: false, error: 'отсутствует тикет NMO API — повторите поиск', data: null});
 			return;
 		}
-
-		const sourceKey = mode === 'nmo-api' ? 'nmo-helper' : detectSource(valid.href);
-		if (!sourceKey) return onChange({loading: false, error: 'URL не относится к поддерживаемой базе ответов', data: null});
 
 		onChange({ loading: true, error: null, data: null });
 
@@ -55,7 +53,7 @@ const AnswerLoader = ({url, mode = 'page', ticket = '', onChange}: IAnswerLoader
 
 		async function load() {
 			try {
-				if (mode === 'nmo-api') {
+				if (sourceKey === 'nmo-helper') {
 					const model = await fetchNmoApiTopic(normalizedTicket);
 					if (cancelled) return;
 					onChange({loading: false, error: null, data: model});
@@ -63,7 +61,7 @@ const AnswerLoader = ({url, mode = 'page', ticket = '', onChange}: IAnswerLoader
 				}
 
 				// отдельная обработка
-				if (sourceKey === 'nmo-helper') {
+				if (sourceKey === 'foo') {
 					const model = await fetchNmoSource(valid.href);
 					if (cancelled) return;
 					onChange({loading: false, error: null, data: model});
@@ -90,7 +88,7 @@ const AnswerLoader = ({url, mode = 'page', ticket = '', onChange}: IAnswerLoader
 				const message = (error as Error).message;
 				onChange({
 					loading: false,
-					error: mode === 'nmo-api' ? message : `ошибка парсинга: ${message}`,
+					error: sourceKey === 'nmo-helper' ? message : `ошибка парсинга: ${message}`,
 					data: null,
 				});
 			}
@@ -100,7 +98,7 @@ const AnswerLoader = ({url, mode = 'page', ticket = '', onChange}: IAnswerLoader
 
 		return () => { cancelled = true; };
 
-	}, [url, mode, ticket]);
+	}, [url, ticket]);
 
 	return null;
 };
