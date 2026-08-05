@@ -12,7 +12,7 @@ import {
 	searchNmoSource,
 	searchSecondarySource,
 	searchThirdSource,
-} from './search-answer-sources';
+} from './search-variant-sources';
 
 vi.mock('./fetch', async importOriginal => ({
 	...await importOriginal<typeof import('./fetch')>(),

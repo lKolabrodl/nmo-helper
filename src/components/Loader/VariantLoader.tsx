@@ -1,6 +1,6 @@
 import {useEffect} from 'react';
 import type {ISearchResult} from '../../types';
-import {searchFirstSource, searchNmoSource, searchSecondarySource, searchThirdSource} from '../../api/fetch/search-answer-sources';
+import {searchFirstSource, searchNmoSource, searchSecondarySource, searchThirdSource} from '../../api/fetch/search-variant-sources';
 
 export interface IVariantModel {
 	readonly loading: boolean;

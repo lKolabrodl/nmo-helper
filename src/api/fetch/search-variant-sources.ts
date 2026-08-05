@@ -4,7 +4,7 @@
  * Каждый источник принимает строку запроса и возвращает общую модель результата,
  * чтобы вызывающий код не зависел от формата конкретного сайта.
  *
- * @module api/fetch/search-answer-sources
+ * @module api/fetch/search-variant-sources
  */
 
 import type {ISearchResult} from '../../types';

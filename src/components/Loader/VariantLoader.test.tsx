@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => ({
 	searchThirdSource: vi.fn(),
 }));
 
-vi.mock('../../api/fetch/search-answer-sources', () => ({
+vi.mock('../../api/fetch/search-variant-sources', () => ({
 	searchSecondarySource: mocks.searchSecondarySource,
 	searchFirstSource: mocks.searchFirstSource,
 	searchNmoSource: mocks.searchNmoSource,
