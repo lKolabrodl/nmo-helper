@@ -7,7 +7,7 @@ import {useBugReportContext} from '../../contexts/BugReportContext';
 import {storageSet} from '../../utils';
 import {answerCache} from '../../utils/answer-cache';
 import {detectSource} from '../../utils/matching';
-import {findAnswers, extractCases} from '../../utils/cases';
+import {findAnswers} from '../../utils/cases';
 import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
@@ -90,8 +90,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		const source = detectSource(activeUrl);
 		if (!source) return;
 
-		const model = extractCases(source, answerModel.data);
-		const found = findAnswers(model, question, variants);
+		const found = findAnswers(answerModel.data, question, variants);
 
 		if (!found) return setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
 		if (!found.answers.length) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});

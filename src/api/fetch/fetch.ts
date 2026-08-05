@@ -69,6 +69,23 @@ export function fetchViaBackground(url: string, options: IRequestOptions = {}): 
 }
 
 /**
+ * Возвращает текст успешного ответа или бросает единообразную ошибку запроса.
+ *
+ * @param response Ответ {@link fetchViaBackground}.
+ * @returns Непустое текстовое тело ответа.
+ * @throws {Error} При сетевой ошибке, ошибочном HTTP-статусе или пустом теле.
+ */
+export function getResponseText(response: IRequestResponse): string {
+	if (response.error) throw new Error('ошибка сети — проверь URL');
+	if (response.status < 200 || response.status >= 400) {
+		throw new Error(`ошибка ${response.status}: сервер отклонил запрос`);
+	}
+	if (!response.text.trim()) throw new Error('пустой ответ от сервера');
+
+	return response.text;
+}
+
+/**
  * Безопасно читает ошибку последнего вызова Chrome Runtime API.
  *
  * Доступ к `chrome.runtime.lastError` сам может бросить после инвалидирования

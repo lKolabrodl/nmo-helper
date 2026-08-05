@@ -1,9 +1,8 @@
 import type {ISearchResult} from '../types';
-import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_HOST, SECONDARY_ANSWER_SOURCE_HOST} from './constants';
+import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_TOPIC_ENDPOINT, SECONDARY_ANSWER_SOURCE_HOST} from './constants';
 
 const SECONDARY_SOURCE_URL = `https://${SECONDARY_ANSWER_SOURCE_HOST}`;
 const THIRD_SOURCE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
-const NMO_API_TOPIC_URL = `https://${NMO_API_HOST}/api/nmo/topic`;
 
 interface INmoApiSearchItem {
 	readonly title: string;
@@ -190,6 +189,6 @@ export function parseNmoApiSearchResults(text: string): ISearchResult[] {
 	return payload.items.map(item => ({
 		source: 'nmo-helper',
 		title: item.title.trim(),
-		url: `${NMO_API_TOPIC_URL}/${encodeURIComponent(item.uid.trim())}`,
+		url: `${NMO_API_TOPIC_ENDPOINT}/${encodeURIComponent(item.uid.trim())}`,
 	}));
 }

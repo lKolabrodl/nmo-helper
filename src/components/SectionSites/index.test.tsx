@@ -1,6 +1,6 @@
 import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
+import {NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
 import SectionSites from './index';
 
 interface ITestSearchResult {
@@ -18,7 +18,12 @@ interface ITestVariantModel {
 interface ITestAnswerModel {
 	readonly loading: boolean;
 	readonly error: string | null;
-	readonly data: HTMLElement | null;
+	readonly data: Array<{
+		readonly question: string;
+		readonly variants: string[];
+		readonly answers: string[];
+		readonly idx: number;
+	}> | null;
 }
 
 type VariantChange = (state: ITestVariantModel) => void;
@@ -68,7 +73,6 @@ vi.mock('../../utils/matching', () => ({
 }));
 
 vi.mock('../../utils/cases', () => ({
-	extractCases: vi.fn(),
 	findAnswers: vi.fn(),
 }));
 

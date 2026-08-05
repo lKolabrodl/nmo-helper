@@ -2,11 +2,11 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {
 	ALTERNATIVE_ANSWER_SOURCE_HOST,
 	NMO_API_HOST,
+	NMO_API_TOPIC_ENDPOINT,
 	PRIMARY_ANSWER_SOURCE_HOST,
 	SECONDARY_ANSWER_SOURCE_HOST,
 } from '../../utils/constants';
 import {fetchViaBackground} from './fetch';
-import {NMO_API_TOPIC_ENDPOINT} from './fetch-nmo-api';
 import {
 	searchFirstSource,
 	searchNmoSource,
@@ -42,6 +42,11 @@ describe('searchSecondarySource', () => {
 		expectedUrl.searchParams.set('query', 'Тема (тест) - 2026');
 		expect(mockFetch).toHaveBeenCalledWith(expectedUrl.toString());
 	});
+
+	it('не отправляет пустой запрос', async () => {
+		await expect(searchSecondarySource('   ')).resolves.toEqual([]);
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
 });
 
 describe('searchFirstSource', () => {
@@ -62,6 +67,11 @@ describe('searchFirstSource', () => {
 			headers: {'Content-Type': 'application/x-www-form-urlencoded'},
 			body: 'do=search&subaction=search&story=' + encodeURIComponent('Инфаркт миокарда'),
 		});
+	});
+
+	it('не отправляет пустой запрос', async () => {
+		await expect(searchFirstSource('   ')).resolves.toEqual([]);
+		expect(mockFetch).not.toHaveBeenCalled();
 	});
 });
 
@@ -91,9 +101,14 @@ describe('searchThirdSource', () => {
 
 		await expect(searchThirdSource('Тема')).resolves.toEqual([]);
 	});
+
+	it('не отправляет пустой запрос', async () => {
+		await expect(searchThirdSource('   ')).resolves.toEqual([]);
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
 });
 
-describe('searchNmoApi', () => {
+describe('searchNmoSource', () => {
 	it('возвращает результаты с короткоживущими UID', async () => {
 		mockFetch.mockResolvedValue(ok(JSON.stringify({
 			items: [{

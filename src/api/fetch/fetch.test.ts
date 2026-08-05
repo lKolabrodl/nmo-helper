@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {fetchViaBackground} from './fetch';
+import {fetchViaBackground, getResponseText} from './fetch';
 
 type SendMessageFn = (msg: unknown, cb: (res: unknown) => void) => void;
 
@@ -80,5 +80,28 @@ describe('fn fetchViaBackground', () => {
 			text: '',
 			message: 'Extension context invalidated.',
 		});
+	});
+});
+
+describe('getResponseText', () => {
+	it('возвращает текст успешного ответа', () => {
+		expect(getResponseText({error: false, status: 200, text: 'answer'})).toBe('answer');
+	});
+
+	it.each([
+		{
+			response: {error: true, status: 0, text: ''},
+			message: 'ошибка сети — проверь URL',
+		},
+		{
+			response: {error: false, status: 404, text: 'not found'},
+			message: 'ошибка 404: сервер отклонил запрос',
+		},
+		{
+			response: {error: false, status: 200, text: '   '},
+			message: 'пустой ответ от сервера',
+		},
+	])('бросает единообразную ошибку: $message', ({response, message}) => {
+		expect(() => getResponseText(response)).toThrow(message);
 	});
 });

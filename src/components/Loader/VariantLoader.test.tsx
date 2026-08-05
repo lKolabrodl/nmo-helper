@@ -1,6 +1,6 @@
 import {render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
+import {NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
 import type {ISearchResult} from '../../types';
 import VariantLoader from './VariantLoader';
 

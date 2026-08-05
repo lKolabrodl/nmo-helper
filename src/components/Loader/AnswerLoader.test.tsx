@@ -1,7 +1,6 @@
 import {render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
-import {NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
+import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
 import AnswerLoader from './AnswerLoader';
 
 const NMO_TEST_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic.html`;
@@ -9,25 +8,21 @@ const NMO_API_RESULT_URL = `${NMO_API_TOPIC_ENDPOINT}/short-lived.uid`;
 
 const mocks = vi.hoisted(() => ({
 	detectSource: vi.fn(),
-	fetchNmoApiTopic: vi.fn(),
-	fetchNmoSource: vi.fn(),
-	fetchViaBackground: vi.fn(),
-	parseHtml: vi.fn(),
+	getFirstAnswers: vi.fn(),
+	getSecondAnswers: vi.fn(),
+	getNmoAnswers: vi.fn(),
+	getThirdAnswers: vi.fn(),
 }));
 
 vi.mock('../../utils', () => ({
 	detectSource: mocks.detectSource,
-	fetchViaBackground: mocks.fetchViaBackground,
-	parseHtml: mocks.parseHtml,
 }));
 
-vi.mock('../../api/fetch/fetch-nmo-source', () => ({
-	fetchNmoSource: mocks.fetchNmoSource,
-}));
-
-vi.mock('../../api/fetch/fetch-nmo-api', async importOriginal => ({
-	...await importOriginal<typeof import('../../api/fetch/fetch-nmo-api')>(),
-	fetchNmoApiTopic: mocks.fetchNmoApiTopic,
+vi.mock('../../api/fetch/search-answer-sources', () => ({
+	getFirstAnswers: mocks.getFirstAnswers,
+	getSecondAnswers: mocks.getSecondAnswers,
+	getNmoAnswers: mocks.getNmoAnswers,
+	getThirdAnswers: mocks.getThirdAnswers,
 }));
 
 beforeEach(() => {
@@ -45,7 +40,7 @@ describe('AnswerLoader', () => {
 			idx: 0,
 		}];
 		mocks.detectSource.mockReturnValue('foo');
-		mocks.fetchNmoSource.mockResolvedValue(model);
+		mocks.getThirdAnswers.mockResolvedValue(model);
 		const onChange = vi.fn();
 
 		render(<AnswerLoader url={NMO_TEST_URL} onChange={onChange}/>);
@@ -54,8 +49,10 @@ describe('AnswerLoader', () => {
 		await waitFor(() => {
 			expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: model});
 		});
-		expect(mocks.fetchNmoSource).toHaveBeenCalledWith(NMO_TEST_URL);
-		expect(mocks.fetchViaBackground).not.toHaveBeenCalled();
+		expect(mocks.getThirdAnswers).toHaveBeenCalledWith(NMO_TEST_URL);
+		expect(mocks.getFirstAnswers).not.toHaveBeenCalled();
+		expect(mocks.getSecondAnswers).not.toHaveBeenCalled();
+		expect(mocks.getNmoAnswers).not.toHaveBeenCalled();
 	});
 
 	it('для sourceKey=nmo-helper загружает готовый вариант по тикету', async () => {
@@ -66,7 +63,7 @@ describe('AnswerLoader', () => {
 			idx: 0,
 		}];
 		mocks.detectSource.mockReturnValue('nmo-helper');
-		mocks.fetchNmoApiTopic.mockResolvedValue(model);
+		mocks.getNmoAnswers.mockResolvedValue(model);
 		const onChange = vi.fn();
 
 		render(
@@ -79,14 +76,45 @@ describe('AnswerLoader', () => {
 		await waitFor(() => {
 			expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: model});
 		});
-		expect(mocks.fetchNmoApiTopic).toHaveBeenCalledWith(NMO_API_RESULT_URL);
-		expect(mocks.fetchNmoSource).not.toHaveBeenCalled();
-		expect(mocks.fetchViaBackground).not.toHaveBeenCalled();
+		expect(mocks.getNmoAnswers).toHaveBeenCalledWith(NMO_API_RESULT_URL);
+		expect(mocks.getThirdAnswers).not.toHaveBeenCalled();
+		expect(mocks.getFirstAnswers).not.toHaveBeenCalled();
+		expect(mocks.getSecondAnswers).not.toHaveBeenCalled();
 	});
 
-	it('передаёт проверку URL в fetchNmoApiTopic и показывает её ошибку', async () => {
+	it('для sourceKey=primary загружает первый источник и возвращает готовую модель', async () => {
+		const model = [{question: 'Вопрос', variants: ['A', 'B'], answers: ['A'], idx: 0}];
+		mocks.detectSource.mockReturnValue('primary');
+		mocks.getFirstAnswers.mockResolvedValue(model);
+		const onChange = vi.fn();
+
+		render(<AnswerLoader url="https://first.example/topic" onChange={onChange}/>);
+
+		await waitFor(() => {
+			expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: model});
+		});
+		expect(mocks.getFirstAnswers).toHaveBeenCalledWith('https://first.example/topic');
+		expect(mocks.getSecondAnswers).not.toHaveBeenCalled();
+	});
+
+	it('для sourceKey=secondary загружает второй источник и возвращает готовую модель', async () => {
+		const model = [{question: 'Вопрос', variants: ['A', 'B'], answers: ['B'], idx: 0}];
+		mocks.detectSource.mockReturnValue('secondary');
+		mocks.getSecondAnswers.mockResolvedValue(model);
+		const onChange = vi.fn();
+
+		render(<AnswerLoader url="https://second.example/topic" onChange={onChange}/>);
+
+		await waitFor(() => {
+			expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: model});
+		});
+		expect(mocks.getSecondAnswers).toHaveBeenCalledWith('https://second.example/topic');
+		expect(mocks.getFirstAnswers).not.toHaveBeenCalled();
+	});
+
+	it('передаёт проверку URL в getNmoAnswers и показывает её ошибку', async () => {
 		mocks.detectSource.mockReturnValue('nmo-helper');
-		mocks.fetchNmoApiTopic.mockRejectedValue(new Error('некорректный URL NMO API'));
+		mocks.getNmoAnswers.mockRejectedValue(new Error('некорректный URL NMO API'));
 		const onChange = vi.fn();
 
 		render(<AnswerLoader url={NMO_API_TOPIC_ENDPOINT} onChange={onChange}/>);
@@ -98,6 +126,6 @@ describe('AnswerLoader', () => {
 				data: null,
 			});
 		});
-		expect(mocks.fetchNmoApiTopic).toHaveBeenCalledWith(NMO_API_TOPIC_ENDPOINT);
+		expect(mocks.getNmoAnswers).toHaveBeenCalledWith(NMO_API_TOPIC_ENDPOINT);
 	});
 });

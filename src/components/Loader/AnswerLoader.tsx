@@ -1,14 +1,12 @@
 import { useEffect } from 'react';
-import { fetchViaBackground, parseHtml } from '../../utils';
 import { detectSource } from '../../utils';
-import {fetchNmoSource} from '../../api/fetch/fetch-nmo-source';
-import {fetchNmoApiTopic} from '../../api/fetch/fetch-nmo-api';
+import {getFirstAnswers, getNmoAnswers, getSecondAnswers, getThirdAnswers} from '../../api/fetch/search-answer-sources';
 import type {QaCaseModel} from '../../utils/cases';
 
 export interface IAnswerModel {
 	readonly loading: boolean;
 	readonly error: string | null;
-	readonly data: HTMLElement | QaCaseModel[] | null;
+	readonly data: QaCaseModel[] | null;
 }
 
 const INIT_STATE: IAnswerModel = { loading: false, error: null, data: null };
@@ -41,44 +39,20 @@ const AnswerLoader = ({url, onChange}: IAnswerLoaderProps) => {
 
 		async function load() {
 			try {
-				if (sourceKey === 'nmo-helper') {
-					const model = await fetchNmoApiTopic(valid.href);
-					if (cancelled) return;
-					onChange({loading: false, error: null, data: model});
-					return;
-				}
+				let model: QaCaseModel[];
+				if (sourceKey === 'nmo-helper') model = await getNmoAnswers(valid.href);
+				else if (sourceKey === 'foo') model = await getThirdAnswers(valid.href);
+				else if (sourceKey === 'primary') model = await getFirstAnswers(valid.href);
+				else model = await getSecondAnswers(valid.href);
 
-				// отдельная обработка
-				if (sourceKey === 'foo') {
-					const model = await fetchNmoSource(valid.href);
-					if (cancelled) return;
-					onChange({loading: false, error: null, data: model});
-					return;
-				}
-
-				const res = await fetchViaBackground(valid.href);
 				if (cancelled) return;
 
-				if (res.error) return onChange({loading: false, error: 'ошибка сети — проверь URL', data: null});
-
-				if (res.status < 200 || res.status >= 400) {
-					return onChange({ loading: false, error: `ошибка ${res.status}: сервер отклонил запрос`, data: null });
-				}
-
-				if (!res.text || res.text.length < 100) {
-					return onChange({ loading: false, error: 'пустой ответ от сервера', data: null });
-				}
-
-				onChange({loading: false, error: null, data: parseHtml(res.text, true)});
+				onChange({loading: false, error: null, data: model});
 
 			} catch (error) {
 				if (cancelled) return;
 				const message = (error as Error).message;
-				onChange({
-					loading: false,
-					error: sourceKey === 'nmo-helper' ? message : `ошибка парсинга: ${message}`,
-					data: null,
-				});
+				onChange({loading: false, error: message, data: null});
 			}
 		}
 

@@ -1,13 +1,19 @@
 import {act, render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
-import {NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
+import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
 import SectionAuto from './index';
 
 interface ITestAnswerModel {
 	readonly loading: boolean;
 	readonly error: string | null;
-	readonly data: HTMLElement | null;
+	readonly data: ITestQaCase[] | null;
+}
+
+interface ITestQaCase {
+	readonly question: string;
+	readonly variants: string[];
+	readonly answers: string[];
+	readonly idx: number;
 }
 
 interface ITestSearchResult {
@@ -72,8 +78,7 @@ vi.mock('../../utils', () => ({
 }));
 
 vi.mock('../../utils/cases', () => ({
-	extractCases: (source: string) => [{question: source, variants: [], answers: [], idx: 0}],
-	findAnswers: (model: Array<{question: string}>) => testState.foundBySource.get(model[0].question) ?? null,
+	findAnswers: (model: ITestQaCase[]) => testState.foundBySource.get(model[0].question) ?? null,
 }));
 
 vi.mock('../Loader/VariantLoader', () => ({
@@ -174,7 +179,7 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(PRIMARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('primary'),
 			});
 		});
 		expect(testState.cacheSet).not.toHaveBeenCalled();
@@ -192,7 +197,7 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(SECONDARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('secondary'),
 			});
 		});
 
@@ -222,7 +227,7 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(PRIMARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('primary'),
 			});
 		});
 		expect(testState.cacheSet).not.toHaveBeenCalled();
@@ -231,7 +236,7 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(SECONDARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('secondary'),
 			});
 		});
 		expect(testState.cacheSet).not.toHaveBeenCalled();
@@ -268,17 +273,17 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(PRIMARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('primary'),
 			});
 			testState.answerChanges.get(SECONDARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('secondary'),
 			});
 			testState.answerChanges.get(FOO_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('foo'),
 			});
 		});
 
@@ -310,17 +315,17 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(PRIMARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('primary'),
 			});
 			testState.answerChanges.get(SECONDARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('secondary'),
 			});
 			testState.answerChanges.get(FOO_URL)?.({
 				loading: false,
 				error: null,
-				data: document.createElement('div'),
+				data: makeModel('foo'),
 			});
 		});
 
@@ -352,4 +357,8 @@ function startSourceLoading(...sourceResults: ITestSearchResult[]): void {
 			],
 		});
 	});
+}
+
+function makeModel(source: string): ITestQaCase[] {
+	return [{question: source, variants: [], answers: [], idx: 0}];
 }

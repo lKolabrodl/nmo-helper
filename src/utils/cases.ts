@@ -1,21 +1,10 @@
-import type { ISourceKey } from '../types';
 import { matchQuestion, variantScore } from './matching';
-import {
-	extractSecondaryH3Strong,
-	extractSecondaryNumberedPPlus,
-	extractPrimaryH3Highlighted,
-	extractPrimaryH3BrPlus,
-	extractPrimaryNumberedPInlineBr,
-	extractPrimaryNumberedPPerParagraph,
-	extractPrimaryFlatBr,
-	type QaCaseRaw,
-} from './extractors';
 
 export interface QaCaseModel {
 	readonly question: string;
 	readonly variants: string[];
 	readonly answers: string[];
-	/** Порядковый индекс case'а в выходном массиве `extractCases`. Уникален в рамках одного вызова. */
+	/** Порядковый индекс case'а в модели. Уникален в рамках одного извлечения. */
 	readonly idx: number;
 }
 
@@ -26,34 +15,6 @@ export interface QaCaseModel {
  * через «лучший кандидат», не через этот порог.
  */
 const MIN_VARIANT_SCORE = 0.7;
-
-// ─── Публичный диспатчер ─────────────────────────────────────────────
-
-/**
- * Достаёт все вопросы из данных источника.
- * Готовая модель от nmo-helper или foo уже собрана загрузчиком и возвращается
- * без изменений.
- * @param source — ключ источника
- * @param input  — распарсенный HTML-документ либо готовая модель источника
- */
-export function extractCases(source: ISourceKey, input: HTMLElement | QaCaseModel[]): QaCaseModel[] {
-	if (Array.isArray(input)) return input;
-
-	let raw: QaCaseRaw[] = [];
-
-	if (source === 'secondary') raw = [...extractSecondaryH3Strong(input), ...extractSecondaryNumberedPPlus(input)];
-	else if (source === 'primary') {
-		raw = [
-			...extractPrimaryH3Highlighted(input),
-			...extractPrimaryH3BrPlus(input),
-			...extractPrimaryNumberedPInlineBr(input),
-			...extractPrimaryNumberedPPerParagraph(input),
-			...extractPrimaryFlatBr(input),
-		];
-	}
-
-	return raw.map((c, idx) => ({...c, idx}));
-}
 
 // ─── Поиск по модели ─────────────────────────────────────────────────
 

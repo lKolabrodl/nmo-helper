@@ -11,7 +11,7 @@ import type {IVariantModel} from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
 import {pickResult} from '../../utils';
-import {findAnswers, extractCases} from '../../utils/cases';
+import {findAnswers} from '../../utils/cases';
 import {IconBolt} from '../icons';
 import InlineToast from '../ui/InlineToast';
 import ThinkingStrip from '../ui/ThinkingStrip';
@@ -98,10 +98,10 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		if (!question || !variants.length) return;
 
 		const sources = [
-			{key: 'nmo-helper' as const, label: 'nmo-helper', url: nmoHelperUrl, state: nmoHelperModel},
-			{key: 'primary' as const, label: 'база 1', url: primarySourceUrl, state: primarySourceModel},
-			{key: 'secondary' as const, label: 'база 2', url: secondarySourceUrl, state: secondarySourceModel},
-			{key: 'foo' as const, label: 'foo', url: fooUrl, state: fooModel},
+			{label: 'nmo-helper', url: nmoHelperUrl, state: nmoHelperModel},
+			{label: 'база 1', url: primarySourceUrl, state: primarySourceModel},
+			{label: 'база 2', url: secondarySourceUrl, state: secondarySourceModel},
+			{label: 'foo', url: fooUrl, state: fooModel},
 		].filter(source => source.url);
 
 		// пока пусто
@@ -124,8 +124,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		for (const source of sources) {
 			if (!source.state.data) continue;
 
-			const model = extractCases(source.key, source.state.data);
-			const found = findAnswers(model, question, variants);
+			const found = findAnswers(source.state.data, question, variants);
 
 			if (!found) continue;
 

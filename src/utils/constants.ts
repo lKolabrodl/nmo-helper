@@ -25,6 +25,8 @@ export const PRIMARY_ANSWER_SOURCE_HOST = 'rosmedicinfo.ru';
 export const SECONDARY_ANSWER_SOURCE_HOST = '24forcare.com';
 export const ALTERNATIVE_ANSWER_SOURCE_HOST = 'testotvet.com';
 export const NMO_API_HOST = 'nmo-helper.ru';
+export const NMO_API_BASE_URL = `https://${NMO_API_HOST}/api/nmo`;
+export const NMO_API_TOPIC_ENDPOINT = `${NMO_API_BASE_URL}/topic`;
 
 /**
  * DOM-селекторы страницы НМО.

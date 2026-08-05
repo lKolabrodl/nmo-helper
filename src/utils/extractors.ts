@@ -4,8 +4,8 @@
  *
  * Каждый extractor знает ровно одну раскладку и на чужой либо вернёт `[]`,
  * либо наберёт мусор — рассчитывать на «универсальный» код не надо.
- * Диспатчер (`extractCases`) прогоняет все relevant extractor'ы
- * для выбранного источника и склеивает результаты, после чего matcher
+ * Функции {@link extractFirstCases} и {@link extractSecondCases} прогоняют
+ * extractor'ы своего источника и склеивают результаты, после чего matcher
  * разбирается, какой case лучше всего совпадает с входным вопросом.
  *
  * Почему несколько extractor'ов на одну базу: вёрстка
@@ -19,10 +19,11 @@
 
 import { cleanAnswer } from './text';
 import { parseHtml } from './html';
+import type {QaCaseModel} from './cases';
 
 /**
  * Сырой результат extractor'а — один `case` без порядкового индекса.
- * Индекс проставляется диспатчером по позиции в итоговом массиве.
+ * Индекс проставляется объединяющей функцией по позиции в итоговом массиве.
  */
 export interface QaCaseRaw {
 	/** Текст вопроса как он лежит в DOM источника (без нумерации вида «N.»). */
@@ -33,6 +34,29 @@ export interface QaCaseRaw {
 	readonly answers: string[];
 }
 
+/** Извлекает готовую модель из всех поддерживаемых раскладок первого источника. */
+export function extractFirstCases(input: HTMLElement): QaCaseModel[] {
+	const raw = [
+		...extractFirstH3Highlighted(input),
+		...extractFirstH3BrPlus(input),
+		...extractFirstNumberedPInlineBr(input),
+		...extractFirstNumberedPPerParagraph(input),
+		...extractFirstFlatBr(input),
+	];
+
+	return raw.map((item, idx) => ({...item, idx}));
+}
+
+/** Извлекает готовую модель из всех поддерживаемых раскладок второго источника. */
+export function extractSecondCases(input: HTMLElement): QaCaseModel[] {
+	const raw = [
+		...extractSecondaryH3Strong(input),
+		...extractSecondaryNumberedPPlus(input),
+	];
+
+	return raw.map((item, idx) => ({...item, idx}));
+}
+
 /** Пара «plain-text + исходный HTML» для одной `<br>`-строки — см. {@link splitBrLines}. */
 interface RawLine {
 	readonly text: string;
@@ -40,7 +64,7 @@ interface RawLine {
 }
 
 //──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────── nmo-sources ───────────────────────────────────────────────
+// ─────────────────────────────────────────────────── Third-sources ───────────────────────────────────────────────
 //──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 export interface INmoSourceQuestion {
@@ -49,12 +73,18 @@ export interface INmoSourceQuestion {
 	readonly docId: string;
 }
 
+/** Необработанная форма JSON-ответа третьего источника. */
+interface IThirdAnswerResponse {
+	readonly success?: unknown;
+	readonly correct_index?: unknown;
+}
+
 /**
- * Извлекает вопросы nmo-sources из одной HTML-страницы.
+ * Извлекает вопросы third-sources из одной HTML-страницы.
  * Порядок вариантов сохраняется как есть: 1-индексированные номера из API
  * `correct_index` затем преобразуются в позиции именно в этом списке.
  */
-export function parseNmoSourceQuestions(html: string): INmoSourceQuestion[] {
+export function extractThirdQuestions(html: string): INmoSourceQuestion[] {
 	const root = parseHtml(html);
 	const questions: INmoSourceQuestion[] = [];
 
@@ -78,8 +108,70 @@ export function parseNmoSourceQuestions(html: string): INmoSourceQuestion[] {
 	return questions;
 }
 
+/**
+ * Извлекает 0-индексированные позиции правильных вариантов из JSON третьего источника.
+ *
+ * @param text Сырое JSON-тело ответа API.
+ * @param variantCount Число вариантов вопроса для проверки границ индекса.
+ * @returns Массив правильных позиций либо `null`, если ответ невалиден.
+ */
+export function extractThirdAnser(text: string, variantCount: number): number[] | null {
+	let data: IThirdAnswerResponse;
+	try {
+		data = JSON.parse(text) as IThirdAnswerResponse;
+	} catch {
+		return null;
+	}
+
+	if (data.success !== true || !Array.isArray(data.correct_index)) return null;
+
+	const correctIndexes = [...new Set(data.correct_index
+		.filter((value): value is number =>
+			typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= variantCount,
+		)
+		.map(value => value - 1))];
+
+	return correctIndexes.length ? correctIndexes : null;
+}
+
 function normalizeNmoText(text: string): string {
 	return text.replace(/\s+/g, ' ').trim();
+}
+
+type NmoAnswerPayload = {
+	questions?: Array<{
+		text: string;
+		options: string[];
+		correct_answers: string[];
+	}>;
+} | null;
+
+/**
+ * Извлекает вопросы и правильные ответы из JSON NMO API.
+ *
+ * @param text Сырое JSON-тело ответа NMO API.
+ * @returns Готовая модель либо пустой массив, если JSON или `questions` невалидны.
+ */
+export function extractNmoAnswer(text: string): QaCaseModel[] {
+	try {
+		const payload = JSON.parse(text) as NmoAnswerPayload;
+		const questions = payload?.questions;
+
+		if (!Array.isArray(questions)) {
+			console.error('загрузка варианта NMO API:', new Error('questions не является массивом'));
+			return [];
+		}
+
+		return questions.map(({text, options, correct_answers}, idx) => ({
+			question: text.trim(),
+			variants: options,
+			answers: correct_answers,
+			idx,
+		}));
+	} catch (error) {
+		console.error('загрузка варианта NMO API:', error);
+		return [];
+	}
 }
 
 //──────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -145,7 +237,7 @@ export function extractSecondaryH3Strong(div: HTMLElement): QaCaseRaw[] {
  * </p>
  * ```
  *
- * Структурно идентичен {@link extractPrimaryNumberedPInlineBr} — отличается
+ * Структурно идентичен {@link extractFirstNumberedPInlineBr} — отличается
  * только тегом-обёрткой нумерованного заголовка (`<strong>` vs `<b>`),
  * это покрыто расширением {@link readNumberedQuestionText}.
  *
@@ -205,7 +297,7 @@ export function extractSecondaryNumberedPPlus(div: HTMLElement): QaCaseRaw[] {
  * @param div Распарсенный HTML источника.
  * @returns Массив case'ов.
  */
-export function extractPrimaryH3Highlighted(div: HTMLElement): QaCaseRaw[] {
+export function extractFirstH3Highlighted(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 
 	for (const h3 of Array.from(div.querySelectorAll('h3'))) {
@@ -247,7 +339,7 @@ export function extractPrimaryH3Highlighted(div: HTMLElement): QaCaseRaw[] {
  * @param div Распарсенный HTML источника.
  * @returns Массив case'ов.
  */
-export function extractPrimaryH3BrPlus(div: HTMLElement): QaCaseRaw[] {
+export function extractFirstH3BrPlus(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 
 	for (const h3 of Array.from(div.querySelectorAll('h3'))) {
@@ -293,7 +385,7 @@ export function extractPrimaryH3BrPlus(div: HTMLElement): QaCaseRaw[] {
  * @param div Распарсенный HTML источника.
  * @returns Массив case'ов.
  */
-export function extractPrimaryNumberedPInlineBr(div: HTMLElement): QaCaseRaw[] {
+export function extractFirstNumberedPInlineBr(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 	const allP = Array.from(div.querySelectorAll('p'));
 
@@ -342,7 +434,7 @@ export function extractPrimaryNumberedPInlineBr(div: HTMLElement): QaCaseRaw[] {
  * @param div Распарсенный HTML источника.
  * @returns Массив case'ов.
  */
-export function extractPrimaryNumberedPPerParagraph(div: HTMLElement): QaCaseRaw[] {
+export function extractFirstNumberedPPerParagraph(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 	const allP = Array.from(div.querySelectorAll('p'));
 
@@ -401,7 +493,7 @@ export function extractPrimaryNumberedPPerParagraph(div: HTMLElement): QaCaseRaw
  * @param div Распарсенный HTML источника.
  * @returns Массив case'ов.
  */
-export function extractPrimaryFlatBr(div: HTMLElement): QaCaseRaw[] {
+export function extractFirstFlatBr(div: HTMLElement): QaCaseRaw[] {
 	const out: QaCaseRaw[] = [];
 
 	const html = div.innerHTML.replace(/<\/p\s*>/gi, '<br>');
