@@ -1,112 +1,108 @@
 import {render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {SECONDARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import {NMO_API_TOPIC_ENDPOINT} from '../../api/fetch/fetch-nmo-api';
+import type {ISearchResult} from '../../types';
 import VariantLoader from './VariantLoader';
 
-const NMO_BASE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
-
 const mocks = vi.hoisted(() => ({
-	fetchViaBackground: vi.fn(),
-	searchNmoApi: vi.fn(),
+	searchSecondarySource: vi.fn(),
+	searchFirstSource: vi.fn(),
+	searchNmoSource: vi.fn(),
+	searchThirdSource: vi.fn(),
 }));
 
-vi.mock('../../utils', () => ({
-	fetchViaBackground: mocks.fetchViaBackground,
-	parseHtml: vi.fn(),
-}));
-
-vi.mock('../../api/fetch/fetch-nmo-api', async importOriginal => ({
-	...await importOriginal<typeof import('../../api/fetch/fetch-nmo-api')>(),
-	searchNmoApi: mocks.searchNmoApi,
+vi.mock('../../api/fetch/search-answer-sources', () => ({
+	searchSecondarySource: mocks.searchSecondarySource,
+	searchFirstSource: mocks.searchFirstSource,
+	searchNmoSource: mocks.searchNmoSource,
+	searchThirdSource: mocks.searchThirdSource,
 }));
 
 describe('VariantLoader', () => {
 	beforeEach(() => {
-		mocks.fetchViaBackground.mockReset();
-		mocks.searchNmoApi.mockReset();
-		mocks.searchNmoApi.mockResolvedValue([]);
+		mocks.searchSecondarySource.mockReset().mockResolvedValue([]);
+		mocks.searchFirstSource.mockReset().mockResolvedValue([]);
+		mocks.searchNmoSource.mockReset().mockResolvedValue([]);
+		mocks.searchThirdSource.mockReset().mockResolvedValue([]);
 	});
 
-	it('сериализует запрос в формате поисковой формы дополнительной базы', async () => {
-		mocks.fetchViaBackground.mockResolvedValue({
-			error: false,
-			status: 200,
-			text: '',
-		});
-		const onChange = vi.fn();
-
-		render(<VariantLoader text="Тема (тест) - 2026" onChange={onChange}/>);
-
-		await waitFor(() => {
-			expect(mocks.fetchViaBackground).toHaveBeenCalledWith(
-				`https://${SECONDARY_ANSWER_SOURCE_HOST}/search/?query=%D0%A2%D0%B5%D0%BC%D0%B0+%28%D1%82%D0%B5%D1%81%D1%82%29+-+2026`,
-			);
-		});
-	});
-
-	it('добавляет результаты нового API с ticket-only режимом загрузки', async () => {
-		mocks.fetchViaBackground.mockResolvedValue({
-			error: false,
-			status: 200,
-			text: '',
-		});
-		mocks.searchNmoApi.mockResolvedValue([{
-			title: 'Диагностика заболевания',
-			questionCount: 46,
+	it('передаёт query четырём источникам и объединяет их результаты', async () => {
+		const secondary: ISearchResult = {
+			source: 'secondary',
+			title: 'Дополнительный результат',
+			url: 'https://secondary.example/topic',
+		};
+		const primary: ISearchResult = {
+			source: 'primary',
+			title: 'Основной результат',
+			url: 'https://primary.example/topic',
+		};
+		const nmoApi: ISearchResult = {
+			source: 'nmo-helper',
+			title: 'Результат NMO API',
+			url: NMO_API_TOPIC_ENDPOINT,
+			mode: 'nmo-api',
 			ticket: 'short-lived.ticket',
-		}]);
+		};
+		const third: ISearchResult = {
+			source: 'nmo-helper',
+			title: 'Результат третьего источника',
+			url: 'https://third.example/topic',
+		};
+
+		mocks.searchSecondarySource.mockResolvedValue([secondary]);
+		mocks.searchFirstSource.mockResolvedValue([primary]);
+		mocks.searchNmoSource.mockResolvedValue([nmoApi]);
+		mocks.searchThirdSource.mockResolvedValue([third]);
 		const onChange = vi.fn();
 
-		render(<VariantLoader text="Диагностика" onChange={onChange}/>);
+		render(<VariantLoader text="  Диагностика  " onChange={onChange}/>);
 
 		await waitFor(() => {
 			expect(onChange).toHaveBeenLastCalledWith({
 				loading: false,
 				error: null,
-				data: [{
-					source: 'nmo-helper',
-					title: 'Диагностика заболевания',
-					url: NMO_API_TOPIC_ENDPOINT,
-					mode: 'nmo-api',
-					ticket: 'short-lived.ticket',
-					questionCount: 46,
-				}],
+				data: [secondary, primary, nmoApi, third],
 			});
 		});
-		expect(mocks.searchNmoApi).toHaveBeenCalledWith('Диагностика');
+
+		expect(mocks.searchSecondarySource).toHaveBeenCalledWith('Диагностика');
+		expect(mocks.searchFirstSource).toHaveBeenCalledWith('Диагностика');
+		expect(mocks.searchNmoSource).toHaveBeenCalledWith('Диагностика');
+		expect(mocks.searchThirdSource).toHaveBeenCalledWith('Диагностика');
 	});
 
-	it('формирует результаты alternative из categories', async () => {
-		mocks.fetchViaBackground.mockImplementation(async (url: string) => ({
-			error: false,
-			status: 200,
-			text: url.includes('/api/search/suggestions/categories')
-				? JSON.stringify({
-					categories: [
-						{
-							name: 'Особенности физической реабилитации при постковидном синдроме',
-							slug: '678270b4b100db787f87d662',
-						},
-						{name: '', slug: 'without-title'},
-						{name: 'Без ссылки', slug: null},
-					],
-				})
-				: '',
-		}));
+	it('не теряет результаты остальных источников при единичной ошибке', async () => {
+		const result: ISearchResult = {
+			source: 'secondary',
+			title: 'Найденная тема',
+			url: 'https://secondary.example/topic',
+		};
+		mocks.searchSecondarySource.mockResolvedValue([result]);
+		mocks.searchFirstSource.mockRejectedValue(new Error('источник недоступен'));
 		const onChange = vi.fn();
 
-		render(<VariantLoader text="КОВИД" onChange={onChange}/>);
+		render(<VariantLoader text="Тема" onChange={onChange}/>);
 
 		await waitFor(() => {
 			expect(onChange).toHaveBeenLastCalledWith({
 				loading: false,
 				error: null,
-				data: [{
-					source: 'nmo-helper',
-					title: 'Особенности физической реабилитации при постковидном синдроме',
-					url: `${NMO_BASE_URL}/test-medik/nmo/678270b4b100db787f87d662.html`,
-				}],
+				data: [result],
+			});
+		});
+	});
+
+	it('сообщает, когда ни один источник ничего не нашёл', async () => {
+		const onChange = vi.fn();
+
+		render(<VariantLoader text="Неизвестная тема" onChange={onChange}/>);
+
+		await waitFor(() => {
+			expect(onChange).toHaveBeenLastCalledWith({
+				loading: false,
+				error: 'ничего не найдено',
+				data: [],
 			});
 		});
 	});

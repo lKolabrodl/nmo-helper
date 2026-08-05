@@ -1,8 +1,8 @@
 /**
  * Клиент серверного NMO API с короткоживущими тикетами.
  *
- * Поиск возвращает только метаданные и тикет. Полный вариант загружается
- * одним отдельным запросом, после чего преобразуется в общую модель matcher'а.
+ * Полный вариант загружается одним запросом по короткоживущему тикету,
+ * после чего преобразуется в общую модель matcher'а.
  *
  * @module api/fetch/fetch-nmo-api
  */
@@ -13,62 +13,14 @@ import {fetchViaBackground, type IRequestResponse} from './fetch';
 
 const NMO_API_BASE_URL = `https://${NMO_API_HOST}/api/nmo`;
 
-/** Публичный endpoint поиска тем. */
-export const NMO_API_SEARCH_ENDPOINT = `${NMO_API_BASE_URL}/topics`;
-
 /** Ticket-only endpoint полного варианта. */
 export const NMO_API_TOPIC_ENDPOINT = `${NMO_API_BASE_URL}/topic`;
-
-/** Валидный результат поиска серверного NMO API. */
-export interface INmoApiSearchItem {
-	readonly title: string;
-	readonly questionCount: number;
-	readonly ticket: string;
-}
-
-/**
- * Ищет темы в серверной базе NMO Helper.
- *
- * @param query Название теста; запросы короче трёх символов не отправляются.
- * @returns До пяти результатов с короткоживущими тикетами.
- * @throws {Error} При сетевой, HTTP-ошибке или нарушении схемы ответа.
- */
-export async function searchNmoApi(query: string): Promise<INmoApiSearchItem[]> {
-	const normalizedQuery = query.trim();
-	if (normalizedQuery.length < 3) return [];
-
-	const url = new URL(NMO_API_SEARCH_ENDPOINT);
-	url.searchParams.set('q', normalizedQuery);
-
-	const response = await fetchViaBackground(url.toString(), {
-		method: 'GET',
-		headers: {'Accept': 'application/json'},
-		credentials: 'omit',
-	});
-	assertSuccessfulResponse(response, 'поиск NMO API');
-
-	const payload = parseJsonObject(response.text, 'поиск NMO API');
-	if (!Array.isArray(payload.items)) throw invalidPayload('поиск NMO API');
-
-	return payload.items.map(item => {
-		const value = asObject(item, 'поиск NMO API');
-		const title = typeof value.title === 'string' ? value.title.trim() : '';
-		const ticket = typeof value.ticket === 'string' ? value.ticket.trim() : '';
-		const questionCount = value.question_count;
-
-		if (!title || !ticket || typeof questionCount !== 'number' || !Number.isInteger(questionCount) || questionCount < 1) {
-			throw invalidPayload('поиск NMO API');
-		}
-
-		return {title, ticket, questionCount};
-	});
-}
 
 /**
  * Загружает полный вариант по короткоживущему тикету одним запросом.
  * Тикет передаётся только в заголовке и никогда не попадает в URL.
  *
- * @param ticket Тикет из результата {@link searchNmoApi}.
+ * @param ticket Тикет из результата поиска NMO API.
  * @returns Готовая модель всех вопросов и правильных ответов варианта.
  * @throws {Error} Если тикет истёк, запрос не удался или ответ невалиден.
  */
@@ -92,14 +44,6 @@ export async function fetchNmoApiTopic(ticket: string): Promise<QaCaseModel[]> {
 
 	const payload = parseJsonObject(response.text, 'загрузка варианта NMO API');
 	if (!Array.isArray(payload.questions) || !payload.questions.length) {
-		throw invalidPayload('загрузка варианта NMO API');
-	}
-
-	if (
-		typeof payload.question_count !== 'number'
-		|| !Number.isInteger(payload.question_count)
-		|| payload.question_count !== payload.questions.length
-	) {
 		throw invalidPayload('загрузка варианта NMO API');
 	}
 

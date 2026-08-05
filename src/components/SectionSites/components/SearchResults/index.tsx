@@ -1,7 +1,7 @@
 import React from 'react';
 import cn from 'classnames';
 import './styles.scss';
-import type {ISearchResult} from '../../../Loader/VariantLoader';
+import type {ISearchResult} from '../../../../types';
 import {IconStar} from '../../../icons';
 import {SOURCE_DETAILS} from '../../utils';
 
@@ -41,7 +41,6 @@ const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, sel
 									{source.label}
 									{result.source === 'primary' && <> <IconStar size={9}/></>}
 								</span>
-								{result.questionCount !== undefined && <span>• {result.questionCount} вопросов</span>}
 							</div>
 						</button>
 					);

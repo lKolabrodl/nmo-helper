@@ -1,5 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { parseHtml } from './html';
+import {describe, expect, it} from 'vitest';
+import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_HOST, SECONDARY_ANSWER_SOURCE_HOST} from './constants';
+import {
+	parseHtml,
+	parseNmoApiSearchResults,
+	parsePrimarySourceResults,
+	parseSecondarySourceResults,
+	parseThirdSourceResults,
+} from './html';
 
 describe('parseHtml', () => {
 	it('парсит HTML в DOM-элемент', () => {
@@ -34,5 +41,166 @@ describe('parseHtml', () => {
 		const div = parseHtml(html, true);
 		expect(div.querySelectorAll('nav').length).toBe(0);
 		expect(div.querySelector('h3')?.textContent).toBe('Вопрос');
+	});
+});
+
+describe('parseSecondarySourceResults', () => {
+	it('извлекает ссылки по селектору и дополняет относительные URL', () => {
+		const html = `
+			<a class="item-name" href="/answer/42"> Первая тема </a>
+			<a class="item-name" href="https://external.example/answer/7"> Вторая тема </a>
+		`;
+
+		expect(parseSecondarySourceResults(html)).toEqual([
+			{
+				source: 'secondary',
+				title: 'Первая тема',
+				url: `https://${SECONDARY_ANSWER_SOURCE_HOST}/answer/42`,
+			},
+			{
+				source: 'secondary',
+				title: 'Вторая тема',
+				url: 'https://external.example/answer/7',
+			},
+		]);
+	});
+
+	it('пропускает неполные, неподходящие и небезопасные ссылки', () => {
+		const html = `
+			<a class="item-name" href="/without-title"> </a>
+			<a class="item-name">Без URL</a>
+			<a class="item-name" href="javascript:alert(1)">Опасная ссылка</a>
+			<a href="/wrong-selector">Другой селектор</a>
+		`;
+
+		expect(parseSecondarySourceResults(html)).toEqual([]);
+	});
+});
+
+describe('parsePrimarySourceResults', () => {
+	it('извлекает заголовки и сохраняет URL основного источника как есть', () => {
+		const html = `
+			<div class="short__title">
+				<a href="https://primary.example/topic/42"> Основная тема </a>
+			</div>
+			<div class="short__title"><a href="/relative/topic"> Относительный URL </a></div>
+		`;
+
+		expect(parsePrimarySourceResults(html)).toEqual([
+			{
+				source: 'primary',
+				title: 'Основная тема',
+				url: 'https://primary.example/topic/42',
+			},
+			{
+				source: 'primary',
+				title: 'Относительный URL',
+				url: '/relative/topic',
+			},
+		]);
+	});
+
+	it('пропускает элементы вне выдачи и ссылки без обязательных данных', () => {
+		const html = `
+			<div class="short__title"><a href="/without-title"> </a></div>
+			<div class="short__title"><a>Без URL</a></div>
+			<a href="/outside-result">Вне блока результата</a>
+		`;
+
+		expect(parsePrimarySourceResults(html)).toEqual([]);
+	});
+});
+
+describe('parseThirdSourceResults', () => {
+	it('преобразует categories, нормализует поля и кодирует slug', () => {
+		const text = JSON.stringify({
+			categories: [
+				{name: ' Особенности реабилитации ', slug: ' topic/42 '},
+				{name: 'Вторая тема', slug: 'тема с пробелом'},
+			],
+		});
+
+		expect(parseThirdSourceResults(text)).toEqual([
+			{
+				source: 'nmo-helper',
+				title: 'Особенности реабилитации',
+				url: `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic%2F42.html`,
+			},
+			{
+				source: 'nmo-helper',
+				title: 'Вторая тема',
+				url: `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/${encodeURIComponent('тема с пробелом')}.html`,
+			},
+		]);
+	});
+
+	it('пропускает категории с отсутствующими или неверными полями', () => {
+		const text = JSON.stringify({
+			categories: [
+				null,
+				'строка',
+				{name: '', slug: 'without-title'},
+				{name: 'Без ссылки', slug: null},
+				{name: 42, slug: 'wrong-title-type'},
+				{name: 'Пустой slug', slug: '   '},
+			],
+		});
+
+		expect(parseThirdSourceResults(text)).toEqual([]);
+	});
+
+	it.each([
+		'not json',
+		'null',
+		'[]',
+		'{}',
+		'{"categories":{}}',
+	])('безопасно обрабатывает невалидный ответ: %s', text => {
+		expect(parseThirdSourceResults(text)).toEqual([]);
+	});
+});
+
+describe('parseNmoApiSearchResults', () => {
+	it('преобразует элементы API и нормализует заголовок с тикетом', () => {
+		const text = JSON.stringify({
+			items: [
+				{
+					id: 'internal-id-is-ignored',
+					title: ' Диагностика заболевания ',
+					ticket: ' short-lived.ticket ',
+				},
+				{
+					title: 'Вторая тема',
+					ticket: 'second.ticket',
+				},
+			],
+		});
+
+		expect(parseNmoApiSearchResults(text)).toEqual([
+			{
+				source: 'nmo-helper',
+				title: 'Диагностика заболевания',
+				url: `https://${NMO_API_HOST}/api/nmo/topic`,
+				mode: 'nmo-api',
+				ticket: 'short-lived.ticket',
+			},
+			{
+				source: 'nmo-helper',
+				title: 'Вторая тема',
+				url: `https://${NMO_API_HOST}/api/nmo/topic`,
+				mode: 'nmo-api',
+				ticket: 'second.ticket',
+			},
+		]);
+	});
+
+	it.each([
+		'not json',
+		'null',
+		'[]',
+		'{}',
+		'{"items":{}}',
+	])('безопасно обрабатывает невалидный ответ: %s', text => {
+		expect(parseNmoApiSearchResults(text)).toEqual([]);
 	});
 });

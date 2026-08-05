@@ -1,6 +1,6 @@
 import {fireEvent, render, screen} from '@testing-library/react';
 import {describe, expect, it, vi} from 'vitest';
-import type {ISearchResult} from '../../../Loader/VariantLoader';
+import type {ISearchResult} from '../../../../types';
 import SearchResults from './index';
 
 const RESULTS: ISearchResult[] = [
@@ -9,7 +9,6 @@ const RESULTS: ISearchResult[] = [
 		title: 'Результат NMO Helper',
 		url: 'https://nmo-helper.ru/result',
 		ticket: 'short-lived.ticket',
-		questionCount: 46,
 	},
 	{source: 'secondary', title: 'Результат 24forcare', url: 'https://24forcare.com/result'},
 	{source: 'primary', title: 'Результат Rosmed', url: 'https://rosmedicinfo.ru/result'},

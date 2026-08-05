@@ -2,9 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {fetchViaBackground} from './fetch';
 import {
 	fetchNmoApiTopic,
-	NMO_API_SEARCH_ENDPOINT,
 	NMO_API_TOPIC_ENDPOINT,
-	searchNmoApi,
 } from './fetch-nmo-api';
 
 vi.mock('./fetch', async importOriginal => ({
@@ -18,50 +16,12 @@ beforeEach(() => {
 	mockFetch.mockReset();
 });
 
-describe('searchNmoApi', () => {
-	it('возвращает тикеты поиска и не раскрывает внутренний ID темы', async () => {
-		mockFetch.mockResolvedValue(ok(JSON.stringify({
-			items: [{
-				title: 'Диагностика заболевания',
-				question_count: 46,
-				ticket: 'short-lived.ticket',
-			}],
-		})));
-
-		await expect(searchNmoApi('  диагностика  ')).resolves.toEqual([{
-			title: 'Диагностика заболевания',
-			questionCount: 46,
-			ticket: 'short-lived.ticket',
-		}]);
-
-		const expectedUrl = new URL(NMO_API_SEARCH_ENDPOINT);
-		expectedUrl.searchParams.set('q', 'диагностика');
-		expect(mockFetch).toHaveBeenCalledWith(expectedUrl.toString(), {
-			method: 'GET',
-			headers: {'Accept': 'application/json'},
-			credentials: 'omit',
-		});
-	});
-
-	it('не отправляет запрос короче трёх символов', async () => {
-		await expect(searchNmoApi(' Я ')).resolves.toEqual([]);
-		expect(mockFetch).not.toHaveBeenCalled();
-	});
-
-	it('отклоняет неожиданный формат поиска', async () => {
-		mockFetch.mockResolvedValue(ok('{"items":[{"title":"Тема","question_count":1}]}'));
-
-		await expect(searchNmoApi('Тема')).rejects.toThrow('некорректный ответ сервера');
-	});
-});
-
 describe('fetchNmoApiTopic', () => {
 	it('загружает весь вариант одним запросом и передаёт тикет только в заголовке', async () => {
 		mockFetch.mockResolvedValue(ok(JSON.stringify({
 			schema_version: 1,
 			id: 'hidden-topic-id',
 			title: 'Тема',
-			question_count: 2,
 			questions: [
 				{
 					id: 'q1',
@@ -105,7 +65,6 @@ describe('fetchNmoApiTopic', () => {
 
 	it('отклоняет рассинхронизированные правильные ответы', async () => {
 		mockFetch.mockResolvedValue(ok(JSON.stringify({
-			question_count: 1,
 			questions: [{
 				text: 'Вопрос',
 				options: ['Нет', 'Да'],
