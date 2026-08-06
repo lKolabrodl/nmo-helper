@@ -5,6 +5,8 @@
  * @module background
  */
 
+import {fetchSignedNmoRequest, isProtectedNmoApiRequest} from './api/nmo-auth';
+
 /** Формат сообщения от content-скрипта */
 interface IFetchMessage {
   readonly action: 'fetch';
@@ -76,12 +78,17 @@ chrome.runtime.onMessage.addListener(
 	(message: IFetchMessage, _sender: chrome.runtime.MessageSender, sendResponse: (response: unknown) => void) => {
 		if (message.action !== 'fetch') return false;
 
-		fetch(message.url, {
+		const requestInit: RequestInit = {
 			method: message.method || 'GET',
 			headers: message.headers || undefined,
 			body: message.body || undefined,
 			credentials: message.credentials || undefined,
-		})
+		};
+		const request = isProtectedNmoApiRequest(message.url)
+			? fetchSignedNmoRequest(message.url, requestInit)
+			: fetch(message.url, requestInit);
+
+		request
 			.then(async (res) => {
 				const text = await res.text();
 				sendResponse({ error: false, status: res.status, text });

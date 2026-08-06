@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {findAnswers} from '../../utils/cases';
 import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
 import {fetchViaBackground} from './fetch';
-import {getFirstAnswers, getNmoAnswers, getSecondAnswers, getThirdAnswers} from './search-answer-sources';
+import {clearNmoAnswerCache, getFirstAnswers, getNmoAnswers, getSecondAnswers, getThirdAnswers} from './search-answer-sources';
 
 vi.mock('./fetch', async importOriginal => ({
 	...await importOriginal<typeof import('./fetch')>(),
@@ -14,6 +14,7 @@ const THIRD_BASE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
 
 beforeEach(() => {
 	mockFetch.mockReset();
+	clearNmoAnswerCache();
 });
 
 describe('getFirstAnswers', () => {
@@ -117,6 +118,24 @@ describe('getNmoAnswers', () => {
 
 		await expect(getNmoAnswers(`${NMO_API_TOPIC_ENDPOINT}/expired.uid`))
 			.rejects.toThrow('ошибка 404: сервер отклонил запрос');
+	});
+
+	it('не загружает один и тот же полный вариант повторно', async () => {
+		mockFetch.mockResolvedValue(ok(JSON.stringify({
+			questions: [{
+				text: 'Вопрос',
+				options: ['Нет', 'Да'],
+				correct_answers: ['Да'],
+			}],
+		})));
+
+		const url = `${NMO_API_TOPIC_ENDPOINT}/cached.uid`;
+		const first = await getNmoAnswers(url);
+		first[0].answers.push('Локальное изменение');
+		const repeated = await getNmoAnswers(url);
+
+		expect(mockFetch).toHaveBeenCalledTimes(1);
+		expect(repeated[0].answers).toEqual(['Да']);
 	});
 
 	it('не отправляет запрос, если UID отсутствует в URL', async () => {

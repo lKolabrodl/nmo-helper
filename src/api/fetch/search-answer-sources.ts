@@ -5,13 +5,14 @@
  */
 
 import type {QaCaseModel} from '../../utils/cases';
-import {NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
+import {CACHE_MAX_TOPICS, NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
 import {extractFirstCases, extractNmoAnswer, extractSecondCases, extractThirdAnser, extractThirdQuestions, type INmoSourceQuestion} from '../../utils/extractors';
 import {parseHtml} from '../../utils/html';
 import {fetchViaBackground, getResponseText, isSuccessful, mapWithConcurrency} from './fetch';
 
 /** Максимальное число одновременно выполняемых запросов правильных ответов. */
 const ANSWER_REQUEST_CONCURRENCY = 6;
+const nmoAnswerCache = new Map<string, Promise<QaCaseModel[]>>();
 
 /** Готовый вопрос третьего источника с идентификатором и правильными вариантами. */
 export interface INmoSourceCase extends QaCaseModel {
@@ -49,7 +50,25 @@ export async function getSecondAnswers(url: string): Promise<QaCaseModel[]> {
 export async function getNmoAnswers(url: string): Promise<QaCaseModel[]> {
 	const uid = url.trim().match(/\/api\/nmo\/topic\/([^/?#]+)$/)?.[1];
 	if (!uid) throw new Error('некорректный URL NMO API');
+	const cached = nmoAnswerCache.get(uid);
+	if (cached) {
+		nmoAnswerCache.delete(uid);
+		nmoAnswerCache.set(uid, cached);
+		return cloneNmoAnswers(await cached);
+	}
 
+	const answers = requestNmoAnswers(uid);
+	nmoAnswerCache.set(uid, answers);
+	trimNmoAnswerCache();
+	try {
+		return cloneNmoAnswers(await answers);
+	} catch (error) {
+		if (nmoAnswerCache.get(uid) === answers) nmoAnswerCache.delete(uid);
+		throw error;
+	}
+}
+
+async function requestNmoAnswers(uid: string): Promise<QaCaseModel[]> {
 	const response = await fetchViaBackground(NMO_API_TOPIC_ENDPOINT, {
 		method: 'GET',
 		headers: {
@@ -61,6 +80,27 @@ export async function getNmoAnswers(url: string): Promise<QaCaseModel[]> {
 	const text = getResponseText(response);
 
 	return extractNmoAnswer(text);
+}
+
+/** Очищает кеш полностью загруженных вариантов NMO API. */
+export function clearNmoAnswerCache(): void {
+	nmoAnswerCache.clear();
+}
+
+function cloneNmoAnswers(items: readonly QaCaseModel[]): QaCaseModel[] {
+	return items.map(item => ({
+		...item,
+		variants: [...item.variants],
+		answers: [...item.answers],
+	}));
+}
+
+function trimNmoAnswerCache(): void {
+	while (nmoAnswerCache.size > CACHE_MAX_TOPICS) {
+		const oldestUid = nmoAnswerCache.keys().next().value;
+		if (oldestUid === undefined) return;
+		nmoAnswerCache.delete(oldestUid);
+	}
 }
 
 /**

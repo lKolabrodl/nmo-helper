@@ -8,6 +8,7 @@ import {
 } from '../../utils/constants';
 import {fetchViaBackground} from './fetch';
 import {
+	clearNmoSearchCache,
 	searchFirstSource,
 	searchNmoSource,
 	searchSecondarySource,
@@ -23,6 +24,7 @@ const mockFetch = vi.mocked(fetchViaBackground);
 
 beforeEach(() => {
 	mockFetch.mockReset();
+	clearNmoSearchCache();
 });
 
 describe('searchSecondarySource', () => {
@@ -134,6 +136,35 @@ describe('searchNmoSource', () => {
 	it('не отправляет запрос короче трёх символов', async () => {
 		await expect(searchNmoSource(' Я ')).resolves.toEqual([]);
 		expect(mockFetch).not.toHaveBeenCalled();
+	});
+
+	it('повторно использует результат нормализованного запроса', async () => {
+		mockFetch.mockResolvedValue(ok(JSON.stringify({
+			items: [{title: 'Тема', uid: 'cached.uid'}],
+		})));
+
+		const first = await searchNmoSource('  Ёлка   ВРАЧА ');
+		(first[0] as {title: string}).title = 'Изменено локально';
+		const repeated = await searchNmoSource('елка врача');
+
+		expect(mockFetch).toHaveBeenCalledTimes(1);
+		expect(repeated).toEqual([{
+			source: 'nmo-helper',
+			title: 'Тема',
+			url: `${NMO_API_TOPIC_ENDPOINT}/cached.uid`,
+		}]);
+	});
+
+	it('обновляет результат после четырёх минут', async () => {
+		const now = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+		mockFetch.mockResolvedValue(ok('{"items":[]}'));
+
+		await searchNmoSource('Тема');
+		now.mockReturnValue(4 * 60 * 1000 + 1_001);
+		await searchNmoSource('Тема');
+
+		expect(mockFetch).toHaveBeenCalledTimes(2);
+		now.mockRestore();
 	});
 
 	it.each([
