@@ -4,6 +4,11 @@
  * @module api/fetch/fetch
  */
 
+import {NMO_API_HOST} from '../../utils/constants';
+
+/** Точные пути NMO API, для которых разрешено создавать подпись. */
+const PROTECTED_NMO_API_PATHS = new Set(['/api/nmo/topics', '/api/nmo/topic']);
+
 /** Унифицированный ответ background-обработчика сетевого запроса. */
 export interface IRequestResponse {
 	/** `true`, если запрос не удалось выполнить из-за сетевой или runtime-ошибки. */
@@ -26,6 +31,25 @@ export interface IRequestOptions {
 	readonly body?: string | null;
 	/** Режим передачи cookies и других учётных данных. */
 	readonly credentials?: RequestCredentials | null;
+}
+
+/**
+ * Проверяет, что абсолютный URL относится ровно к одному из подписываемых
+ * NMO-маршрутов: HTTPS, ожидаемый host без нестандартного порта и точный путь.
+ *
+ * @param value URL-кандидат для проверки.
+ * @returns `true`, если для URL разрешено формировать заголовки подписи.
+ */
+export function isProtectedNmoApiRequest(value: string): boolean {
+	try {
+		const url = new URL(value);
+		return url.protocol === 'https:'
+			&& url.hostname === NMO_API_HOST
+			&& url.port === ''
+			&& PROTECTED_NMO_API_PATHS.has(url.pathname);
+	} catch {
+		return false;
+	}
 }
 
 /**

@@ -42,7 +42,6 @@ export async function checkVersion(force = false): Promise<IVersionInfo> {
 
 	if (fresh) return {current: EXT_VERSION, latest: cache.latest};
 
-
 	const res = await fetchViaBackground(VERSION_ENDPOINT, {method: 'GET'});
 
 	// сеть упала или сервер ругается — возвращаем кэш, либо «всё хорошо»

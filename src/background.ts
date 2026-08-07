@@ -5,7 +5,8 @@
  * @module background
  */
 
-import {fetchSignedNmoRequest, isProtectedNmoApiRequest} from './api/nmo-auth';
+import {isProtectedNmoApiRequest} from './api/fetch/fetch';
+import {fetchSignedNmoRequest} from './api/nmo-auth';
 
 /** Формат сообщения от content-скрипта */
 interface IFetchMessage {

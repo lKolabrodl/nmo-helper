@@ -1,5 +1,5 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {fetchViaBackground, getResponseText} from './fetch';
+import {fetchViaBackground, getResponseText, isProtectedNmoApiRequest} from './fetch';
 
 type SendMessageFn = (msg: unknown, cb: (res: unknown) => void) => void;
 
@@ -8,6 +8,26 @@ const sendMessage = vi.fn();
 beforeEach(() => {
 	sendMessage.mockReset();
 	(chrome.runtime as unknown as { sendMessage: SendMessageFn }).sendMessage = sendMessage as unknown as SendMessageFn;
+});
+
+describe('isProtectedNmoApiRequest', () => {
+	it.each([
+		'https://nmo-helper.ru/api/nmo/topics?q=тема',
+		'https://nmo-helper.ru/api/nmo/topic',
+	])('разрешает точный защищённый endpoint: %s', value => {
+		expect(isProtectedNmoApiRequest(value)).toBe(true);
+	});
+
+	it.each([
+		'http://nmo-helper.ru/api/nmo/topics?q=тема',
+		'https://www.nmo-helper.ru/api/nmo/topic',
+		'https://nmo-helper.ru.evil.example/api/nmo/topic',
+		'https://nmo-helper.ru/api/nmo/topic/uid',
+		'https://nmo-helper.ru/api/version',
+		'not a url',
+	])('не выдаёт подпись постороннему URL: %s', value => {
+		expect(isProtectedNmoApiRequest(value)).toBe(false);
+	});
 });
 
 describe('fn fetchViaBackground', () => {

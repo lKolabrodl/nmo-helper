@@ -5,58 +5,45 @@
  * @module api/nmo-auth
  */
 
-import {NMO_API_BASE_URL, NMO_API_HOST} from '../utils/constants';
+import {NMO_API_BASE_URL} from '../utils/constants';
+import {
+	AUTH_HEADER_NAMES,
+	bodyBytes,
+	createInstallationIdentity,
+	createSignatureHeaders,
+	isValidIdentity,
+	isValidInstallationId,
+} from './crypto/nmo-crypto';
+import type {IInstallationIdentity} from './crypto/nmo-crypto';
 
-const SIGNATURE_PROTOCOL = 'NMO-REQUEST-V1';
+/** Endpoint анонимной регистрации установки. */
 const INSTALLATION_ENDPOINT = `${NMO_API_BASE_URL}/installations`;
-const PROTECTED_PATHS = new Set(['/api/nmo/topics', '/api/nmo/topic']);
-const AUTH_HEADER_NAMES = [
-	'X-NMO-Installation',
-	'X-NMO-Timestamp',
-	'X-NMO-Nonce',
-	'X-NMO-Signature',
-] as const;
 
+/** Имя IndexedDB с криптографической идентичностью установки. */
 const DATABASE_NAME = 'nmo-helper-auth';
+/** Версия схемы {@link DATABASE_NAME}. */
 const DATABASE_VERSION = 1;
+/** Хранилище единственной текущей идентичности. */
 const IDENTITY_STORE = 'identity';
+/** Ключ текущей идентичности в {@link IDENTITY_STORE}. */
 const IDENTITY_KEY = 'current';
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const PUBLIC_KEY_PATTERN = /^[A-Za-z0-9_-]{87}$/;
 
-interface IInstallationIdentity {
-	readonly privateKey: CryptoKey;
-	readonly publicKey: string;
-	readonly installationId?: string;
-}
-
+/** Общий промис загрузки идентичности для параллельных запросов. */
 let identityPromise: Promise<IInstallationIdentity> | null = null;
+/** Общий промис регистрации, предотвращающий дублирующие POST-запросы. */
 let registrationPromise: Promise<IInstallationIdentity> | null = null;
-
-/** Проверяет, что URL относится ровно к одному из подписываемых NMO-маршрутов. */
-export function isProtectedNmoApiRequest(value: string): boolean {
-	try {
-		const url = new URL(value);
-		return url.protocol === 'https:'
-			&& url.hostname === NMO_API_HOST
-			&& url.port === ''
-			&& PROTECTED_PATHS.has(url.pathname);
-	} catch {
-		return false;
-	}
-}
 
 /**
  * Выполняет запрос к собственному NMO API с подписью текущей установки.
  * При потере серверной регистрации один раз регистрирует тот же ключ повторно.
+ *
+ * @param url Абсолютный URL защищённого NMO endpoint'а.
+ * @param init Параметры `fetch`; служебные заголовки подписи будут заменены.
+ * @returns Ответ первого запроса либо единственной повторной попытки после `401`.
+ * @throws Если не удалось получить, зарегистрировать или подписать
+ * идентичность установки либо выполнить сетевой запрос.
  */
-export async function fetchSignedNmoRequest(
-	url: string,
-	init: RequestInit = {},
-): Promise<Response> {
-	if (!isProtectedNmoApiRequest(url)) {
-		throw new Error('Signing is not allowed for this URL.');
-	}
+export async function fetchSignedNmoRequest(url: string, init: RequestInit = {}): Promise<Response> {
 
 	let identity = await ensureRegistered(await getIdentity());
 	let response = await signedFetch(url, init, identity);
@@ -69,35 +56,17 @@ export async function fetchSignedNmoRequest(
 	return response;
 }
 
-/** Собирает каноническую строку в том же формате, который проверяет сервер. */
-export async function buildCanonicalNmoRequest(
-	installationId: string,
-	timestamp: string,
-	nonce: string,
-	method: string,
-	target: string,
-	topicTicket: string,
-	body: Uint8Array<ArrayBuffer>,
-): Promise<Uint8Array<ArrayBuffer>> {
-	const bodyHash = await crypto.subtle.digest('SHA-256', body);
-	const fields = [
-		SIGNATURE_PROTOCOL,
-		installationId,
-		timestamp,
-		nonce,
-		method.toUpperCase(),
-		target,
-		topicTicket,
-		toHex(new Uint8Array(bodyHash)),
-	];
-	return new TextEncoder().encode(fields.join('\n'));
-}
-
-async function signedFetch(
-	value: string,
-	init: RequestInit,
-	identity: IInstallationIdentity,
-): Promise<Response> {
+/**
+ * Подписывает и выполняет один HTTP-запрос с переданной идентичностью.
+ * Пользовательские значения служебных auth-заголовков удаляются перед записью
+ * рассчитанных значений.
+ *
+ * @param value Абсолютный URL защищённого запроса.
+ * @param init Исходные параметры `fetch`.
+ * @param identity Зарегистрированная идентичность с закрытым ключом.
+ * @returns Ответ браузерного `fetch` без дополнительной обработки статуса.
+ */
+async function signedFetch(value: string, init: RequestInit, identity: IInstallationIdentity): Promise<Response> {
 	const url = new URL(value);
 	const method = (init.method || 'GET').toUpperCase();
 	const body = bodyBytes(init.body);
@@ -110,21 +79,21 @@ async function signedFetch(
 		requestHeaders.get('X-NMO-Ticket') || '',
 		body,
 	);
-	AUTH_HEADER_NAMES.forEach(name => requestHeaders.delete(name));
-	Object.entries(headers).forEach(([name, headerValue]) => {
-		requestHeaders.set(name, headerValue);
-	});
 
-	return fetch(url.toString(), {
-		...init,
-		method,
-		headers: requestHeaders,
-	});
+	AUTH_HEADER_NAMES.forEach(name => requestHeaders.delete(name));
+	Object.entries(headers).forEach(([name, headerValue]) => requestHeaders.set(name, headerValue));
+
+	return fetch(url.toString(), {...init, method, headers: requestHeaders});
 }
 
-async function ensureRegistered(
-	identity: IInstallationIdentity,
-): Promise<IInstallationIdentity> {
+/**
+ * Возвращает зарегистрированную идентичность, регистрируя её при необходимости.
+ * Параллельные вызовы без `installationId` используют один общий запрос.
+ *
+ * @param identity Валидная локальная идентичность установки.
+ * @returns Идентичность с серверным `installationId`.
+ */
+async function ensureRegistered(identity: IInstallationIdentity): Promise<IInstallationIdentity> {
 	if (identity.installationId) return identity;
 	if (registrationPromise) return registrationPromise;
 
@@ -136,9 +105,15 @@ async function ensureRegistered(
 	}
 }
 
-async function registerIdentity(
-	identity: IInstallationIdentity,
-): Promise<IInstallationIdentity> {
+/**
+ * Регистрирует открытый ключ на сервере и сохраняет полученный UUID в IndexedDB.
+ * Запрос подписывается тем же закрытым ключом без ID установки.
+ *
+ * @param identity Ещё не зарегистрированная локальная идентичность.
+ * @returns Сохранённая идентичность с выданным сервером `installationId`.
+ * @throws Если сервер вернул статус не `201`, невалидный UUID или сохранение не удалось.
+ */
+async function registerIdentity(identity: IInstallationIdentity): Promise<IInstallationIdentity> {
 	const bodyText = JSON.stringify({public_key: identity.publicKey});
 	const body = new TextEncoder().encode(bodyText);
 	const headers = await createSignatureHeaders(
@@ -159,6 +134,7 @@ async function registerIdentity(
 		body: bodyText,
 		credentials: 'omit',
 	});
+
 	if (response.status !== 201) {
 		throw new Error(`NMO installation registration failed: ${response.status}`);
 	}
@@ -167,50 +143,24 @@ async function registerIdentity(
 	const installationId = typeof payload.installation_id === 'string'
 		? payload.installation_id
 		: '';
-	if (!UUID_PATTERN.test(installationId)) {
+
+	if (!isValidInstallationId(installationId)) {
 		throw new Error('NMO installation registration returned an invalid id.');
 	}
 
 	const registered = {...identity, installationId};
 	await writeIdentity(registered);
+
 	identityPromise = Promise.resolve(registered);
 	return registered;
 }
 
-async function createSignatureHeaders(
-	privateKey: CryptoKey,
-	installationId: string,
-	method: string,
-	target: string,
-	topicTicket: string,
-	body: Uint8Array<ArrayBuffer>,
-): Promise<Record<string, string>> {
-	const timestamp = Math.floor(Date.now() / 1000).toString();
-	const nonceBytes = crypto.getRandomValues(new Uint8Array(16));
-	const nonce = toBase64Url(nonceBytes);
-	const canonical = await buildCanonicalNmoRequest(
-		installationId,
-		timestamp,
-		nonce,
-		method,
-		target,
-		topicTicket,
-		body,
-	);
-	const signature = await crypto.subtle.sign(
-		{name: 'ECDSA', hash: 'SHA-256'},
-		privateKey,
-		canonical,
-	);
-	const headers: Record<string, string> = {
-		'X-NMO-Timestamp': timestamp,
-		'X-NMO-Nonce': nonce,
-		'X-NMO-Signature': toBase64Url(new Uint8Array(signature)),
-	};
-	if (installationId) headers['X-NMO-Installation'] = installationId;
-	return headers;
-}
-
+/**
+ * Получает локальную идентичность через общий кеширующий промис.
+ * После ошибки кеш сбрасывается, чтобы следующий вызов мог повторить загрузку.
+ *
+ * @returns Валидная существующая или вновь созданная идентичность.
+ */
 async function getIdentity(): Promise<IInstallationIdentity> {
 	if (!identityPromise) identityPromise = loadOrCreateIdentity();
 	try {
@@ -221,69 +171,45 @@ async function getIdentity(): Promise<IInstallationIdentity> {
 	}
 }
 
+/**
+ * Загружает идентичность из IndexedDB либо создаёт новую пару ECDSA P-256.
+ * Некорректная сохранённая запись заменяется новой; закрытый ключ создаётся
+ * неэкспортируемым.
+ *
+ * @returns Валидная локальная идентичность, сохранённая в IndexedDB.
+ */
 async function loadOrCreateIdentity(): Promise<IInstallationIdentity> {
 	const stored = await readIdentity();
 	if (isValidIdentity(stored)) return stored;
 
-	const keyPair = await crypto.subtle.generateKey(
-		{name: 'ECDSA', namedCurve: 'P-256'},
-		false,
-		['sign', 'verify'],
-	) as CryptoKeyPair;
-	const publicKey = await crypto.subtle.exportKey('raw', keyPair.publicKey);
-	const identity: IInstallationIdentity = {
-		privateKey: keyPair.privateKey,
-		publicKey: toBase64Url(new Uint8Array(publicKey)),
-	};
+	const identity = await createInstallationIdentity();
 	await writeIdentity(identity);
 	return identity;
 }
 
-async function forgetRegistration(
-	identity: IInstallationIdentity,
-): Promise<IInstallationIdentity> {
+/**
+ * Удаляет только серверный ID регистрации, сохраняя исходную пару ключей.
+ * Используется после `401`, чтобы повторно зарегистрировать ту же установку.
+ *
+ * @param identity Текущая зарегистрированная идентичность.
+ * @returns Сохранённая идентичность без `installationId`.
+ */
+async function forgetRegistration(identity: IInstallationIdentity): Promise<IInstallationIdentity> {
 	const unregistered: IInstallationIdentity = {
 		privateKey: identity.privateKey,
 		publicKey: identity.publicKey,
 	};
+
 	await writeIdentity(unregistered);
 	identityPromise = Promise.resolve(unregistered);
 	return unregistered;
 }
 
-function isValidIdentity(value: unknown): value is IInstallationIdentity {
-	if (!value || typeof value !== 'object') return false;
-	const candidate = value as Partial<IInstallationIdentity>;
-	const algorithm = candidate.privateKey?.algorithm as EcKeyAlgorithm | undefined;
-	if (
-		typeof candidate.publicKey !== 'string'
-		|| !PUBLIC_KEY_PATTERN.test(candidate.publicKey)
-		|| !candidate.privateKey
-		|| candidate.privateKey.type !== 'private'
-		|| candidate.privateKey.extractable
-		|| algorithm?.name !== 'ECDSA'
-		|| algorithm.namedCurve !== 'P-256'
-		|| !candidate.privateKey.usages.includes('sign')
-	) return false;
-	return candidate.installationId === undefined
-		|| (
-			typeof candidate.installationId === 'string'
-			&& UUID_PATTERN.test(candidate.installationId)
-		);
-}
-
-function bodyBytes(body: BodyInit | null | undefined): Uint8Array<ArrayBuffer> {
-	if (body === undefined || body === null) return new Uint8Array();
-	if (typeof body === 'string') return new TextEncoder().encode(body);
-	if (body instanceof ArrayBuffer) return new Uint8Array(body);
-	if (ArrayBuffer.isView(body)) {
-		return new Uint8Array(
-			new Uint8Array(body.buffer, body.byteOffset, body.byteLength),
-		);
-	}
-	throw new Error('Unsupported signed request body.');
-}
-
+/**
+ * Читает текущую идентичность из IndexedDB без предположений о её структуре.
+ *
+ * @returns Сохранённое значение либо `undefined`, если запись отсутствует.
+ */
 function readIdentity(): Promise<unknown> {
 	return withDatabase(database => new Promise((resolve, reject) => {
 		const transaction = database.transaction(IDENTITY_STORE, 'readonly');
@@ -293,6 +219,12 @@ function readIdentity(): Promise<unknown> {
 	}));
 }
 
+/**
+ * Атомарно записывает текущую идентичность в IndexedDB.
+ *
+ * @param identity Валидная идентичность для сохранения.
+ * @returns Промис завершения read-write транзакции.
+ */
 function writeIdentity(identity: IInstallationIdentity): Promise<void> {
 	return withDatabase(database => new Promise((resolve, reject) => {
 		const transaction = database.transaction(IDENTITY_STORE, 'readwrite');
@@ -303,6 +235,13 @@ function writeIdentity(identity: IInstallationIdentity): Promise<void> {
 	}));
 }
 
+/**
+ * Открывает IndexedDB на время одной операции и гарантированно закрывает соединение.
+ *
+ * @typeParam T Тип результата операции.
+ * @param operation Асинхронная операция с открытым соединением IndexedDB.
+ * @returns Результат переданной операции.
+ */
 function withDatabase<T>(operation: (database: IDBDatabase) => Promise<T>): Promise<T> {
 	return openDatabase().then(async database => {
 		try {
@@ -313,6 +252,12 @@ function withDatabase<T>(operation: (database: IDBDatabase) => Promise<T>): Prom
 	});
 }
 
+/**
+ * Открывает базу идентичности и при обновлении схемы создаёт object store.
+ *
+ * @returns Открытое соединение IndexedDB.
+ * @throws Если открытие завершилось ошибкой или заблокировано другой версией базы.
+ */
 function openDatabase(): Promise<IDBDatabase> {
 	return new Promise((resolve, reject) => {
 		const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
@@ -325,17 +270,4 @@ function openDatabase(): Promise<IDBDatabase> {
 		request.onerror = () => reject(request.error || new Error('Could not open NMO identity storage.'));
 		request.onblocked = () => reject(new Error('NMO identity storage is blocked.'));
 	});
-}
-
-function toBase64Url(value: Uint8Array): string {
-	let binary = '';
-	value.forEach(byte => { binary += String.fromCharCode(byte); });
-	return btoa(binary)
-		.replace(/\+/g, '-')
-		.replace(/\//g, '_')
-		.replace(/=+$/g, '');
-}
-
-function toHex(value: Uint8Array): string {
-	return Array.from(value, byte => byte.toString(16).padStart(2, '0')).join('');
 }
