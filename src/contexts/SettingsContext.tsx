@@ -15,25 +15,41 @@ interface ISettingsProviderProps {
 	readonly initialState: IExtensionState;
 }
 
-interface ISettingsState {
-	readonly aiProvider: AiProvider;
-	readonly setAiProvider: (provider: AiProvider) => void;
+interface IProxyAiSettings {
 	readonly apiKey: string;
 	readonly setApiKey: (apiKey: string) => void;
-	readonly aiModel: string;
-	readonly setAiModel: (model: string) => void;
-	readonly customAiUrl: string;
-	readonly setCustomAiUrl: (url: string) => void;
-	readonly customAiToken: string;
-	readonly setCustomAiToken: (token: string) => void;
-	readonly customAiModel: string;
-	readonly setCustomAiModel: (model: string) => void;
-	readonly autoSolveEnabled: boolean;
-	readonly setAutoSolveEnabled: (enabled: boolean) => void;
-	readonly autoSolveDelayMinSeconds: number;
-	readonly setAutoSolveDelayMinSeconds: (seconds: number) => void;
-	readonly autoSolveDelayMaxSeconds: number;
-	readonly setAutoSolveDelayMaxSeconds: (seconds: number) => void;
+	readonly model: string;
+	readonly setModel: (model: string) => void;
+}
+
+interface ICustomAiSettings {
+	readonly url: string;
+	readonly setUrl: (url: string) => void;
+	readonly token: string;
+	readonly setToken: (token: string) => void;
+	readonly model: string;
+	readonly setModel: (model: string) => void;
+}
+
+interface IAiSettings {
+	readonly provider: AiProvider;
+	readonly setProvider: (provider: AiProvider) => void;
+	readonly proxy: IProxyAiSettings;
+	readonly custom: ICustomAiSettings;
+}
+
+interface IAutoSolveSettings {
+	readonly enabled: boolean;
+	readonly setEnabled: (enabled: boolean) => void;
+	readonly delayMinSeconds: number;
+	readonly setDelayMinSeconds: (seconds: number) => void;
+	readonly delayMaxSeconds: number;
+	readonly setDelayMaxSeconds: (seconds: number) => void;
+}
+
+interface ISettingsState {
+	readonly ai: IAiSettings;
+	readonly autoSolve: IAutoSolveSettings;
 }
 
 const SettingsContext = createContext<ISettingsState>(null!);
@@ -121,24 +137,32 @@ export const SettingsProvider: React.FC<React.PropsWithChildren<ISettingsProvide
 
 	return (
 		<SettingsContext.Provider value={{
-			aiProvider,
-			setAiProvider,
-			apiKey,
-			setApiKey,
-			aiModel,
-			setAiModel,
-			customAiUrl,
-			setCustomAiUrl,
-			customAiToken,
-			setCustomAiToken,
-			customAiModel,
-			setCustomAiModel,
-			autoSolveEnabled,
-			setAutoSolveEnabled,
-			autoSolveDelayMinSeconds,
-			setAutoSolveDelayMinSeconds,
-			autoSolveDelayMaxSeconds,
-			setAutoSolveDelayMaxSeconds,
+			ai: {
+				provider: aiProvider,
+				setProvider: setAiProvider,
+				proxy: {
+					apiKey,
+					setApiKey,
+					model: aiModel,
+					setModel: setAiModel,
+				},
+				custom: {
+					url: customAiUrl,
+					setUrl: setCustomAiUrl,
+					token: customAiToken,
+					setToken: setCustomAiToken,
+					model: customAiModel,
+					setModel: setCustomAiModel,
+				},
+			},
+			autoSolve: {
+				enabled: autoSolveEnabled,
+				setEnabled: setAutoSolveEnabled,
+				delayMinSeconds: autoSolveDelayMinSeconds,
+				setDelayMinSeconds: setAutoSolveDelayMinSeconds,
+				delayMaxSeconds: autoSolveDelayMaxSeconds,
+				setDelayMaxSeconds: setAutoSolveDelayMaxSeconds,
+			},
 		}}>
 			{children}
 		</SettingsContext.Provider>

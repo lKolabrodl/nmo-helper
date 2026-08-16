@@ -34,7 +34,7 @@ interface IPlannedAutoSolve {
  */
 const AutoSolveLoader = () => {
 
-	const {autoSolveEnabled, autoSolveDelayMinSeconds, autoSolveDelayMaxSeconds} = useSettings();
+	const {enabled: autoSolveEnabled, delayMinSeconds: autoSolveDelayMinSeconds, delayMaxSeconds: autoSolveDelayMaxSeconds} = useSettings().autoSolve;
 	const {status} = usePanelStatus();
 	const {topic, question, variants, isSingle} = useQuestionFinder();
 

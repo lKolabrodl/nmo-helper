@@ -18,7 +18,7 @@ interface IProxyApiProps {
 
 const ProxyApi: React.FC<IProxyApiProps> = ({onBusyChange}) => {
 	// contextик
-	const {apiKey, setApiKey, aiModel, setAiModel} = useSettings();
+	const {apiKey, setApiKey, model: aiModel, setModel: setAiModel} = useSettings().ai.proxy;
 	const {status, setStatus} = usePanelStatus();
 
 	// state

@@ -17,7 +17,14 @@ interface ICustomEndpointProps {
 
 const CustomEndpoint: React.FC<ICustomEndpointProps> = ({onBusyChange}) => {
 	// contextик
-	const {customAiUrl, setCustomAiUrl, customAiToken, setCustomAiToken, customAiModel, setCustomAiModel} = useSettings();
+	const {
+		url: customAiUrl,
+		setUrl: setCustomAiUrl,
+		token: customAiToken,
+		setToken: setCustomAiToken,
+		model: customAiModel,
+		setModel: setCustomAiModel,
+	} = useSettings().ai.custom;
 	const {status, setStatus} = usePanelStatus();
 
 	// state

@@ -28,7 +28,7 @@ interface IBugReportButtonProps {
 const BugReportButton: React.FC<IBugReportButtonProps> = ({isOpen: openProp, onClose, hideTrigger}) => {
 	// context
 	const {mode: panelMode} = usePanelUi();
-	const {aiProvider} = useSettings();
+	const {provider: aiProvider} = useSettings().ai;
 	const reportContext = useBugReportContext();
 	const {rawTopic, question, variants} = useQuestionFinder();
 

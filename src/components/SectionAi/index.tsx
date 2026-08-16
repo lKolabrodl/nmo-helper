@@ -16,7 +16,7 @@ const AI_PROVIDERS: ReadonlyArray<{readonly id: AiProvider; readonly label: stri
 ];
 
 const SectionAi: React.FC = (): React.JSX.Element => {
-	const {aiProvider, setAiProvider} = useSettings();
+	const {provider: aiProvider, setProvider: setAiProvider} = useSettings().ai;
 	const {setStatus} = usePanelStatus();
 	const [providerLocked, setProviderLocked] = useState(false);
 
