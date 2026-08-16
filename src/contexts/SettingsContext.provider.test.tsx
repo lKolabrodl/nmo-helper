@@ -3,7 +3,11 @@ import {act, renderHook} from '@testing-library/react';
 import {describe, expect, it} from 'vitest';
 import type {IExtensionState} from '../types';
 import {storageGet} from '../utils';
-import {SettingsProvider, useSettings} from './SettingsContext';
+import {
+	SettingsProvider,
+	TEST_DATA_SHARING_STORAGE_KEY,
+	useSettings,
+} from './SettingsContext';
 
 function createInitialState(overrides: Partial<IExtensionState> = {}): IExtensionState {
 	return {
@@ -21,6 +25,7 @@ function createInitialState(overrides: Partial<IExtensionState> = {}): IExtensio
 		savedAutoSolveEnabled: false,
 		savedAutoSolveDelayMinSeconds: 5,
 		savedAutoSolveDelayMaxSeconds: 12,
+		savedTestDataSharingEnabled: false,
 		...overrides,
 	};
 }
@@ -45,6 +50,7 @@ describe('SettingsProvider nested API', () => {
 			savedAutoSolveEnabled: true,
 			savedAutoSolveDelayMinSeconds: 8,
 			savedAutoSolveDelayMaxSeconds: 15,
+			savedTestDataSharingEnabled: true,
 		});
 		const {result} = renderHook(useSettings, {wrapper: createWrapper(initialState)});
 
@@ -62,6 +68,7 @@ describe('SettingsProvider nested API', () => {
 			delayMinSeconds: 8,
 			delayMaxSeconds: 15,
 		});
+		expect(result.current.testDataSharing.enabled).toBe(true);
 	});
 
 	it('сохраняет изменения по прежним плоским storage-ключам', async () => {
@@ -75,6 +82,7 @@ describe('SettingsProvider nested API', () => {
 			result.current.ai.custom.setToken('next-custom-token');
 			result.current.ai.custom.setModel('next-custom-model');
 			result.current.autoSolve.setEnabled(true);
+			result.current.testDataSharing.setEnabled(true);
 		});
 
 		expect(result.current.ai).toMatchObject({
@@ -87,6 +95,7 @@ describe('SettingsProvider nested API', () => {
 			},
 		});
 		expect(result.current.autoSolve.enabled).toBe(true);
+		expect(result.current.testDataSharing.enabled).toBe(true);
 
 		await expect(storageGet('aiProvider', '')).resolves.toBe('proxy');
 		await expect(storageGet('apiKey', '')).resolves.toBe('next-proxy-key');
@@ -95,6 +104,7 @@ describe('SettingsProvider nested API', () => {
 		await expect(storageGet('customAiToken', '')).resolves.toBe('next-custom-token');
 		await expect(storageGet('customAiModel', '')).resolves.toBe('next-custom-model');
 		await expect(storageGet('autoSolveTests', false)).resolves.toBe(true);
+		await expect(storageGet(TEST_DATA_SHARING_STORAGE_KEY, false)).resolves.toBe(true);
 	});
 
 	it('сохраняет максимальную задержку не меньше минимальной', async () => {

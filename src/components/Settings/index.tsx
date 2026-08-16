@@ -1,7 +1,8 @@
 import React, {useEffect, useRef, useState} from 'react';
 import cn from 'classnames';
 import './styles.scss';
-import {IconSettings} from '../icons';
+import {useSettings} from '../../contexts/SettingsContext';
+import {IconCheck, IconSettings} from '../icons';
 import AutoSolveSettings from './AutoSolveSettings';
 
 interface ISettingsProps {
@@ -11,6 +12,8 @@ interface ISettingsProps {
 const Settings: React.FC<ISettingsProps> = ({onOpen}) => {
 	const settingsRef = useRef<HTMLDivElement>(null);
 	const [open, setOpen] = useState(false);
+	const {enabled: testDataSharingEnabled, setEnabled: setTestDataSharingEnabled} =
+		useSettings().testDataSharing;
 
 	useEffect(() => {
 		if (!open) return;
@@ -54,6 +57,19 @@ const Settings: React.FC<ISettingsProps> = ({onOpen}) => {
 			{open && (
 				<div className="nmo-settings-menu nmo-fade-up" role="menu">
 					<AutoSolveSettings/>
+					<div className="nmo-settings-divider"/>
+					<label className={cn('nmo-settings-option', {on: testDataSharingEnabled})}
+						role="menuitemcheckbox"
+						aria-checked={testDataSharingEnabled}>
+						<input type="checkbox"
+							className="nmo-settings-option-input"
+							checked={testDataSharingEnabled}
+							onChange={e => setTestDataSharingEnabled(e.target.checked)}/>
+						<span className="nmo-settings-option-text">Делиться данными теста</span>
+						<span className="nmo-settings-option-check" aria-hidden="true">
+							<IconCheck size={12}/>
+						</span>
+					</label>
 				</div>
 			)}
 		</div>

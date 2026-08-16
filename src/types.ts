@@ -44,6 +44,8 @@ export interface IExtensionState {
   readonly savedAutoSolveDelayMinSeconds: number;
   /** Максимальный интервал автопрохождения вопроса, секунды */
   readonly savedAutoSolveDelayMaxSeconds: number;
+  /** Пользователь явно разрешил делиться данными тестов */
+  readonly savedTestDataSharingEnabled: boolean;
 }
 
 /** Описание AI-модели для выбора в панели */

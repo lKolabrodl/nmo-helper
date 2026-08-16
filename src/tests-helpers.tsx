@@ -15,12 +15,7 @@ interface IProviderOptions {
 	readonly initialCollapsed?: boolean;
 }
 
-const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({
-	children,
-	initialMode = 'auto',
-	initialAiProvider = 'free',
-	initialCollapsed = false,
-}) => {
+const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({children, initialMode = 'auto', initialAiProvider = 'free', initialCollapsed = false}) => {
 	const initialState: IExtensionState = {
 		savedUrl: '',
 		savedCollapsed: initialCollapsed,
@@ -36,6 +31,7 @@ const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({
 		savedAutoSolveEnabled: false,
 		savedAutoSolveDelayMinSeconds: 5,
 		savedAutoSolveDelayMaxSeconds: 12,
+		savedTestDataSharingEnabled: false,
 	};
 
 	return (
@@ -53,10 +49,8 @@ const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({
 	);
 };
 
-export function renderWithProviders(
-	ui: React.ReactElement,
-	options?: RenderOptions & IProviderOptions,
-) {
+export function renderWithProviders(ui: React.ReactElement,	options?: RenderOptions & IProviderOptions) {
+
 	const { initialMode, initialAiProvider, initialCollapsed, ...renderOptions } = options ?? {};
 
 	return render(ui, {
