@@ -22,7 +22,7 @@ export class QuestionCache {
 		if (!this.isCurrentTopic(topic)) return null;
 
 		const entry = this._cache.get(makeId(variants));
-		return entry ?? null;
+		return entry ? cloneEntry(entry) : null;
 	}
 
 	/** Проверяет наличие вопроса в кеше текущей темы. */
@@ -35,7 +35,6 @@ export class QuestionCache {
 	 * Повторная запись того же набора вариантов заменяет выбранные варианты.
 	 */
 	public set(topic: string, variants: readonly string[], selectedVariants: readonly string[]): ICachedQuestionModel {
-
 		if (!this.isCurrentTopic(topic)) {
 			this._cache.clear();
 			this._topic = topic.trim();
@@ -72,5 +71,8 @@ function normalize(value: string): string {
 }
 
 function cloneEntry(entry: ICachedQuestionModel): ICachedQuestionModel {
-	return {variants: [...entry.variants], selectedVariants: [...entry.selectedVariants]};
+	return {
+		variants: [...entry.variants],
+		selectedVariants: [...entry.selectedVariants],
+	};
 }

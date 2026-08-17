@@ -9,7 +9,6 @@ describe('QuestionCache', () => {
 
 		expect(cache.has('Кардиология', ['Вариант A', 'Вариант B'])).toBe(true);
 		expect(cache.get('Кардиология', ['Вариант A', 'Вариант B'])).toEqual({
-			topic: 'Кардиология',
 			variants: ['Вариант A', 'Вариант B'],
 			selectedVariants: ['Вариант B'],
 		});
@@ -31,7 +30,6 @@ describe('QuestionCache', () => {
 		cache.set('Кардиология', ['B', 'A'], ['B']);
 
 		expect(cache.getAll()).toEqual([{
-			topic: 'Кардиология',
 			variants: ['B', 'A'],
 			selectedVariants: ['B'],
 		}]);
@@ -46,7 +44,6 @@ describe('QuestionCache', () => {
 
 		expect(cache.has('Кардиология', ['A', 'B'])).toBe(false);
 		expect(cache.getAll()).toEqual([{
-			topic: 'Неврология',
 			variants: ['E', 'F'],
 			selectedVariants: ['F'],
 		}]);
@@ -74,7 +71,6 @@ describe('QuestionCache', () => {
 		(saved.selectedVariants as string[]).push('B');
 
 		expect(cache.get('Тема', ['A', 'B'])).toEqual({
-			topic: 'Тема',
 			variants: ['A', 'B'],
 			selectedVariants: ['A'],
 		});
