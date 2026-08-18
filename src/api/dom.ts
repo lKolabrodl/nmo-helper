@@ -1,7 +1,7 @@
 import { SELECTORS } from '../utils/constants';
 
 /** Ключ группы fallback-селекторов из {@link SELECTORS}. */
-type SelectorKey = keyof typeof SELECTORS;
+export type SelectorKey = keyof typeof SELECTORS;
 
 /**
  * Находит первый элемент по fallback-цепочке селекторов для заданного ключа.
@@ -14,7 +14,7 @@ type SelectorKey = keyof typeof SELECTORS;
  * @param root Корень поиска. По умолчанию — весь `document`.
  * @returns Первый подошедший элемент или `null`, если ни один селектор не сработал.
  */
-function queryFirst<T extends Element = HTMLElement>(key: SelectorKey, root: ParentNode = document): T | null {
+export function queryFirst<T extends Element = HTMLElement>(key: SelectorKey, root: ParentNode = document): T | null {
 	for (const sel of SELECTORS[key]) {
 		const el = root.querySelector<T>(sel);
 		if (el) return el;
@@ -33,7 +33,7 @@ function queryFirst<T extends Element = HTMLElement>(key: SelectorKey, root: Par
  * @param root Корень поиска. По умолчанию — весь `document`.
  * @returns Массив элементов (возможно пустой).
  */
-function queryAll<T extends Element = HTMLElement>(key: SelectorKey, root: ParentNode = document): T[] {
+export function queryAll<T extends Element = HTMLElement>(key: SelectorKey, root: ParentNode = document): T[] {
 	for (const sel of SELECTORS[key]) {
 		const els = root.querySelectorAll<T>(sel);
 		if (els.length) return Array.from(els);
@@ -54,6 +54,25 @@ function queryAll<T extends Element = HTMLElement>(key: SelectorKey, root: Paren
  */
 export function getTopicElement(): HTMLElement | null {
 	return queryFirst('topic');
+}
+
+/**
+ * Находит полностью завершённый тест со списком результатов.
+ *
+ * @param root Корень поиска. По умолчанию весь документ.
+ * @returns Контейнер результатов или `null`, пока итоговый DOM не появился.
+ */
+export function findCompletedQuizResults(root: ParentNode = document): HTMLElement | null {
+	const results = queryFirst<HTMLElement>('quizResults', root);
+	if (!results || !queryFirst('resultItem', results)) return null;
+
+	const page = results.closest('lib-quiz-page') ?? document;
+	const isCompleted = queryAll<HTMLElement>('completedStatus', page)
+		.some(element => /заверш[её]н/i.test(
+			element.textContent?.replace(/\s+/g, ' ').trim() ?? '',
+		));
+
+	return isCompleted ? results : null;
 }
 
 /**

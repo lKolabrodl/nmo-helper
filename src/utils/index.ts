@@ -15,6 +15,7 @@ export {
 export { cleanTopic, normalizeDashes, normalizeText } from './text';
 export { similarity, detectSource, pickResult } from './matching';
 export {
+	findCompletedQuizResults,
 	getAnswerClickTarget,
 	getAnswerInput,
 	getFinishQuizButton,
@@ -28,4 +29,6 @@ export {
 	getVariantElements,
 	getVariantTexts,
 	isSingleAnswer,
+	queryAll,
+	queryFirst,
 } from '../api/dom';

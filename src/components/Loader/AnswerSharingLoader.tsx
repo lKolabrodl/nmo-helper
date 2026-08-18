@@ -2,18 +2,11 @@ import {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {submitSharedQuestions, type ISharedQuizQuestion} from '../../api/fetch/submit-shared-questions';
 import {useSettings} from '../../contexts/SettingsContext';
-import {cleanTopic, getTopicElement, normalizeText} from '../../utils';
+import {cleanTopic, findCompletedQuizResults, getTopicElement, normalizeText, queryAll, queryFirst} from '../../utils';
 import {questionCache, type ICachedQuestionModel} from '../../utils/question-cache';
 import {IconCheck} from '../icons';
 import './AnswerSharingLoader.scss';
 
-const QUIZ_RESULTS_SELECTOR = 'lib-questions-list .questionList';
-const RESULT_ITEM_SELECTOR = '.questionList-item';
-const RESULT_NUMBER_SELECTOR = '.questionList-item-number';
-const RESULT_TITLE_SELECTOR = '.questionList-item-content-title';
-const RESULT_ANSWER_SELECTOR = '.questionList-item-content-answer-text';
-const RESULT_CORRECT_SELECTOR = '.questionList-item-status-wright';
-const COMPLETED_STATUS_SELECTOR = '.text_value.text-success';
 const RESULTS_SETTLE_DELAY_MS = 200;
 
 /** Готовые данные одной завершённой попытки теста. */
@@ -23,24 +16,6 @@ export interface IAnswerSharingSnapshot {
 	/** Только вопросы, которые портал отметил как решённые правильно. */
 	readonly questions: readonly ISharedQuizQuestion[];
 }
-
-/**
- * Находит полностью завершённый тест со списком результатов.
- *
- * @param root Корень поиска. По умолчанию весь документ.
- * @returns Контейнер результатов или `null`, пока итоговый DOM не появился.
- */
-export function findCompletedQuizResults(root: ParentNode = document): HTMLElement | null {
-	const results = root.querySelector<HTMLElement>(QUIZ_RESULTS_SELECTOR);
-	if (!results?.querySelector(RESULT_ITEM_SELECTOR)) return null;
-
-	const page = results.closest('lib-quiz-page') ?? document;
-	const isCompleted = Array.from(page.querySelectorAll<HTMLElement>(COMPLETED_STATUS_SELECTOR))
-		.some(element => /заверш[её]н/i.test(collapseText(element.textContent)));
-
-	return isCompleted ? results : null;
-}
-
 /**
  * Сопоставляет правильные строки итогового DOM с вопросами, собранными во время
  * прохождения теста. Основное соответствие строится по номеру вопроса; при
@@ -62,17 +37,17 @@ export function createAnswerSharingSnapshot(
 	const usedQuestionKeys = new Set<string>();
 	const questions: ISharedQuizQuestion[] = [];
 
-	results.querySelectorAll<HTMLElement>(RESULT_ITEM_SELECTOR).forEach(item => {
-		if (!item.querySelector(RESULT_CORRECT_SELECTOR)) return;
+	queryAll<HTMLElement>('resultItem', results).forEach(item => {
+		if (!queryFirst('resultCorrect', item)) return;
 
-		const text = collapseText(item.querySelector(RESULT_TITLE_SELECTOR)?.textContent);
-		const answers = Array.from(item.querySelectorAll<HTMLElement>(RESULT_ANSWER_SELECTOR))
+		const text = collapseText(queryFirst('resultTitle', item)?.textContent);
+		const answers = queryAll<HTMLElement>('resultAnswer', item)
 			.map(element => collapseText(element.textContent))
 			.filter(Boolean);
 		if (!text || !answers.length) return;
 
 		const ordinal = Number.parseInt(
-			collapseText(item.querySelector(RESULT_NUMBER_SELECTOR)?.textContent),
+			collapseText(queryFirst('resultNumber', item)?.textContent),
 			10,
 		) - 1;
 		const cacheIndex = findCachedQuestionIndex(
@@ -240,15 +215,9 @@ function sendSnapshot(snapshot: IAnswerSharingSnapshot): void {
 	});
 }
 
-function findCachedQuestionIndex(
-	preferredIndex: number,
-	answers: readonly string[],
-	cachedQuestions: readonly ICachedQuestionModel[],
-	usedIndexes: ReadonlySet<number>,
-): number {
-	if (isMatchingCachedQuestion(preferredIndex, answers, cachedQuestions, usedIndexes)) {
-		return preferredIndex;
-	}
+function findCachedQuestionIndex(preferredIndex: number, answers: readonly string[], cachedQuestions: readonly ICachedQuestionModel[], usedIndexes: ReadonlySet<number>): number {
+	if (isMatchingCachedQuestion(preferredIndex, answers, cachedQuestions, usedIndexes)) return preferredIndex;
+
 
 	const matches = cachedQuestions
 		.map((_, index) => index)
@@ -257,23 +226,14 @@ function findCachedQuestionIndex(
 	return matches.length === 1 ? matches[0] : -1;
 }
 
-function isMatchingCachedQuestion(
-	index: number,
-	answers: readonly string[],
-	cachedQuestions: readonly ICachedQuestionModel[],
-	usedIndexes: ReadonlySet<number>,
-): boolean {
+function isMatchingCachedQuestion(index: number, answers: readonly string[], cachedQuestions: readonly ICachedQuestionModel[], usedIndexes: ReadonlySet<number>): boolean {
 	const cached = cachedQuestions[index];
 	if (!cached || usedIndexes.has(index) || cached.variants.length < 2) return false;
 
-	return normalizedSet(cached.selectedVariants) === normalizedSet(answers)
-		&& findCorrectIndexes(cached.variants, answers) !== null;
+	return normalizedSet(cached.selectedVariants) === normalizedSet(answers) && findCorrectIndexes(cached.variants, answers) !== null;
 }
 
-function findCorrectIndexes(
-	variants: readonly string[],
-	answers: readonly string[],
-): number[] | null {
+function findCorrectIndexes(variants: readonly string[], answers: readonly string[]): number[] | null {
 	const variantKeys = variants.map(normalizeText);
 	const answerKeys = answers.map(normalizeText);
 	const correctKeys = new Set(answerKeys);

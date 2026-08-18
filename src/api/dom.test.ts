@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import {
+	findCompletedQuizResults,
 	getTopicElement,
 	getQuestionAnchor,
 	getQuestionText,
@@ -21,6 +22,26 @@ beforeAll(() => {
 
 beforeEach(() => {
 	document.body.innerHTML = '';
+});
+
+describe('fn findCompletedQuizResults', () => {
+	it('находит список только у завершённого теста', () => {
+		document.body.innerHTML = `
+			<lib-quiz-page>
+				<div class="text_value text-success">Завершен</div>
+				<lib-questions-list>
+					<div class="questionList">
+						<div class="questionList-item"></div>
+					</div>
+				</lib-questions-list>
+			</lib-quiz-page>
+		`;
+
+		expect(findCompletedQuizResults()).toBe(document.querySelector('.questionList'));
+
+		document.querySelector('.text-success')?.remove();
+		expect(findCompletedQuizResults()).toBeNull();
+	});
 });
 
 describe('fn getTopicElement', () => {

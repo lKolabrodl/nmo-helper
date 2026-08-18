@@ -1,9 +1,6 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {cleanup, fireEvent, render, screen, waitFor} from '@testing-library/react';
-import AnswerSharingLoader, {
-	createAnswerSharingSnapshot,
-	findCompletedQuizResults,
-} from './AnswerSharingLoader';
+import AnswerSharingLoader, {createAnswerSharingSnapshot} from './AnswerSharingLoader';
 
 const mocks = vi.hoisted(() => ({
 	sharingEnabled: false,
@@ -50,25 +47,14 @@ afterEach(() => {
 	document.body.innerHTML = '';
 });
 
-describe('DOM результатов', () => {
-	it('находит список только у завершённого теста', () => {
-		document.body.innerHTML = createResultsMarkup([
-			resultItem(1, 'Первый вопрос', 'correct', ['A2']),
-		]);
-
-		expect(findCompletedQuizResults()).toBe(document.querySelector('.questionList'));
-
-		document.querySelector('.text-success')?.remove();
-		expect(findCompletedQuizResults()).toBeNull();
-	});
-
+describe('createAnswerSharingSnapshot', () => {
 	it('собирает только вопросы со статусом «Верно»', () => {
 		document.body.innerHTML = createResultsMarkup([
 			resultItem(1, 'Первый вопрос', 'correct', ['A2']),
 			resultItem(2, 'Второй вопрос', 'wrong', ['B1']),
 			resultItem(3, 'Третий вопрос', 'correct', ['C1', 'C3']),
 		]);
-		const results = findCompletedQuizResults()!;
+		const results = document.querySelector<HTMLElement>('.questionList')!;
 
 		expect(createAnswerSharingSnapshot(results, mocks.cacheQuestions)).toMatchObject({
 			title: 'Кардиология - 2025',
@@ -97,7 +83,7 @@ describe('DOM результатов', () => {
 		];
 
 		expect(createAnswerSharingSnapshot(
-			findCompletedQuizResults()!,
+			document.querySelector<HTMLElement>('.questionList')!,
 			mocks.cacheQuestions,
 		)).toBeNull();
 	});
