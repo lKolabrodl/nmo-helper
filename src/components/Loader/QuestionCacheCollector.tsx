@@ -1,5 +1,12 @@
 import {useEffect} from 'react';
-import {cleanTopic, getAnswerInput, getNextQuestionButton, getTopicElement, getVariantElements} from '../../utils';
+import {
+	cleanTopic,
+	getAnswerInput,
+	getNextQuestionButton,
+	getQuestionText,
+	getTopicElement,
+	getVariantElements,
+} from '../../utils';
 import {questionCache} from '../../utils/question-cache';
 
 /**
@@ -31,19 +38,23 @@ const QuestionCacheCollector = () => {
 export default QuestionCacheCollector;
 
 /**
- * Считывает текущую тему, варианты ответа и состояние связанных radio/checkbox
- * из DOM страницы НМО, затем сохраняет варианты в {@link questionCache}.
+ * Считывает текущую тему, текст вопроса, варианты ответа и состояние связанных
+ * radio/checkbox из DOM страницы НМО, затем сохраняет их в {@link questionCache}.
  *
  * Тема очищается через {@link cleanTopic} и передаётся в кеш только для
  * определения смены теста. В саму модель сохранённого вопроса она не входит.
- * Если тема или варианты не найдены либо пользователь ничего не выбрал,
+ * Если тема, вопрос или варианты не найдены либо пользователь ничего не выбрал,
  * функция завершает работу без записи в кеш.
  *
  * @returns Ничего не возвращает.
  */
 export function collectCurrentQuestion(): void {
-	const topic = cleanTopic(getTopicElement()?.innerText?.trim() ?? null);
+	const topicText = getTopicElement()?.textContent?.replace(/\s+/g, ' ').trim() ?? null;
+	const topic = cleanTopic(topicText);
 	if (!topic) return;
+
+	const question = getQuestionText();
+	if (!question) return;
 
 	const variantElements = getVariantElements();
 	if (!variantElements.length) return;
@@ -54,5 +65,5 @@ export function collectCurrentQuestion(): void {
 	);
 
 	if (!selectedVariants.length) return;
-	questionCache.set(topic, variants, selectedVariants);
+	questionCache.set(topic, question, variants, selectedVariants);
 }

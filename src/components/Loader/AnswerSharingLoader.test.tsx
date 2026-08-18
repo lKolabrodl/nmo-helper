@@ -5,10 +5,11 @@ import AnswerSharingLoader, {createAnswerSharingSnapshot} from './AnswerSharingL
 const mocks = vi.hoisted(() => ({
 	sharingEnabled: false,
 	setSharingEnabled: vi.fn(),
-	cacheQuestions: [] as Array<{
+	cacheQuestions: new Map<string, {
 		readonly variants: readonly string[];
 		readonly selectedVariants: readonly string[];
-	}>,
+	}>(),
+	getCachedQuestion: vi.fn(),
 	submitSharedQuestions: vi.fn(),
 }));
 
@@ -22,7 +23,7 @@ vi.mock('../../contexts/SettingsContext', () => ({
 }));
 
 vi.mock('../../utils/question-cache', () => ({
-	questionCache: {getAll: () => mocks.cacheQuestions},
+	questionCache: {get: mocks.getCachedQuestion},
 }));
 
 vi.mock('../../api/fetch/submit-shared-questions', () => ({
@@ -35,11 +36,23 @@ beforeEach(() => {
 	mocks.setSharingEnabled.mockReset();
 	mocks.submitSharedQuestions.mockReset();
 	mocks.submitSharedQuestions.mockResolvedValue(undefined);
-	mocks.cacheQuestions = [
-		{variants: ['A1', 'A2'], selectedVariants: ['A2']},
-		{variants: ['B1', 'B2'], selectedVariants: ['B1']},
-		{variants: ['C1', 'C2', 'C3'], selectedVariants: ['C1', 'C3']},
-	];
+	mocks.cacheQuestions.clear();
+	mocks.cacheQuestions.set('Первый вопрос', {
+		variants: ['A1', 'A2'],
+		selectedVariants: ['A2'],
+	});
+	mocks.cacheQuestions.set('Второй вопрос', {
+		variants: ['B1', 'B2'],
+		selectedVariants: ['B1'],
+	});
+	mocks.cacheQuestions.set('Третий вопрос', {
+		variants: ['C1', 'C2', 'C3'],
+		selectedVariants: ['C1', 'C3'],
+	});
+	mocks.getCachedQuestion.mockReset();
+	mocks.getCachedQuestion.mockImplementation(
+		(_topic: string, question: string) => mocks.cacheQuestions.get(question) ?? null,
+	);
 });
 
 afterEach(() => {
@@ -50,13 +63,13 @@ afterEach(() => {
 describe('createAnswerSharingSnapshot', () => {
 	it('собирает только вопросы со статусом «Верно»', () => {
 		document.body.innerHTML = createResultsMarkup([
-			resultItem(1, 'Первый вопрос', 'correct', ['A2']),
+			resultItem(99, 'Первый вопрос', 'correct', ['Ответ из итогов не используется']),
 			resultItem(2, 'Второй вопрос', 'wrong', ['B1']),
-			resultItem(3, 'Третий вопрос', 'correct', ['C1', 'C3']),
+			resultItem(1, 'Третий вопрос', 'correct', []),
 		]);
 		const results = document.querySelector<HTMLElement>('.questionList')!;
 
-		expect(createAnswerSharingSnapshot(results, mocks.cacheQuestions)).toMatchObject({
+		expect(createAnswerSharingSnapshot(results)).toMatchObject({
 			title: 'Кардиология - 2025',
 			questions: [
 				{
@@ -71,21 +84,75 @@ describe('createAnswerSharingSnapshot', () => {
 				},
 			],
 		});
+		expect(mocks.getCachedQuestion).toHaveBeenCalledWith(
+			'Кардиология - 2025',
+			'Первый вопрос',
+		);
 	});
 
-	it('пропускает результат, который нельзя надёжно сопоставить с кешем', () => {
+	it('различает вопросы с одинаковым выбранным ответом по тексту вопроса', () => {
+		mocks.cacheQuestions.set('Второй вопрос', {
+			variants: ['A2', 'B2'],
+			selectedVariants: ['A2'],
+		});
 		document.body.innerHTML = createResultsMarkup([
-			resultItem(8, 'Неизвестный вопрос', 'correct', ['Да']),
+			resultItem(99, 'Первый вопрос', 'correct', []),
+			resultItem(99, 'Второй вопрос', 'correct', []),
 		]);
-		mocks.cacheQuestions = [
-			{variants: ['Нет', 'Да'], selectedVariants: ['Да']},
-			{variants: ['Не знаю', 'Да'], selectedVariants: ['Да']},
-		];
 
 		expect(createAnswerSharingSnapshot(
 			document.querySelector<HTMLElement>('.questionList')!,
-			mocks.cacheQuestions,
+		)?.questions).toEqual([
+			{
+				text: 'Первый вопрос',
+				options: ['A1', 'A2'],
+				correct_indexes: [1],
+			},
+			{
+				text: 'Второй вопрос',
+				options: ['A2', 'B2'],
+				correct_indexes: [0],
+			},
+		]);
+	});
+
+	it('пропускает зелёный вопрос, которого нет в кеше', () => {
+		document.body.innerHTML = createResultsMarkup([
+			resultItem(8, 'Неизвестный вопрос', 'correct', ['Да']),
+		]);
+
+		expect(createAnswerSharingSnapshot(
+			document.querySelector<HTMLElement>('.questionList')!,
 		)).toBeNull();
+	});
+
+	it('пропускает неоднозначные выбранные варианты из кеша', () => {
+		mocks.cacheQuestions.set('Некорректный вопрос', {
+			variants: ['Да', 'Да'],
+			selectedVariants: ['Да'],
+		});
+		document.body.innerHTML = createResultsMarkup([
+			resultItem(1, 'Некорректный вопрос', 'correct', []),
+		]);
+
+		expect(createAnswerSharingSnapshot(
+			document.querySelector<HTMLElement>('.questionList')!,
+		)).toBeNull();
+	});
+
+	it.each([
+		['correct' as const, 'два зелёных результата'],
+		['wrong' as const, 'зелёный и неверный результаты'],
+	])('не отправляет одинаковый вопрос: %s — %s', (secondStatus) => {
+		document.body.innerHTML = createResultsMarkup([
+			resultItem(1, 'Первый вопрос', 'correct', []),
+			resultItem(2, '  ПЕРВЫЙ   ВОПРОС  ', secondStatus, []),
+		]);
+
+		expect(createAnswerSharingSnapshot(
+			document.querySelector<HTMLElement>('.questionList')!,
+		)).toBeNull();
+		expect(mocks.getCachedQuestion).not.toHaveBeenCalled();
 	});
 });
 

@@ -61,12 +61,8 @@ export const SELECTORS = {
 	quizResults: ['lib-questions-list .questionList'],
 	/** Элемент вопроса в списке результатов */
 	resultItem: ['.questionList-item'],
-	/** Номер вопроса в списке результатов */
-	resultNumber: ['.questionList-item-number'],
 	/** Заголовок вопроса в списке результатов */
 	resultTitle: ['.questionList-item-content-title'],
-	/** Текст правильного ответа в списке результатов */
-	resultAnswer: ['.questionList-item-content-answer-text'],
 	/** Статус правильного ответа в списке результатов */
 	resultCorrect: ['.questionList-item-status-wright'],
 	/** Статус завершённого теста */

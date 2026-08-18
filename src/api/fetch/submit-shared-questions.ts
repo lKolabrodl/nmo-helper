@@ -25,11 +25,7 @@ export interface ISharedQuizQuestion {
  * @param submissionId UUID идемпотентной отправки. По умолчанию создаётся новый.
  * @throws Если входные данные пусты, запрос отклонён или сервер недоступен.
  */
-export async function submitSharedQuestions(
-	title: string,
-	questions: readonly ISharedQuizQuestion[],
-	submissionId: string = crypto.randomUUID(),
-): Promise<void> {
+export async function submitSharedQuestions(title: string,	questions: readonly ISharedQuizQuestion[],	submissionId: string = crypto.randomUUID()): Promise<void> {
 	const normalizedTitle = title.trim();
 	if (!normalizedTitle) throw new Error('не указана тема теста');
 	if (!questions.length) throw new Error('нет правильных ответов для отправки');

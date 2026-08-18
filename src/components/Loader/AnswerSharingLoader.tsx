@@ -3,7 +3,7 @@ import {createPortal} from 'react-dom';
 import {submitSharedQuestions, type ISharedQuizQuestion} from '../../api/fetch/submit-shared-questions';
 import {useSettings} from '../../contexts/SettingsContext';
 import {cleanTopic, findCompletedQuizResults, getTopicElement, normalizeText, queryAll, queryFirst} from '../../utils';
-import {questionCache, type ICachedQuestionModel} from '../../utils/question-cache';
+import {questionCache} from '../../utils/question-cache';
 import {IconCheck} from '../icons';
 import './AnswerSharingLoader.scss';
 
@@ -17,71 +17,45 @@ export interface IAnswerSharingSnapshot {
 	readonly questions: readonly ISharedQuizQuestion[];
 }
 /**
- * Сопоставляет правильные строки итогового DOM с вопросами, собранными во время
- * прохождения теста. Основное соответствие строится по номеру вопроса; при
- * пропуске вопроса допускается только единственное однозначное совпадение по
- * выбранным ответам. Неоднозначные и неполные данные не включаются.
+ * Собирает отмеченные порталом правильные вопросы и достаёт их варианты с
+ * выбранными ответами из кеша по тексту вопроса. Неполные данные не включаются.
  *
  * @param results Контейнер итогового списка вопросов.
- * @param cachedQuestions Вопросы из {@link questionCache} в порядке прохождения.
  * @returns Данные для отправки либо `null`, если надёжных совпадений нет.
  */
-export function createAnswerSharingSnapshot(
-	results: HTMLElement,
-	cachedQuestions: readonly ICachedQuestionModel[],
-): IAnswerSharingSnapshot | null {
+export function createAnswerSharingSnapshot(results: HTMLElement): IAnswerSharingSnapshot | null {
 	const title = cleanTopic(collapseText(getTopicElement()?.textContent) || null);
-	if (!title || !cachedQuestions.length) return null;
+	if (!title) return null;
 
-	const usedCacheIndexes = new Set<number>();
-	const usedQuestionKeys = new Set<string>();
-	const questions: ISharedQuizQuestion[] = [];
-
-	queryAll<HTMLElement>('resultItem', results).forEach(item => {
-		if (!queryFirst('resultCorrect', item)) return;
-
+	const questionResults = queryAll<HTMLElement>('resultItem', results).flatMap(item => {
 		const text = collapseText(queryFirst('resultTitle', item)?.textContent);
-		const answers = queryAll<HTMLElement>('resultAnswer', item)
-			.map(element => collapseText(element.textContent))
-			.filter(Boolean);
-		if (!text || !answers.length) return;
+		return text ? [{
+			text,
+			key: normalizeText(text),
+			isCorrect: !!queryFirst('resultCorrect', item),
+		}] : [];
+	});
+	const questionCounts = new Map<string, number>();
+	questionResults.forEach(({key}) => {
+		questionCounts.set(key, (questionCounts.get(key) ?? 0) + 1);
+	});
 
-		const ordinal = Number.parseInt(
-			collapseText(queryFirst('resultNumber', item)?.textContent),
-			10,
-		) - 1;
-		const cacheIndex = findCachedQuestionIndex(
-			Number.isInteger(ordinal) ? ordinal : -1,
-			answers,
-			cachedQuestions,
-			usedCacheIndexes,
-		);
-		if (cacheIndex < 0) return;
+	const questions: ISharedQuizQuestion[] = [];
+	questionResults.forEach(({text, key, isCorrect}) => {
+		if (!isCorrect || questionCounts.get(key) !== 1) return;
 
-		const cached = cachedQuestions[cacheIndex];
-		const correctIndexes = findCorrectIndexes(cached.variants, answers);
+		const cached = questionCache.get(title, text);
+		if (!cached) return;
+
+		const correctIndexes = findCorrectIndexes(cached.variants, cached.selectedVariants);
 		if (!correctIndexes) return;
 
-		const questionKey = JSON.stringify([
-			normalizeText(text),
-			[...cached.variants].map(normalizeText).sort(),
-		]);
-		if (usedQuestionKeys.has(questionKey)) return;
-
-		usedCacheIndexes.add(cacheIndex);
-		usedQuestionKeys.add(questionKey);
-		questions.push({
-			text,
-			options: [...cached.variants],
-			correct_indexes: correctIndexes,
-		});
+		questions.push({text, options: [...cached.variants], correct_indexes: correctIndexes});
 	});
 
 	if (!questions.length) return null;
-	return {
-		title,
-		questions,
-	};
+
+	return {title, questions};
 }
 
 /**
@@ -92,6 +66,7 @@ const AnswerSharingLoader = () => {
 	const {enabled, setEnabled} = useSettings().testDataSharing;
 	const [pending, setPending] = useState<IAnswerSharingSnapshot | null>(null);
 	const [rememberChoice, setRememberChoice] = useState(false);
+
 	const handledResultsRef = useRef(new WeakSet<HTMLElement>());
 	const pendingResultsRef = useRef<HTMLElement | null>(null);
 
@@ -105,7 +80,7 @@ const AnswerSharingLoader = () => {
 				|| pendingResultsRef.current === results
 			) return;
 
-			const snapshot = createAnswerSharingSnapshot(results, questionCache.getAll());
+			const snapshot = createAnswerSharingSnapshot(results);
 			if (!snapshot) return;
 
 			if (enabled) {
@@ -215,42 +190,18 @@ function sendSnapshot(snapshot: IAnswerSharingSnapshot): void {
 	});
 }
 
-function findCachedQuestionIndex(preferredIndex: number, answers: readonly string[], cachedQuestions: readonly ICachedQuestionModel[], usedIndexes: ReadonlySet<number>): number {
-	if (isMatchingCachedQuestion(preferredIndex, answers, cachedQuestions, usedIndexes)) return preferredIndex;
-
-
-	const matches = cachedQuestions
-		.map((_, index) => index)
-		.filter(index => isMatchingCachedQuestion(index, answers, cachedQuestions, usedIndexes));
-
-	return matches.length === 1 ? matches[0] : -1;
-}
-
-function isMatchingCachedQuestion(index: number, answers: readonly string[], cachedQuestions: readonly ICachedQuestionModel[], usedIndexes: ReadonlySet<number>): boolean {
-	const cached = cachedQuestions[index];
-	if (!cached || usedIndexes.has(index) || cached.variants.length < 2) return false;
-
-	return normalizedSet(cached.selectedVariants) === normalizedSet(answers) && findCorrectIndexes(cached.variants, answers) !== null;
-}
-
 function findCorrectIndexes(variants: readonly string[], answers: readonly string[]): number[] | null {
 	const variantKeys = variants.map(normalizeText);
 	const answerKeys = answers.map(normalizeText);
 	const correctKeys = new Set(answerKeys);
-	if (!correctKeys.size
-		|| correctKeys.size !== answerKeys.length
-		|| new Set(variantKeys).size !== variantKeys.length
-	) return null;
+
+	if (variants.length < 2	|| !correctKeys.size|| correctKeys.size !== answerKeys.length|| new Set(variantKeys).size !== variantKeys.length) return null;
 
 	const indexes = variantKeys.flatMap((variant, index) =>
 		correctKeys.has(variant) ? [index] : []
 	);
 
 	return indexes.length === correctKeys.size ? indexes : null;
-}
-
-function normalizedSet(values: readonly string[]): string {
-	return JSON.stringify(values.map(normalizeText).sort());
 }
 
 function collapseText(value: string | null | undefined): string {

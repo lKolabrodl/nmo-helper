@@ -64,6 +64,7 @@ describe('collectCurrentQuestion', () => {
 		expect(mocks.setQuestion).toHaveBeenCalledOnce();
 		expect(mocks.setQuestion).toHaveBeenCalledWith(
 			'Кардиология - 2024',
+			'Какой вариант правильный?',
 			['Вариант A', 'Вариант B', 'Вариант C'],
 			['Вариант A', 'Вариант C'],
 		);
@@ -78,7 +79,15 @@ describe('collectCurrentQuestion', () => {
 	});
 
 	it('не записывает вопрос без вариантов', () => {
-		document.querySelector('#questionAnchor')?.replaceChildren();
+		document.querySelectorAll('.mdc-form-field').forEach(element => element.remove());
+
+		collectCurrentQuestion();
+
+		expect(mocks.setQuestion).not.toHaveBeenCalled();
+	});
+
+	it('не записывает вопрос без текста вопроса', () => {
+		document.querySelector('.question-title-text')?.remove();
 
 		collectCurrentQuestion();
 
@@ -102,6 +111,7 @@ function createQuizMarkup(forwardButtonText: string): string {
 			Кардиология - 2024 - Предварительное тестирование
 		</div>
 		<div id="questionAnchor">
+			<div class="question-title-text">Какой вариант правильный?</div>
 			<label class="mdc-form-field">
 				<input type="checkbox" checked>
 				<span>Вариант A</span>
