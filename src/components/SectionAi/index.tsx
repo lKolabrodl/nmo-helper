@@ -45,7 +45,7 @@ const SectionAi: React.FC = (): React.JSX.Element => {
 				</div>
 			</div>
 
-			{aiProvider === 'free' && <FreeAi/>}
+			{aiProvider === 'free' && <FreeAi onBusyChange={setProviderLocked}/>}
 			{aiProvider === 'proxy' && <ProxyApi onBusyChange={setProviderLocked}/>}
 			{aiProvider === 'custom' && <CustomEndpoint onBusyChange={setProviderLocked}/>}
 		</div>

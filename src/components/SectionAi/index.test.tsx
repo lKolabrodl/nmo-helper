@@ -5,13 +5,30 @@ import {renderWithProviders} from '../../tests-helpers';
 import SectionAi from './index';
 
 describe('SectionAi', () => {
-	it('по умолчанию показывает заглушку бесплатного AI', () => {
+	it('по умолчанию показывает автоматический бесплатный маршрут без настроек', () => {
 		renderWithProviders(<SectionAi/>, {initialMode: 'ai'});
 
 		expect(screen.getByRole('tab', {name: 'Бесплатно'})).toHaveAttribute('aria-selected', 'true');
-		expect(screen.getByText('Бесплатный AI')).toBeInTheDocument();
-		expect(screen.getByRole('button', {name: 'Скоро будет доступно'})).toBeDisabled();
+		expect(screen.getByText('Бесплатный AI · автоматически')).toBeInTheDocument();
+		expect(screen.getByText('OVH anonymous')).toBeInTheDocument();
+		expect(screen.getByText('AI Horde anonymous')).toBeInTheDocument();
+		expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+		expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+		expect(screen.getByRole('button', {name: 'Запустить бесплатно'})).toBeEnabled();
 		expect(screen.queryByLabelText('API-ключ ProxyAPI')).not.toBeInTheDocument();
+	});
+
+	it('запускает бесплатный маршрут одной кнопкой и блокирует смену подключения', () => {
+		renderWithProviders(<SectionAi/>, {initialMode: 'ai'});
+
+		fireEvent.click(screen.getByRole('button', {name: 'Запустить бесплатно'}));
+
+		expect(screen.getByRole('button', {name: 'Остановить'})).toBeEnabled();
+		expect(screen.getByRole('tab', {name: 'ProxyAPI'})).toBeDisabled();
+		expect(screen.getByRole('tab', {name: 'Свой endpoint'})).toBeDisabled();
+
+		fireEvent.click(screen.getByRole('button', {name: 'Остановить'}));
+		expect(screen.getByRole('button', {name: 'Запустить бесплатно'})).toBeEnabled();
 	});
 
 	it('переключает ProxyAPI и свой endpoint, сохраняя выбранный вариант', async () => {
@@ -27,7 +44,7 @@ describe('SectionAi', () => {
 		expect(await storageGet('aiProvider', '')).toBe('custom');
 	});
 
-	it('открывает сохранённый ProxyAPI вместо бесплатной заглушки', () => {
+	it('открывает сохранённый ProxyAPI вместо бесплатного режима', () => {
 		renderWithProviders(<SectionAi/>, {initialMode: 'ai', initialAiProvider: 'proxy'});
 
 		expect(screen.getByRole('tab', {name: 'ProxyAPI'})).toHaveAttribute('aria-selected', 'true');

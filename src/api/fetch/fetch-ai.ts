@@ -2,6 +2,16 @@ import {AI_URL} from '../../utils/constants';
 import {buildPrompt, getApiModel} from '../../components/SectionAi/utils';
 import {fetchViaBackground, type IRequestResponse} from './fetch';
 
+/** Необязательные параметры конкретного AI-провайдера. */
+export interface IAiRequestOptions {
+	/** Клиентский таймаут background-fetch в миллисекундах. */
+	readonly timeoutMs?: number;
+	/** Лимит выходных токенов для OpenAI-совместимых endpoint'ов. */
+	readonly maxTokens?: number;
+	/** Дополнительные поля JSON-тела, например серверный timeout AI Horde. */
+	readonly extraBody?: Readonly<Record<string, unknown>>;
+}
+
 /**
  * Отправляет вопрос теста в LLM через ProxyAPI (или кастомный endpoint) и
  * возвращает номера правильных вариантов.
@@ -26,16 +36,19 @@ import {fetchViaBackground, type IRequestResponse} from './fetch';
  * @throws {Error} `лимит запросов — подождите` — HTTP 429.
  * @throws {Error} `ошибка <status>` — любой другой не-2xx HTTP-статус.
  */
-export async function askAI(apiKey: string, question: string, options: string[], isSingle: boolean, topic: string, model: string, endpoint?: string): Promise<number[]> {
+export async function askAI(apiKey: string, question: string, options: string[], isSingle: boolean, topic: string, model: string, endpoint?: string, requestOptions: IAiRequestOptions = {}): Promise<number[]> {
 	const { systemPrompt, userPrompt } = buildPrompt(question, options, isSingle, topic);
-	const { url, init } = buildRequest(apiKey, model, systemPrompt, userPrompt, endpoint);
+	const { url, init } = buildRequest(apiKey, model, systemPrompt, userPrompt, endpoint, requestOptions);
 
 	const res: IRequestResponse = await fetchViaBackground(url, init);
 
-	if (res.error) throw new Error('ошибка сети');
+	if (res.error) {
+		if (res.message?.startsWith('таймаут')) throw new Error(`${res.message} — попробуйте ещё раз`);
+		throw new Error('ошибка сети');
+	}
 	if (res.status < 200 || res.status >= 400) handleError(res);
 
-	return parseAnswer(res);
+	return normalizeAnswerIndexes(parseAnswer(res), options.length);
 }
 
 /**
@@ -94,24 +107,27 @@ export async function validateApiKey(apiKey: string, model: string, endpoint?: s
  * @param endpoint     Необязательный кастомный URL; по умолчанию — {@link AI_URL}.
  * @returns `{ url, init }` для передачи в {@link fetchViaBackground}.
  */
-export function buildRequest(apiKey: string, model: string, systemPrompt: string, userPrompt: string, endpoint?: string) {
+export function buildRequest(apiKey: string, model: string, systemPrompt: string, userPrompt: string, endpoint?: string, requestOptions: IAiRequestOptions = {}) {
 	const body: Record<string, unknown> = {
+		...requestOptions.extraBody,
 		model: endpoint ? model : getApiModel(model),
 		messages: [
 			{ role: 'system', content: systemPrompt },
 			{ role: 'user', content: userPrompt },
 		],
 	};
+	if (requestOptions.maxTokens !== undefined) body.max_tokens = requestOptions.maxTokens;
+
+	const headers: Record<string, string> = {'Content-Type': 'application/json'};
+	if (apiKey) headers.Authorization = 'Bearer ' + apiKey;
 
 	return {
 		url: endpoint || AI_URL,
 		init: {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': 'Bearer ' + apiKey,
-			},
+			headers,
 			body: JSON.stringify(body),
+			timeoutMs: requestOptions.timeoutMs,
 		},
 	};
 }
@@ -131,12 +147,22 @@ export function buildRequest(apiKey: string, model: string, systemPrompt: string
  */
 export function handleError(res: IRequestResponse): never {
 	let detail: string;
-	try { detail = JSON.parse(res.text)?.error?.message || res.text; } catch { detail = res.text; }
+	try {
+		const json = JSON.parse(res.text);
+		detail = json?.error?.message || json?.detail || json?.message || res.text;
+	} catch { detail = res.text; }
 	console.error(`NMO AI [${res.status}]:`, detail);
 	if (res.status === 401 || res.status === 403) throw new Error('неверный API-ключ');
 	if (res.status === 402) throw new Error('нет средств на балансе');
 	if (res.status === 429) throw new Error('лимит запросов — подождите');
+	if (res.status === 406 && /timed out|timeout/i.test(detail)) throw new Error('таймаут очереди — попробуйте ещё раз');
+	if (res.status === 406 && /not possible|not enough generations/i.test(detail)) throw new Error('нет доступного AI-узла — попробуйте позже');
 	throw new Error(`ошибка ${res.status}`);
+}
+
+/** Удаляет повторы и числа, которые не соответствуют вариантам на странице. */
+export function normalizeAnswerIndexes(indexes: number[], optionCount: number): number[] {
+	return [...new Set(indexes.filter(index => index >= 0 && index < optionCount))];
 }
 
 /**

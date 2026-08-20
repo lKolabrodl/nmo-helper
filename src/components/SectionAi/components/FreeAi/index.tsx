@@ -1,36 +1,98 @@
-import React from 'react';
+import React, {useState} from 'react';
 import './styles.scss';
+import {FREE_AI_SERVICES} from '../../../../api/fetch/fetch-free-ai';
+import {usePanelStatus} from '../../../../contexts/PanelStatusContext';
+import {Status} from '../../../../types';
+import {StatusTitle} from '../../../../utils/constants';
+import AIProxyFreeLoader from '../../../Loader/AIProxyFreeLoader';
 import {IconBolt, IconPlay} from '../../../icons';
+import InlineToast from '../../../ui/InlineToast';
+import ThinkingStrip from '../../../ui/ThinkingStrip';
+import {statusToToast} from '../../utils';
 
-/**
- * Заглушка бесплатного режима. Позже здесь будет подключён старый бесплатный
- * API Pollinations (`https://text.pollinations.ai/`).
- */
-const FreeAi: React.FC = () => (
-	<>
-		<div className="nmo-section-inner nmo-ai-free-content" role="tabpanel">
-			<div className="nmo-ai-free nmo-fade-up">
-				<div className="nmo-ai-free-icon"><IconBolt size={16}/></div>
-				<div className="nmo-ai-free-body">
-					<div className="nmo-ai-free-title-row">
-						<span className="nmo-ai-free-title">Бесплатный AI</span>
-					</div>
-					<div className="nmo-ai-free-description">
-						Недоступен, там всё сложно, надо думать / экспериментировать.
+interface IFreeAiProps {
+	readonly onBusyChange: (busy: boolean) => void;
+}
+
+const FreeAi: React.FC<IFreeAiProps> = ({onBusyChange}) => {
+	const {status, setStatus} = usePanelStatus();
+	const [aiRunning, setAiRunning] = useState(false);
+
+	const run = (): void => {
+		setAiRunning(true);
+		onBusyChange(true);
+		setStatus({title: StatusTitle.RUNNING, status: Status.OK});
+	};
+
+	const stop = (): void => {
+		setAiRunning(false);
+		onBusyChange(false);
+		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
+	};
+
+	const isLoading = status.status === Status.LOADING;
+	const isError = status.status === Status.ERR;
+	const isOk = status.status === Status.OK;
+	const isWarn = status.status === Status.WARN;
+
+	return (
+		<>
+			<AIProxyFreeLoader
+				active={aiRunning}
+				onChange={({running}) => {
+					if (!running) {
+						setAiRunning(false);
+						onBusyChange(false);
+					}
+				}}/>
+
+			<div className="nmo-section-inner nmo-ai-free-content" role="tabpanel">
+				<div className="nmo-ai-free nmo-fade-up">
+					<div className="nmo-ai-free-icon"><IconBolt size={16}/></div>
+					<div className="nmo-ai-free-body">
+						<div className="nmo-ai-free-title">Бесплатный AI · автоматически</div>
+						<div className="nmo-ai-free-description">
+							Никаких ключей и настроек: расширение само выбирает сервис и модель.
+						</div>
 					</div>
 				</div>
+
+				<div className="nmo-ai-free-services" aria-label="Автоматический маршрут бесплатного AI">
+					{FREE_AI_SERVICES.map(item => (
+						<div key={item.id} className="nmo-ai-free-service">
+							<span className="nmo-ai-free-service-route">{item.id === 'ovh' ? 'сначала' : 'если OVH недоступен'}</span>
+							<span className="nmo-ai-free-service-name">{item.name}</span>
+							<span className="nmo-ai-free-service-description">{item.description}</span>
+							<span className="nmo-ai-free-service-limits">{item.limits}</span>
+						</div>
+					))}
+				</div>
+
+				<div className="nmo-ai-free-note">
+					Если сработает резерв AI Horde, вопрос обрабатывается на добровольном внешнем worker-узле. Не отправляйте персональные данные.
+				</div>
 			</div>
-		</div>
-		<div className="nmo-footer">
-			<button
-				type="button"
-				className="nmo-btn nmo-btn-primary nmo-btn-cta"
-				disabled
-				title="Бесплатный AI пока не подключён">
-				<IconPlay size={14}/>Скоро будет доступно
-			</button>
-		</div>
-	</>
-);
+
+			{isLoading && <ThinkingStrip title={status.title} steps={[]}/>}
+			{(isOk || isError || isWarn) && !isLoading && status.title && (
+				<InlineToast toast={statusToToast(status.title, status.status)}/>
+			)}
+
+			<div className="nmo-footer">
+				{!aiRunning && (
+					<button type="button" className="nmo-btn nmo-btn-primary nmo-btn-cta" onClick={run}>
+						<IconPlay size={14}/>Запустить бесплатно
+					</button>
+				)}
+
+				{aiRunning && (
+					<button type="button" className="nmo-btn nmo-btn-stop nmo-btn-cta" onClick={stop}>
+						Остановить
+					</button>
+				)}
+			</div>
+		</>
+	);
+};
 
 export default FreeAi;

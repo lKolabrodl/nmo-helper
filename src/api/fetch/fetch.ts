@@ -31,6 +31,8 @@ export interface IRequestOptions {
 	readonly body?: string | null;
 	/** Режим передачи cookies и других учётных данных. */
 	readonly credentials?: RequestCredentials | null;
+	/** Максимальное время запроса в миллисекундах; background прервёт fetch по таймеру. */
+	readonly timeoutMs?: number | null;
 }
 
 /**
@@ -77,6 +79,7 @@ export function fetchViaBackground(url: string, options: IRequestOptions = {}): 
 				headers: options.headers || null,
 				body: options.body || null,
 				credentials: options.credentials || null,
+				timeoutMs: options.timeoutMs || null,
 			}, (response: IRequestResponse | undefined) => {
 				const runtimeError = getRuntimeErrorMessage();
 				if (runtimeError) {

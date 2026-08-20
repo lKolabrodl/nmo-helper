@@ -3,6 +3,7 @@ import {
 	askAI,
 	buildRequest,
 	handleError,
+	normalizeAnswerIndexes,
 	parseAnswer,
 	validateApiKey,
 } from './fetch-ai';
@@ -148,6 +149,24 @@ describe('fn buildRequest', () => {
 		const body = JSON.parse(init.body);
 		expect(body.model).toBe('claude-sonnet-5');
 	});
+
+	it('anonymous endpoint не получает пустой Authorization и принимает таймаут/extra body', () => {
+		const {init} = buildRequest('', 'free-model', 'sys', 'usr', 'https://free.example/v1/chat', {
+			timeoutMs: 30_000,
+			maxTokens: 32,
+			extraBody: {temperature: 0, timeout: 25},
+		});
+		const body = JSON.parse(init.body);
+
+		expect(init.headers.Authorization).toBeUndefined();
+		expect(init.timeoutMs).toBe(30_000);
+		expect(body).toMatchObject({
+			model: 'free-model',
+			max_tokens: 32,
+			temperature: 0,
+			timeout: 25,
+		});
+	});
 });
 
 describe('fn handleError', () => {
@@ -189,6 +208,22 @@ describe('fn handleError', () => {
 		const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		expect(() => handleError(res(500, 'Gateway Timeout'))).toThrow();
 		expect(spy).toHaveBeenCalledWith('NMO AI [500]:', 'Gateway Timeout');
+	});
+
+	it('406 timeout от AI Horde → понятная ошибка очереди', () => {
+		const body = JSON.stringify({detail: 'Error: Request timed out.'});
+		expect(() => handleError(res(406, body))).toThrow('таймаут очереди');
+	});
+
+	it('406 not possible от AI Horde → нет доступного узла', () => {
+		const body = JSON.stringify({detail: 'Error: Request is not possible.'});
+		expect(() => handleError(res(406, body))).toThrow('нет доступного AI-узла');
+	});
+});
+
+describe('normalizeAnswerIndexes', () => {
+	it('убирает повторы и индексы за пределами вариантов', () => {
+		expect(normalizeAnswerIndexes([0, 2, 2, -1, 7], 3)).toEqual([0, 2]);
 	});
 });
 
@@ -268,5 +303,24 @@ describe('fn askAI', () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {});
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 429, text: '' }));
 		await expect(askAI('sk', 'Q?', ['a'], true, '', 'gpt-5.4-mini')).rejects.toThrow('лимит запросов');
+	});
+
+	it('таймаут background → понятная ошибка с длительностью', async () => {
+		sendMessage.mockImplementation((_msg, cb) => cb({
+			error: true,
+			status: 0,
+			text: '',
+			message: 'таймаут 30 с',
+		}));
+
+		await expect(askAI('', 'Q?', ['a'], true, '', 'free', 'https://free.example', {timeoutMs: 30_000}))
+			.rejects.toThrow('таймаут 30 с — попробуйте ещё раз');
+	});
+
+	it('не возвращает повторные и несуществующие варианты', async () => {
+		const body = JSON.stringify({choices: [{message: {content: '1, 1, 9, 0'}}]});
+		sendMessage.mockImplementation((_msg, cb) => cb({error: false, status: 200, text: body}));
+
+		await expect(askAI('sk', 'Q?', ['a', 'b'], false, '', 'gpt-5.4-mini')).resolves.toEqual([0]);
 	});
 });
