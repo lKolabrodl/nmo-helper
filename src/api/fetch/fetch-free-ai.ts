@@ -3,13 +3,6 @@ import {askAI, type IAiRequestOptions} from './fetch-ai';
 
 export type FreeAiService = 'ovh' | 'horde';
 
-export interface IFreeAiServiceInfo {
-	readonly id: FreeAiService;
-	readonly name: string;
-	readonly description: string;
-	readonly limits: string;
-}
-
 export interface IFreeAiRequestConfig {
 	readonly apiKey: string;
 	readonly endpoint: string;
@@ -30,21 +23,6 @@ interface IHordeModel {
 	readonly size: number;
 	readonly knownToHorde: boolean;
 }
-
-export const FREE_AI_SERVICES: readonly IFreeAiServiceInfo[] = [
-	{
-		id: 'ovh',
-		name: 'OVH anonymous',
-		description: 'Llama 3.3 70B, без ключа',
-		limits: '2 запроса/мин · таймаут 30 с',
-	},
-	{
-		id: 'horde',
-		name: 'AI Horde anonymous',
-		description: 'модель выбирается по живым worker-ам',
-		limits: 'низкий приоритет · очередь до 120 с',
-	},
-] as const;
 
 export const OVH_AI_URL = 'https://llama-3-3-70b-instruct.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1/chat/completions';
 export const OVH_AI_MODEL = 'Meta-Llama-3_3-70B-Instruct';

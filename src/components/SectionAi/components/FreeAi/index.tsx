@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 import './styles.scss';
-import {FREE_AI_SERVICES} from '../../../../api/fetch/fetch-free-ai';
 import {usePanelStatus} from '../../../../contexts/PanelStatusContext';
 import {Status} from '../../../../types';
 import {StatusTitle} from '../../../../utils/constants';
@@ -57,19 +56,8 @@ const FreeAi: React.FC<IFreeAiProps> = ({onBusyChange}) => {
 					</div>
 				</div>
 
-				<div className="nmo-ai-free-services" aria-label="Автоматический маршрут бесплатного AI">
-					{FREE_AI_SERVICES.map(item => (
-						<div key={item.id} className="nmo-ai-free-service">
-							<span className="nmo-ai-free-service-route">{item.id === 'ovh' ? 'сначала' : 'если OVH недоступен'}</span>
-							<span className="nmo-ai-free-service-name">{item.name}</span>
-							<span className="nmo-ai-free-service-description">{item.description}</span>
-							<span className="nmo-ai-free-service-limits">{item.limits}</span>
-						</div>
-					))}
-				</div>
-
 				<div className="nmo-ai-free-note">
-					Если сработает резерв AI Horde, вопрос обрабатывается на добровольном внешнем worker-узле. Не отправляйте персональные данные.
+					Бесплатный AI работает не очень эффективно.
 				</div>
 			</div>
 
@@ -81,7 +69,7 @@ const FreeAi: React.FC<IFreeAiProps> = ({onBusyChange}) => {
 			<div className="nmo-footer">
 				{!aiRunning && (
 					<button type="button" className="nmo-btn nmo-btn-primary nmo-btn-cta" onClick={run}>
-						<IconPlay size={14}/>Запустить бесплатно
+						<IconPlay size={14}/>Запустить AI
 					</button>
 				)}
 

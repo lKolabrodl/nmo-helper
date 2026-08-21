@@ -10,25 +10,25 @@ describe('SectionAi', () => {
 
 		expect(screen.getByRole('tab', {name: 'Бесплатно'})).toHaveAttribute('aria-selected', 'true');
 		expect(screen.getByText('Бесплатный AI · автоматически')).toBeInTheDocument();
-		expect(screen.getByText('OVH anonymous')).toBeInTheDocument();
-		expect(screen.getByText('AI Horde anonymous')).toBeInTheDocument();
+		expect(screen.getByText('Бесплатный AI работает не очень эффективно.')).toBeInTheDocument();
+		expect(screen.queryByLabelText('Автоматический маршрут бесплатного AI')).not.toBeInTheDocument();
 		expect(screen.queryByRole('radio')).not.toBeInTheDocument();
 		expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-		expect(screen.getByRole('button', {name: 'Запустить бесплатно'})).toBeEnabled();
+		expect(screen.getByRole('button', {name: 'Запустить AI'})).toBeEnabled();
 		expect(screen.queryByLabelText('API-ключ ProxyAPI')).not.toBeInTheDocument();
 	});
 
 	it('запускает бесплатный маршрут одной кнопкой и блокирует смену подключения', () => {
 		renderWithProviders(<SectionAi/>, {initialMode: 'ai'});
 
-		fireEvent.click(screen.getByRole('button', {name: 'Запустить бесплатно'}));
+		fireEvent.click(screen.getByRole('button', {name: 'Запустить AI'}));
 
 		expect(screen.getByRole('button', {name: 'Остановить'})).toBeEnabled();
 		expect(screen.getByRole('tab', {name: 'ProxyAPI'})).toBeDisabled();
 		expect(screen.getByRole('tab', {name: 'Свой endpoint'})).toBeDisabled();
 
 		fireEvent.click(screen.getByRole('button', {name: 'Остановить'}));
-		expect(screen.getByRole('button', {name: 'Запустить бесплатно'})).toBeEnabled();
+		expect(screen.getByRole('button', {name: 'Запустить AI'})).toBeEnabled();
 	});
 
 	it('переключает ProxyAPI и свой endpoint, сохраняя выбранный вариант', async () => {

@@ -50,60 +50,6 @@
   line-height: 1.45;
 }
 
-.nmo-ai-free-services {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: $gap-8;
-  margin-top: $gap-10;
-}
-
-.nmo-ai-free-service {
-  min-width: 0;
-  padding: 10px;
-  color: $text-2;
-  background: $bg-input;
-  border: 1px solid $border;
-  border-radius: $r-md;
-}
-
-.nmo-ai-free-service-route,
-.nmo-ai-free-service-name,
-.nmo-ai-free-service-description,
-.nmo-ai-free-service-limits {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.nmo-ai-free-service-route {
-  margin-bottom: $gap-4;
-  color: $accent;
-  font-size: $fs-xs;
-  font-weight: 600;
-  line-height: 1.25;
-}
-
-.nmo-ai-free-service-name {
-  color: $text;
-  font-size: $fs-md;
-  font-weight: 650;
-  white-space: nowrap;
-}
-
-.nmo-ai-free-service-description {
-  min-height: 30px;
-  margin-top: $gap-4;
-  font-size: $fs-sm;
-  line-height: 1.35;
-}
-
-.nmo-ai-free-service-limits {
-  margin-top: $gap-6;
-  color: $warning-text;
-  font-size: $fs-xs;
-  line-height: 1.35;
-}
-
 .nmo-ai-free-note {
   margin-top: $gap-8;
   padding: 8px 10px;
