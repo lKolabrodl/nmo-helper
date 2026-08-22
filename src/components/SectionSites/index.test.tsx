@@ -70,6 +70,7 @@ vi.mock('../../utils/answer-cache', () => ({
 
 vi.mock('../../utils/matching', () => ({
 	detectSource: vi.fn(),
+	stripAnswerTitlePrefix: (title: string) => title,
 }));
 
 vi.mock('../../utils/cases', () => ({

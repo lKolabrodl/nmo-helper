@@ -27,17 +27,17 @@ describe('SearchResults', () => {
 
 		const buttons = screen.getAllByRole('button');
 		expect(buttons.map(button => button.title)).toEqual([
+			'Результат NMO Helper',
 			'Результат Rosmed',
 			'Результат 24forcare',
-			'Результат NMO Helper',
 			'Результат foo',
 		]);
 
 		expect(buttons[0]).toHaveAttribute('aria-pressed', 'false');
-		expect(buttons[1]).toHaveClass('selected');
-		expect(buttons[1]).toHaveAttribute('aria-pressed', 'true');
+		expect(buttons[2]).toHaveClass('selected');
+		expect(buttons[2]).toHaveAttribute('aria-pressed', 'true');
 
-		fireEvent.click(buttons[1]);
+		fireEvent.click(buttons[2]);
 		expect(onSelect).toHaveBeenCalledWith(RESULTS[1]);
 	});
 

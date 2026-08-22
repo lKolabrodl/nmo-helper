@@ -42,6 +42,16 @@ describe('parseHtml', () => {
 		expect(div.querySelectorAll('nav').length).toBe(0);
 		expect(div.querySelector('h3')?.textContent).toBe('Вопрос');
 	});
+
+	it('full=true не зависает, если на большой странице нет div.row', () => {
+		const html = `<main>${'x'.repeat(70_000)}<h3>Вопрос</h3></main>`;
+		const startedAt = performance.now();
+
+		const div = parseHtml(html, true);
+
+		expect(div.querySelector('h3')?.textContent).toBe('Вопрос');
+		expect(performance.now() - startedAt).toBeLessThan(1_000);
+	});
 });
 
 describe('parseSecondarySourceResults', () => {

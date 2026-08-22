@@ -13,11 +13,8 @@ interface INmoApiSearchResponse {
 	readonly items?: INmoApiSearchItem[];
 }
 
-/**
- * Удаляет опасные теги и event-handler атрибуты из HTML через DOMParser.
- */
-function sanitizeHtml(html: string): string {
-	const doc = new DOMParser().parseFromString(html, 'text/html');
+/** Удаляет опасные теги и event-handler атрибуты из DOM. */
+function sanitizeDocument(doc: Document): void {
 	doc.querySelectorAll('script,iframe,object,embed,form,svg,math,link,meta,base,template,style')
 		.forEach(el => el.remove());
 	doc.querySelectorAll('*').forEach(el => {
@@ -27,15 +24,17 @@ function sanitizeHtml(html: string): string {
 			}
 		}
 	});
-	return doc.body.innerHTML;
 }
 
 /**
  * Очищает HTML-строку от навигации, скриптов, меню и прочих лишних элементов.
  */
 function cleanHtml(html: string): string {
-	return html.replace(/\s+/g, ' ')
-		.replace(/.*?(<div class="row">)/, '$1')
+	const normalized = html.replace(/\s+/g, ' ');
+	const rowStart = normalized.indexOf('<div class="row">');
+	const content = rowStart >= 0 ? normalized.slice(rowStart) : normalized;
+
+	return content
 		.replace(/<footer.*?>.*/, '')
 		.replace(/<script[^>]*>.*?<\/script>/gs, '')
 		.replace(/<a[^>]*>(.*?)<\/a>/gs, '$1')
@@ -53,9 +52,9 @@ function cleanHtml(html: string): string {
  * @param full — true: дополнительно прогнать через cleanHtml (удалить nav/footer/menu и т.п.)
  */
 export function parseHtml(html: string, full = false): HTMLElement {
-	const div = document.createElement('div');
-	div.innerHTML = sanitizeHtml(full ? cleanHtml(html) : html);
-	return div;
+	const doc = new DOMParser().parseFromString(full ? cleanHtml(html) : html, 'text/html');
+	sanitizeDocument(doc);
+	return doc.body;
 }
 
 /**
