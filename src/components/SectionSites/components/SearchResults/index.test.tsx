@@ -9,9 +9,9 @@ const RESULTS: ISearchResult[] = [
 		title: 'Результат NMO Helper',
 		url: 'https://nmo-helper.ru/api/nmo/topic/short-lived.uid',
 	},
-	{source: 'secondary', title: 'Результат 24forcare', url: 'https://24forcare.com/result'},
-	{source: 'primary', title: 'Результат Rosmed', url: 'https://rosmedicinfo.ru/result'},
-	{source: 'foo', title: 'Результат foo', url: 'https://foo.example/result'},
+	{source: 'second', title: 'Результат 24forcare', url: 'https://24forcare.com/result'},
+	{source: 'first', title: 'Результат Rosmed', url: 'https://rosmedicinfo.ru/result'},
+	{source: 'third', title: 'Результат foo', url: 'https://foo.example/result'},
 ];
 
 describe('SearchResults', () => {

@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_HOST, SECONDARY_ANSWER_SOURCE_HOST} from './constants';
+import {NMO_API_HOST, SECOND_ANSWER_SOURCE_HOST, THIRD_ANSWER_SOURCE_HOST} from './constants';
 import {
 	parseHtml,
 	parseNmoApiSearchResults,
@@ -53,12 +53,12 @@ describe('parseSecondarySourceResults', () => {
 
 		expect(parseSecondarySourceResults(html)).toEqual([
 			{
-				source: 'secondary',
+				source: 'second',
 				title: 'Первая тема',
-				url: `https://${SECONDARY_ANSWER_SOURCE_HOST}/answer/42`,
+				url: `https://${SECOND_ANSWER_SOURCE_HOST}/answer/42`,
 			},
 			{
-				source: 'secondary',
+				source: 'second',
 				title: 'Вторая тема',
 				url: 'https://external.example/answer/7',
 			},
@@ -88,12 +88,12 @@ describe('parsePrimarySourceResults', () => {
 
 		expect(parsePrimarySourceResults(html)).toEqual([
 			{
-				source: 'primary',
+				source: 'first',
 				title: 'Основная тема',
 				url: 'https://primary.example/topic/42',
 			},
 			{
-				source: 'primary',
+				source: 'first',
 				title: 'Относительный URL',
 				url: '/relative/topic',
 			},
@@ -122,14 +122,14 @@ describe('parseThirdSourceResults', () => {
 
 		expect(parseThirdSourceResults(text)).toEqual([
 			{
-				source: 'foo',
+				source: 'third',
 				title: 'Особенности реабилитации',
-				url: `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic%2F42.html`,
+				url: `https://${THIRD_ANSWER_SOURCE_HOST}/test-medik/nmo/topic%2F42.html`,
 			},
 			{
-				source: 'foo',
+				source: 'third',
 				title: 'Вторая тема',
-				url: `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/${encodeURIComponent('тема с пробелом')}.html`,
+				url: `https://${THIRD_ANSWER_SOURCE_HOST}/test-medik/nmo/${encodeURIComponent('тема с пробелом')}.html`,
 			},
 		]);
 	});

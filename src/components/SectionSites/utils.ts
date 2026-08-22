@@ -5,7 +5,7 @@
  */
 
 import {Status, type ISourceKey} from '../../types';
-import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_HOST} from '../../utils/constants';
+import {NMO_API_HOST, THIRD_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import type {IToast} from '../ui/InlineToast';
 
 const DISPLAY_URL_PREFIX = 'nmo-helper/id/';
@@ -18,10 +18,10 @@ export const SOURCE_DETAILS: Record<ISourceKey, {
 	readonly className: string;
 	readonly priority: number;
 }> = {
-	'primary': {label: 'rosmed', className: 'primary', priority: 0},
-	'secondary': {label: '24fc', className: 'secondary', priority: 1},
+	'first': {label: 'rosmed', className: 'primary', priority: 0},
+	'second': {label: '24fc', className: 'secondary', priority: 1},
+	'third': {label: 'foo', className: 'secondary', priority: 3},
 	'nmo-helper': {label: 'nmo-helper', className: 'secondary', priority: 2},
-	'foo': {label: 'foo', className: 'secondary', priority: 3},
 };
 
 /**
@@ -58,7 +58,7 @@ export function formatUrlForDisplay(value: string): string {
 	const hostname = url.hostname.toLowerCase();
 	if (
 		url.protocol !== 'https:'
-		|| (hostname !== ALTERNATIVE_ANSWER_SOURCE_HOST && hostname !== NMO_API_HOST)
+		|| (hostname !== THIRD_ANSWER_SOURCE_HOST && hostname !== NMO_API_HOST)
 	) return value;
 
 	return `${DISPLAY_URL_PREFIX}${createSeededId(url.href)}`;

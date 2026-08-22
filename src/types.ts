@@ -61,7 +61,7 @@ export interface IAiModel {
 }
 
 /** Ключ источника ответов */
-export type ISourceKey = 'primary' | 'secondary' | 'nmo-helper' | 'foo';
+export type ISourceKey = 'first' | 'second' | 'third' | 'nmo-helper';
 
 /** Найденный вариант источника ответов. */
 export interface ISearchResult {

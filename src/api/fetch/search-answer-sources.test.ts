@@ -1,6 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {findAnswers} from '../../utils/cases';
-import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
+import {NMO_API_TOPIC_ENDPOINT, THIRD_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import {fetchViaBackground} from './fetch';
 import {clearNmoAnswerCache, getFirstAnswers, getNmoAnswers, getSecondAnswers, getThirdAnswers} from './search-answer-sources';
 
@@ -10,7 +10,7 @@ vi.mock('./fetch', async importOriginal => ({
 }));
 
 const mockFetch = vi.mocked(fetchViaBackground);
-const THIRD_BASE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
+const THIRD_BASE_URL = `https://${THIRD_ANSWER_SOURCE_HOST}`;
 
 beforeEach(() => {
 	mockFetch.mockReset();

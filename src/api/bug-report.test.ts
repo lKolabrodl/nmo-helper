@@ -20,7 +20,7 @@ function makePayload(overrides: Partial<IBugReportPayload> = {}): IBugReportPayl
 	return {
 		mode: 'auto',
 		url: 'https://example.com/test',
-		source: 'primary',
+		source: 'first',
 		topic: 'Кардиология - 2024',
 		question: 'Какой диагноз?',
 		questionHtml: '<p>Какой диагноз?</p>',

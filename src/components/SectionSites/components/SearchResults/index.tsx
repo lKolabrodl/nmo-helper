@@ -37,7 +37,7 @@ const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, onS
 							<div className="nmo-results-meta-row">
 								<span className={cn('nmo-results-src', source.className)}>
 									{source.label}
-									{result.source === 'primary' && <> <IconStar size={9}/></>}
+									{result.source === 'first' && <> <IconStar size={9}/></>}
 								</span>
 							</div>
 						</button>

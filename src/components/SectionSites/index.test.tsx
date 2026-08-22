@@ -4,7 +4,7 @@ import {NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
 import SectionSites from './index';
 
 interface ITestSearchResult {
-	readonly source: 'primary' | 'secondary' | 'nmo-helper' | 'foo';
+	readonly source: 'first' | 'second' | 'third' | 'nmo-helper';
 	readonly title: string;
 	readonly url: string;
 }
@@ -106,7 +106,7 @@ describe('SectionSites', () => {
 
 	it('показывает загрузку ответов в кнопке после выбора результата', async () => {
 		const result = {
-			source: 'primary' as const,
+			source: 'first' as const,
 			title: 'Тестовый результат',
 			url: 'https://rosmedicinfo.ru/test',
 		};

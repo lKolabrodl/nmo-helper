@@ -28,12 +28,12 @@ describe('VariantLoader', () => {
 
 	it('передаёт query четырём источникам и объединяет их результаты', async () => {
 		const secondary: ISearchResult = {
-			source: 'secondary',
+			source: 'second',
 			title: 'Дополнительный результат',
 			url: 'https://secondary.example/topic',
 		};
 		const primary: ISearchResult = {
-			source: 'primary',
+			source: 'first',
 			title: 'Основной результат',
 			url: 'https://primary.example/topic',
 		};
@@ -43,7 +43,7 @@ describe('VariantLoader', () => {
 			url: `${NMO_API_TOPIC_ENDPOINT}/short-lived.uid`,
 		};
 		const third: ISearchResult = {
-			source: 'foo',
+			source: 'third',
 			title: 'Результат третьего источника',
 			url: 'https://third.example/topic',
 		};
@@ -72,7 +72,7 @@ describe('VariantLoader', () => {
 
 	it('не теряет результаты остальных источников при единичной ошибке', async () => {
 		const result: ISearchResult = {
-			source: 'secondary',
+			source: 'second',
 			title: 'Найденная тема',
 			url: 'https://secondary.example/topic',
 		};

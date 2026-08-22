@@ -1,12 +1,6 @@
 import type { ISourceKey } from '../types';
 import { normalizeDashes, stripQuotes } from './text';
-import {
-	SECONDARY_ANSWER_SOURCE_HOST,
-	PRIMARY_ANSWER_SOURCE_HOST,
-	ALTERNATIVE_ANSWER_SOURCE_HOST,
-	NMO_API_HOST,
-	SIMILARITY_THRESHOLD,
-} from './constants';
+import {FIRST_ANSWER_SOURCE_HOST, NMO_API_HOST, SECOND_ANSWER_SOURCE_HOST, SIMILARITY_THRESHOLD, THIRD_ANSWER_SOURCE_HOST} from './constants';
 
 /**
  * Определяет, к какому из поддерживаемых сайтов-источников относится URL.
@@ -15,9 +9,9 @@ import {
  * @returns Ключ источника или `null`, если домен не поддерживается.
  */
 export function detectSource(url: string): ISourceKey | null {
-	if (url.includes(SECONDARY_ANSWER_SOURCE_HOST)) return 'secondary';
-	if (url.includes(PRIMARY_ANSWER_SOURCE_HOST)) return 'primary';
-	if (url.includes(ALTERNATIVE_ANSWER_SOURCE_HOST)) return 'foo';
+	if (url.includes(SECOND_ANSWER_SOURCE_HOST)) return 'second';
+	if (url.includes(FIRST_ANSWER_SOURCE_HOST)) return 'first';
+	if (url.includes(THIRD_ANSWER_SOURCE_HOST)) return 'third';
 	if (url.includes(NMO_API_HOST)) return 'nmo-helper';
 	return null;
 }

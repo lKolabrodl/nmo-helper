@@ -8,13 +8,13 @@
  */
 
 import type {ISearchResult} from '../../types';
-import {ALTERNATIVE_ANSWER_SOURCE_HOST,	NMO_API_HOST,	PRIMARY_ANSWER_SOURCE_HOST,	SECONDARY_ANSWER_SOURCE_HOST} from '../../utils/constants';
+import {FIRST_ANSWER_SOURCE_HOST, NMO_API_HOST, SECOND_ANSWER_SOURCE_HOST, THIRD_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import {parseNmoApiSearchResults, parsePrimarySourceResults, parseSecondarySourceResults, parseThirdSourceResults} from '../../utils/html';
 import {fetchViaBackground} from './fetch';
 
-const FIRST_SOURCE_URL = `https://${PRIMARY_ANSWER_SOURCE_HOST}`;
-const SECONDARY_SOURCE_URL = `https://${SECONDARY_ANSWER_SOURCE_HOST}`;
-const THIRD_SOURCE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
+const FIRST_SOURCE_URL = `https://${FIRST_ANSWER_SOURCE_HOST}`;
+const SECONDARY_SOURCE_URL = `https://${SECOND_ANSWER_SOURCE_HOST}`;
+const THIRD_SOURCE_URL = `https://${THIRD_ANSWER_SOURCE_HOST}`;
 const NMO_API_SEARCH_URL = `https://${NMO_API_HOST}/api/nmo/topics`;
 const NMO_SEARCH_CACHE_TTL_MS = 4 * 60 * 1000;
 const NMO_SEARCH_CACHE_MAX_ENTRIES = 50;

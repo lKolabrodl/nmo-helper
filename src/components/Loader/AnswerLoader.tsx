@@ -41,8 +41,8 @@ const AnswerLoader = ({url, onChange}: IAnswerLoaderProps) => {
 			try {
 				let model: QaCaseModel[];
 				if (sourceKey === 'nmo-helper') model = await getNmoAnswers(valid.href);
-				else if (sourceKey === 'foo') model = await getThirdAnswers(valid.href);
-				else if (sourceKey === 'primary') model = await getFirstAnswers(valid.href);
+				else if (sourceKey === 'third') model = await getThirdAnswers(valid.href);
+				else if (sourceKey === 'first') model = await getFirstAnswers(valid.href);
 				else model = await getSecondAnswers(valid.href);
 
 				if (cancelled) return;

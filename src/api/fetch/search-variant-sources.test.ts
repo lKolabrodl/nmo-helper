@@ -1,10 +1,10 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {
-	ALTERNATIVE_ANSWER_SOURCE_HOST,
+	FIRST_ANSWER_SOURCE_HOST,
 	NMO_API_HOST,
 	NMO_API_TOPIC_ENDPOINT,
-	PRIMARY_ANSWER_SOURCE_HOST,
-	SECONDARY_ANSWER_SOURCE_HOST,
+	SECOND_ANSWER_SOURCE_HOST,
+	THIRD_ANSWER_SOURCE_HOST,
 } from '../../utils/constants';
 import {fetchViaBackground} from './fetch';
 import {
@@ -35,12 +35,12 @@ describe('searchSecondarySource', () => {
 		`));
 
 		await expect(searchSecondarySource('  Тема (тест) - 2026  ')).resolves.toEqual([{
-			source: 'secondary',
+			source: 'second',
 			title: 'Диагностика заболевания',
-			url: `https://${SECONDARY_ANSWER_SOURCE_HOST}/answer/42`,
+			url: `https://${SECOND_ANSWER_SOURCE_HOST}/answer/42`,
 		}]);
 
-		const expectedUrl = new URL('/search/', `https://${SECONDARY_ANSWER_SOURCE_HOST}`);
+		const expectedUrl = new URL('/search/', `https://${SECOND_ANSWER_SOURCE_HOST}`);
 		expectedUrl.searchParams.set('query', 'Тема (тест) - 2026');
 		expect(mockFetch).toHaveBeenCalledWith(expectedUrl.toString());
 	});
@@ -53,18 +53,18 @@ describe('searchSecondarySource', () => {
 
 describe('searchFirstSource', () => {
 	it('отправляет query в формате поисковой формы и разбирает HTML', async () => {
-		const resultUrl = `https://${PRIMARY_ANSWER_SOURCE_HOST}/topic/42`;
+		const resultUrl = `https://${FIRST_ANSWER_SOURCE_HOST}/topic/42`;
 		mockFetch.mockResolvedValue(ok(`
 			<div class="short__title"><a href="${resultUrl}"> Основная тема </a></div>
 		`));
 
 		await expect(searchFirstSource('  Инфаркт миокарда  ')).resolves.toEqual([{
-			source: 'primary',
+			source: 'first',
 			title: 'Основная тема',
 			url: resultUrl,
 		}]);
 
-		expect(mockFetch).toHaveBeenCalledWith(`https://${PRIMARY_ANSWER_SOURCE_HOST}`, {
+		expect(mockFetch).toHaveBeenCalledWith(`https://${FIRST_ANSWER_SOURCE_HOST}`, {
 			method: 'POST',
 			headers: {'Content-Type': 'application/x-www-form-urlencoded'},
 			body: 'do=search&subaction=search&story=' + encodeURIComponent('Инфаркт миокарда'),
@@ -88,13 +88,13 @@ describe('searchThirdSource', () => {
 		})));
 
 		await expect(searchThirdSource('  КОВИД  ')).resolves.toEqual([{
-			source: 'foo',
+			source: 'third',
 			title: 'Особенности реабилитации',
-			url: `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic%2F42.html`,
+			url: `https://${THIRD_ANSWER_SOURCE_HOST}/test-medik/nmo/topic%2F42.html`,
 		}]);
 
 		expect(mockFetch).toHaveBeenCalledWith(
-			`https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/api/search/suggestions/categories?query=${encodeURIComponent('КОВИД')}`,
+			`https://${THIRD_ANSWER_SOURCE_HOST}/api/search/suggestions/categories?query=${encodeURIComponent('КОВИД')}`,
 		);
 	});
 

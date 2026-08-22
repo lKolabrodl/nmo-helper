@@ -1,6 +1,6 @@
 import {act, render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
+import {FIRST_ANSWER_SOURCE_HOST, NMO_API_TOPIC_ENDPOINT, SECOND_ANSWER_SOURCE_HOST, THIRD_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import SectionAuto from './index';
 
 interface ITestAnswerModel {
@@ -17,7 +17,7 @@ interface ITestQaCase {
 }
 
 interface ITestSearchResult {
-	readonly source: 'primary' | 'secondary' | 'nmo-helper' | 'foo';
+	readonly source: 'first' | 'second' | 'third' | 'nmo-helper';
 	readonly title: string;
 	readonly url: string;
 }
@@ -100,10 +100,10 @@ vi.mock('../Loader/AnswerLoader', () => ({
 	},
 }));
 
-const PRIMARY_SOURCE_URL = `https://${PRIMARY_ANSWER_SOURCE_HOST}/test`;
-const SECONDARY_SOURCE_URL = `https://${SECONDARY_ANSWER_SOURCE_HOST}/test`;
+const PRIMARY_SOURCE_URL = `https://${FIRST_ANSWER_SOURCE_HOST}/test`;
+const SECONDARY_SOURCE_URL = `https://${SECOND_ANSWER_SOURCE_HOST}/test`;
 const NMO_API_RESULT_URL = `${NMO_API_TOPIC_ENDPOINT}/short-lived.uid`;
-const FOO_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/test.html`;
+const FOO_URL = `https://${THIRD_ANSWER_SOURCE_HOST}/test-medik/nmo/test.html`;
 
 describe('SectionAuto', () => {
 	beforeEach(() => {
@@ -136,7 +136,7 @@ describe('SectionAuto', () => {
 		});
 	});
 
-	it('раздельно загружает результаты nmo-helper и foo', async () => {
+	it('загружает остальные источники только после data: null от nmo-helper', async () => {
 		render(<SectionAuto/>);
 
 		startSourceLoading(
@@ -145,13 +145,69 @@ describe('SectionAuto', () => {
 				title: 'Тема API',
 				url: NMO_API_RESULT_URL,
 			},
-			{source: 'foo', title: 'Тема foo', url: FOO_URL},
+			{source: 'third', title: 'Тема foo', url: FOO_URL},
 		);
+
+		await waitFor(() => {
+			expect(testState.answerChanges.size).toBe(1);
+			expect(testState.answerChanges.has(NMO_API_RESULT_URL)).toBe(true);
+			expect(testState.answerChanges.has(PRIMARY_SOURCE_URL)).toBe(false);
+			expect(testState.answerChanges.has(SECONDARY_SOURCE_URL)).toBe(false);
+			expect(testState.answerChanges.has(FOO_URL)).toBe(false);
+		});
+
+		act(() => {
+			testState.answerChanges.get(NMO_API_RESULT_URL)?.({
+				loading: false,
+				error: null,
+				data: null,
+			});
+		});
 
 		await waitFor(() => {
 			expect(testState.answerChanges.size).toBe(4);
 			expect(testState.answerChanges.has(NMO_API_RESULT_URL)).toBe(true);
+			expect(testState.answerChanges.has(PRIMARY_SOURCE_URL)).toBe(true);
+			expect(testState.answerChanges.has(SECONDARY_SOURCE_URL)).toBe(true);
 			expect(testState.answerChanges.has(FOO_URL)).toBe(true);
+		});
+	});
+
+	it('не загружает остальные источники, когда nmo-helper вернул данные', async () => {
+		testState.foundBySource.set('nmo-helper', {answers: ['Ответ A'], score: 1});
+		render(<SectionAuto/>);
+
+		startSourceLoading(
+			{
+				source: 'nmo-helper',
+				title: 'Тема API',
+				url: NMO_API_RESULT_URL,
+			},
+			{source: 'third', title: 'Тема foo', url: FOO_URL},
+		);
+
+		await waitFor(() => expect(testState.answerChanges.size).toBe(1));
+
+		act(() => {
+			testState.answerChanges.get(NMO_API_RESULT_URL)?.({
+				loading: false,
+				error: null,
+				data: makeModel('nmo-helper'),
+			});
+		});
+
+		await waitFor(() => {
+			expect(testState.cacheSet).toHaveBeenCalledWith(
+				'Тема',
+				'Вопрос',
+				['Ответ A', 'Ответ B'],
+				['Ответ A'],
+			);
+			expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • nmo-helper', status: 'ok'});
+			expect(testState.answerChanges.size).toBe(1);
+			expect(testState.answerChanges.has(PRIMARY_SOURCE_URL)).toBe(false);
+			expect(testState.answerChanges.has(SECONDARY_SOURCE_URL)).toBe(false);
+			expect(testState.answerChanges.has(FOO_URL)).toBe(false);
 		});
 	});
 
@@ -168,8 +224,8 @@ describe('SectionAuto', () => {
 	});
 
 	it('дожидается дополнительной базы, если в основной ответа нет', async () => {
-		testState.foundBySource.set('primary', null);
-		testState.foundBySource.set('secondary', {answers: ['Ответ B'], score: 1});
+		testState.foundBySource.set('first', null);
+		testState.foundBySource.set('second', {answers: ['Ответ B'], score: 1});
 		render(<SectionAuto/>);
 		startSourceLoading();
 
@@ -179,7 +235,7 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(PRIMARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: makeModel('primary'),
+				data: makeModel('first'),
 			});
 		});
 		expect(testState.cacheSet).not.toHaveBeenCalled();
@@ -197,7 +253,7 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(SECONDARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: makeModel('secondary'),
+				data: makeModel('second'),
 			});
 		});
 
@@ -216,8 +272,8 @@ describe('SectionAuto', () => {
 		});
 	});
 
-	it('ждёт завершения всех источников перед обработкой ответа основной базы', async () => {
-		testState.foundBySource.set('primary', {answers: ['Ответ A'], score: 1});
+	it('обрабатывает ответ основной базы, не дожидаясь остальных источников', async () => {
+		testState.foundBySource.set('first', {answers: ['Ответ A'], score: 1});
 		render(<SectionAuto/>);
 		startSourceLoading();
 
@@ -227,25 +283,7 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(PRIMARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: makeModel('primary'),
-			});
-		});
-		expect(testState.cacheSet).not.toHaveBeenCalled();
-
-		act(() => {
-			testState.answerChanges.get(SECONDARY_SOURCE_URL)?.({
-				loading: false,
-				error: null,
-				data: makeModel('secondary'),
-			});
-		});
-		expect(testState.cacheSet).not.toHaveBeenCalled();
-
-		act(() => {
-			testState.answerChanges.get(FOO_URL)?.({
-				loading: false,
-				error: null,
-				data: null,
+				data: makeModel('first'),
 			});
 		});
 
@@ -260,10 +298,10 @@ describe('SectionAuto', () => {
 		});
 	});
 
-	it('использует foo, если другие источники не нашли ответ', async () => {
-		testState.foundBySource.set('primary', null);
-		testState.foundBySource.set('secondary', null);
-		testState.foundBySource.set('foo', {answers: ['Ответ B'], score: 1});
+	it('использует базу 3, если другие источники не нашли ответ', async () => {
+		testState.foundBySource.set('first', null);
+		testState.foundBySource.set('second', null);
+		testState.foundBySource.set('third', {answers: ['Ответ B'], score: 1});
 		render(<SectionAuto/>);
 		startSourceLoading();
 
@@ -273,17 +311,17 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(PRIMARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: makeModel('primary'),
+				data: makeModel('first'),
 			});
 			testState.answerChanges.get(SECONDARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: makeModel('secondary'),
+				data: makeModel('second'),
 			});
 			testState.answerChanges.get(FOO_URL)?.({
 				loading: false,
 				error: null,
-				data: makeModel('foo'),
+				data: makeModel('third'),
 			});
 		});
 
@@ -294,7 +332,7 @@ describe('SectionAuto', () => {
 				['Ответ A', 'Ответ B'],
 				['Ответ B'],
 			);
-			expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • foo', status: 'ok'});
+			expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • база 3', status: 'ok'});
 			expect(testState.setBugReportContext).toHaveBeenLastCalledWith({
 				mode: 'auto',
 				url: FOO_URL,
@@ -303,9 +341,9 @@ describe('SectionAuto', () => {
 	});
 
 	it('сохраняет приоритет основной базы, когда ответ есть в обоих источниках', async () => {
-		testState.foundBySource.set('primary', {answers: ['Ответ A'], score: 1});
-		testState.foundBySource.set('secondary', {answers: ['Ответ B'], score: 1});
-		testState.foundBySource.set('foo', {answers: ['Ответ B'], score: 1});
+		testState.foundBySource.set('first', {answers: ['Ответ A'], score: 1});
+		testState.foundBySource.set('second', {answers: ['Ответ B'], score: 1});
+		testState.foundBySource.set('third', {answers: ['Ответ B'], score: 1});
 		render(<SectionAuto/>);
 		startSourceLoading();
 
@@ -315,17 +353,17 @@ describe('SectionAuto', () => {
 			testState.answerChanges.get(PRIMARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: makeModel('primary'),
+				data: makeModel('first'),
 			});
 			testState.answerChanges.get(SECONDARY_SOURCE_URL)?.({
 				loading: false,
 				error: null,
-				data: makeModel('secondary'),
+				data: makeModel('second'),
 			});
 			testState.answerChanges.get(FOO_URL)?.({
 				loading: false,
 				error: null,
-				data: makeModel('foo'),
+				data: makeModel('third'),
 			});
 		});
 
@@ -344,15 +382,15 @@ describe('SectionAuto', () => {
 function startSourceLoading(...sourceResults: ITestSearchResult[]): void {
 	const results = sourceResults.length
 		? sourceResults
-		: [{source: 'foo' as const, title: 'Тема', url: FOO_URL}];
+		: [{source: 'third' as const, title: 'Тема', url: FOO_URL}];
 
 	act(() => {
 		testState.variantChange?.({
 			loading: false,
 			error: null,
 			data: [
-				{source: 'primary', title: 'Тема', url: PRIMARY_SOURCE_URL},
-				{source: 'secondary', title: 'Тема', url: SECONDARY_SOURCE_URL},
+				{source: 'first', title: 'Тема', url: PRIMARY_SOURCE_URL},
+				{source: 'second', title: 'Тема', url: SECONDARY_SOURCE_URL},
 				...results,
 			],
 		});

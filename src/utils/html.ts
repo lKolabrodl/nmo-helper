@@ -1,8 +1,8 @@
 import type {ISearchResult} from '../types';
-import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_TOPIC_ENDPOINT, SECONDARY_ANSWER_SOURCE_HOST} from './constants';
+import {NMO_API_TOPIC_ENDPOINT, SECOND_ANSWER_SOURCE_HOST, THIRD_ANSWER_SOURCE_HOST} from './constants';
 
-const SECONDARY_SOURCE_URL = `https://${SECONDARY_ANSWER_SOURCE_HOST}`;
-const THIRD_SOURCE_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}`;
+const SECONDARY_SOURCE_URL = `https://${SECOND_ANSWER_SOURCE_HOST}`;
+const THIRD_SOURCE_URL = `https://${THIRD_ANSWER_SOURCE_HOST}`;
 
 interface INmoApiSearchItem {
 	readonly title: string;
@@ -68,7 +68,7 @@ export function parseHtml(html: string, full = false): HTMLElement {
  * дополнительного источника, а абсолютные URL возвращаются без изменений.
  *
  * @param html Сырая HTML-строка страницы поисковой выдачи.
- * @returns Валидные результаты с ключом источника `secondary`; пустой массив,
+ * @returns Валидные результаты с ключом источника `second`; пустой массив,
  * если подходящих ссылок в разметке нет.
  */
 export function parseSecondarySourceResults(html: string): ISearchResult[] {
@@ -83,7 +83,7 @@ export function parseSecondarySourceResults(html: string): ISearchResult[] {
 		const url = href.startsWith('http')
 			? href
 			: `${SECONDARY_SOURCE_URL}/${href.replace(/^\//, '')}`;
-		results.push({source: 'secondary', title, url});
+		results.push({source: 'second', title, url});
 	});
 
 	return results;
@@ -99,7 +99,7 @@ export function parseSecondarySourceResults(html: string): ISearchResult[] {
  * готовые URL результатов.
  *
  * @param html Сырая HTML-строка страницы поисковой выдачи.
- * @returns Валидные результаты с ключом источника `primary` в порядке выдачи;
+ * @returns Валидные результаты с ключом источника `first` в порядке выдачи;
  * пустой массив, если подходящих ссылок нет.
  */
 export function parsePrimarySourceResults(html: string): ISearchResult[] {
@@ -111,7 +111,7 @@ export function parsePrimarySourceResults(html: string): ISearchResult[] {
 		const title = (link.textContent || '').trim();
 		if (!href || !title) return;
 
-		results.push({source: 'primary', title, url: href});
+		results.push({source: 'first', title, url: href});
 	});
 
 	return results;
@@ -129,7 +129,7 @@ export function parsePrimarySourceResults(html: string): ISearchResult[] {
  *
  * @param text Сырое JSON-тело ответа третьего источника.
  * @returns Валидные результаты в порядке массива `categories` с ключом
- * источника `foo`.
+ * источника `third`.
  */
 export function parseThirdSourceResults(text: string): ISearchResult[] {
 	let payload: unknown;
@@ -154,7 +154,7 @@ export function parseThirdSourceResults(text: string): ISearchResult[] {
 		if (!title || !normalizedSlug) return [];
 
 		return [{
-			source: 'foo' as const,
+			source: 'third' as const,
 			title,
 			url: THIRD_SOURCE_URL
 				+ '/test-medik/nmo/'

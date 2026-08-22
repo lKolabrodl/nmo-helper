@@ -1,9 +1,9 @@
 import {render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {ALTERNATIVE_ANSWER_SOURCE_HOST, NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
+import {NMO_API_TOPIC_ENDPOINT, THIRD_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import AnswerLoader from './AnswerLoader';
 
-const NMO_TEST_URL = `https://${ALTERNATIVE_ANSWER_SOURCE_HOST}/test-medik/nmo/topic.html`;
+const NMO_TEST_URL = `https://${THIRD_ANSWER_SOURCE_HOST}/test-medik/nmo/topic.html`;
 const NMO_API_RESULT_URL = `${NMO_API_TOPIC_ENDPOINT}/short-lived.uid`;
 
 const mocks = vi.hoisted(() => ({
@@ -30,7 +30,7 @@ beforeEach(() => {
 });
 
 describe('AnswerLoader', () => {
-	it('для sourceKey=foo использует отдельный загрузчик и возвращает готовую модель', async () => {
+	it('для sourceKey=third использует отдельный загрузчик и возвращает готовую модель', async () => {
 		const model = [{
 			question: 'Вопрос',
 			variants: ['A', 'B'],
@@ -39,7 +39,7 @@ describe('AnswerLoader', () => {
 			docId: '329960',
 			idx: 0,
 		}];
-		mocks.detectSource.mockReturnValue('foo');
+		mocks.detectSource.mockReturnValue('third');
 		mocks.getThirdAnswers.mockResolvedValue(model);
 		const onChange = vi.fn();
 
@@ -82,9 +82,9 @@ describe('AnswerLoader', () => {
 		expect(mocks.getSecondAnswers).not.toHaveBeenCalled();
 	});
 
-	it('для sourceKey=primary загружает первый источник и возвращает готовую модель', async () => {
+	it('для sourceKey=first загружает первый источник и возвращает готовую модель', async () => {
 		const model = [{question: 'Вопрос', variants: ['A', 'B'], answers: ['A'], idx: 0}];
-		mocks.detectSource.mockReturnValue('primary');
+		mocks.detectSource.mockReturnValue('first');
 		mocks.getFirstAnswers.mockResolvedValue(model);
 		const onChange = vi.fn();
 
@@ -97,9 +97,9 @@ describe('AnswerLoader', () => {
 		expect(mocks.getSecondAnswers).not.toHaveBeenCalled();
 	});
 
-	it('для sourceKey=secondary загружает второй источник и возвращает готовую модель', async () => {
+	it('для sourceKey=second загружает второй источник и возвращает готовую модель', async () => {
 		const model = [{question: 'Вопрос', variants: ['A', 'B'], answers: ['B'], idx: 0}];
-		mocks.detectSource.mockReturnValue('secondary');
+		mocks.detectSource.mockReturnValue('second');
 		mocks.getSecondAnswers.mockResolvedValue(model);
 		const onChange = vi.fn();
 
