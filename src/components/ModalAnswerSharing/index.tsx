@@ -1,7 +1,8 @@
 import React, {useState} from 'react';
 import {useSettings} from '../../contexts/SettingsContext';
-import {IconCheck} from '../icons';
 import './styles.scss';
+
+const MASCOT_URL = chrome.runtime.getURL('icons/new_icon.png');
 
 export interface IModalAnswerSharingProps {
 	readonly questionCount: number;
@@ -26,7 +27,10 @@ const ModalAnswerSharing: React.FC<IModalAnswerSharingProps> = ({questionCount, 
 				aria-labelledby="nmo-answer-sharing-title"
 				aria-describedby="nmo-answer-sharing-description">
 				<div className="nmo-answer-sharing-icon" aria-hidden="true">
-					<IconCheck size={22}/>
+					<img
+						className="nmo-answer-sharing-mascot"
+						src={MASCOT_URL}
+						alt=""/>
 				</div>
 				<h2 id="nmo-answer-sharing-title">Помочь другим врачам?</h2>
 				<p id="nmo-answer-sharing-description">

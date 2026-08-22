@@ -166,6 +166,8 @@ describe('AnswerSharingLoader', () => {
 
 		expect(await screen.findByRole('dialog', {name: 'Помочь другим врачам?'}))
 			.toBeInTheDocument();
+		expect(document.querySelector('.nmo-answer-sharing-mascot'))
+			.toHaveAttribute('src', 'chrome-extension://nmo-helper/icons/new_icon.png');
 		expect(mocks.submitSharedQuestions).not.toHaveBeenCalled();
 	});
 
