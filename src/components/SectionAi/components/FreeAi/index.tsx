@@ -51,20 +51,18 @@ const FreeAi: React.FC<IFreeAiProps> = ({onBusyChange}) => {
 					<div className="nmo-ai-free-body">
 						<div className="nmo-ai-free-title">Бесплатный AI · автоматически</div>
 						<div className="nmo-ai-free-description">
-							Никаких ключей и настроек: расширение само выбирает сервис и модель.
+							Без ключей и настроек: используются открытые бесплатные модели.
 						</div>
 					</div>
 				</div>
 
 				<div className="nmo-ai-free-note">
-					Бесплатный AI работает не очень эффективно.
+					Ответ может занять несколько минут — скорость зависит от нагрузки.
 				</div>
 			</div>
 
 			{isLoading && <ThinkingStrip title={status.title} steps={[]}/>}
-			{(isOk || isError || isWarn) && !isLoading && status.title && (
-				<InlineToast toast={statusToToast(status.title, status.status)}/>
-			)}
+			{(isOk || isError || isWarn) && !isLoading && status.title && (<InlineToast toast={statusToToast(status.title, status.status)}/>)}
 
 			<div className="nmo-footer">
 				{!aiRunning && (

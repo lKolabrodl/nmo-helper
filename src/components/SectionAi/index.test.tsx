@@ -10,7 +10,8 @@ describe('SectionAi', () => {
 
 		expect(screen.getByRole('tab', {name: 'Бесплатно'})).toHaveAttribute('aria-selected', 'true');
 		expect(screen.getByText('Бесплатный AI · автоматически')).toBeInTheDocument();
-		expect(screen.getByText('Бесплатный AI работает не очень эффективно.')).toBeInTheDocument();
+		expect(screen.getByText('Без ключей и настроек: используются открытые бесплатные модели.')).toBeInTheDocument();
+		expect(screen.getByText('Ответ может занять несколько минут — скорость зависит от нагрузки.')).toBeInTheDocument();
 		expect(screen.queryByLabelText('Автоматический маршрут бесплатного AI')).not.toBeInTheDocument();
 		expect(screen.queryByRole('radio')).not.toBeInTheDocument();
 		expect(screen.queryByRole('combobox')).not.toBeInTheDocument();

@@ -53,10 +53,11 @@
 .nmo-ai-free-note {
   margin-top: $gap-8;
   padding: 8px 10px;
-  color: $text-2;
+  color: $warning-text;
   background: $warning-soft;
   border: 1px solid $warning-border;
   border-radius: $r-sm;
   font-size: $fs-xs;
+  font-weight: 500;
   line-height: 1.4;
 }
