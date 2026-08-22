@@ -56,9 +56,9 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		if (state.error) return setStatus({title: state.error, status: Status.WARN});
 		if (!state.data.length) return;
 
+		const nmoHelperResult = pickResult(state.data, 'nmo-helper', topic);
 		const primaryResult = pickResult(state.data, 'first', topic);
 		const secondaryResult = pickResult(state.data, 'second', topic);
-		const nmoHelperResult = pickResult(state.data, 'nmo-helper', topic);
 		const fooResult = pickResult(state.data, 'third', topic);
 
 		const nextPrimarySourceUrl = primaryResult?.url ?? '';

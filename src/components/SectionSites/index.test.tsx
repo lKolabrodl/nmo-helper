@@ -104,6 +104,16 @@ describe('SectionSites', () => {
 		testState.answerRequest = null;
 	});
 
+	it('показывает только поиск без вкладок и ручного ввода URL', () => {
+		render(<SectionSites initialUrl="https://example.com/answers"/>);
+
+		expect(screen.getByRole('button', {name: 'Найти все варианты'})).toBeInTheDocument();
+		expect(screen.queryByRole('button', {name: 'Найти тест'})).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', {name: 'URL'})).not.toBeInTheDocument();
+		expect(screen.queryByLabelText('URL базы ответов')).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', {name: 'Запустить'})).not.toBeInTheDocument();
+	});
+
 	it('показывает загрузку ответов в кнопке после выбора результата', async () => {
 		const result = {
 			source: 'first' as const,

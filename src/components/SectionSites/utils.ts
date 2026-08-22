@@ -13,15 +13,11 @@ const FNV_OFFSET_BASIS_64 = 0xcbf29ce484222325n;
 const FNV_PRIME_64 = 0x100000001b3n;
 const DISPLAY_ID_LENGTH = 10;
 
-export const SOURCE_DETAILS: Record<ISourceKey, {
-	readonly label: string;
-	readonly className: string;
-	readonly priority: number;
-}> = {
-	'first': {label: 'rosmed', className: 'primary', priority: 0},
-	'second': {label: '24fc', className: 'secondary', priority: 1},
-	'third': {label: 'foo', className: 'secondary', priority: 3},
-	'nmo-helper': {label: 'nmo-helper', className: 'secondary', priority: 2},
+export const SOURCE_DETAILS: Record<ISourceKey, { label: string; className: string;	priority: number;}> = {
+	'nmo-helper': {label: 'nmo-helper', className: 'primary', priority: 0},
+	'first': {label: 'база 1', className: 'secondary', priority: 1},
+	'second': {label: 'база 2', className: 'secondary', priority: 2},
+	'third': {label: 'база 3', className: 'secondary', priority: 3},
 };
 
 /**

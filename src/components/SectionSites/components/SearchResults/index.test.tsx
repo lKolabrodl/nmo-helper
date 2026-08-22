@@ -58,4 +58,22 @@ describe('SearchResults', () => {
 		expect(buttons[0]).toHaveAttribute('aria-pressed', 'false');
 		expect(buttons[1]).toHaveAttribute('aria-pressed', 'true');
 	});
+
+	it('убирает служебный префикс из отображаемого заголовка', () => {
+		const onSelect = vi.fn();
+		const result: ISearchResult = {
+			source: 'first',
+			title: 'Ответы к тестам НМО:   "Кардиология - 2024"',
+			url: 'https://rosmedicinfo.ru/cardiology',
+		};
+
+		render(<SearchResults results={[result]} selectedUrl="" onSelect={onSelect}/>);
+
+		const button = screen.getByRole('button');
+		expect(button).toHaveAttribute('title', '"Кардиология - 2024"');
+		expect(screen.getByText('"Кардиология - 2024"')).toBeInTheDocument();
+
+		fireEvent.click(button);
+		expect(onSelect).toHaveBeenCalledWith(result);
+	});
 });
