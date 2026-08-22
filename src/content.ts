@@ -11,6 +11,8 @@ import {
 	AUTO_SOLVE_STORAGE_KEY,
 	DEFAULT_AUTO_SOLVE_DELAY_MAX_SECONDS,
 	DEFAULT_AUTO_SOLVE_DELAY_MIN_SECONDS,
+	DEFAULT_TEST_DATA_SHARING_ENABLED,
+	TEST_DATA_SHARING_STORAGE_KEY,
 	normalizeAiProvider,
 } from './contexts/SettingsContext';
 
@@ -78,14 +80,9 @@ unlockPageInteractions();
 		savedCustomAiToken: await storageGet('customAiToken', ''),
 		savedCustomAiModel: await storageGet('customAiModel', ''),
 		savedAutoSolveEnabled: await storageGet(AUTO_SOLVE_STORAGE_KEY, false),
-		savedAutoSolveDelayMinSeconds: await storageGet(
-			AUTO_SOLVE_DELAY_MIN_STORAGE_KEY,
-			DEFAULT_AUTO_SOLVE_DELAY_MIN_SECONDS
-		),
-		savedAutoSolveDelayMaxSeconds: await storageGet(
-			AUTO_SOLVE_DELAY_MAX_STORAGE_KEY,
-			DEFAULT_AUTO_SOLVE_DELAY_MAX_SECONDS
-		),
+		savedAutoSolveDelayMinSeconds: await storageGet(AUTO_SOLVE_DELAY_MIN_STORAGE_KEY, DEFAULT_AUTO_SOLVE_DELAY_MIN_SECONDS),
+		savedAutoSolveDelayMaxSeconds: await storageGet(AUTO_SOLVE_DELAY_MAX_STORAGE_KEY, DEFAULT_AUTO_SOLVE_DELAY_MAX_SECONDS),
+		savedTestDataSharingEnabled: await storageGet(TEST_DATA_SHARING_STORAGE_KEY, DEFAULT_TEST_DATA_SHARING_ENABLED),
 	};
 
 	const panel = createPanel(state);

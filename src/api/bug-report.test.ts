@@ -18,15 +18,14 @@ function resetStorage(state: unknown = { sent: {}, history: [], lastSentAt: 0 })
 
 function makePayload(overrides: Partial<IBugReportPayload> = {}): IBugReportPayload {
 	return {
-		panelMode: 'auto',
-		panelTab: 'auto',
-		activeUrl: 'https://example.com/test',
-		source: 'primary',
+		mode: 'auto',
+		url: 'https://example.com/test',
+		source: 'first',
 		topic: 'Кардиология - 2024',
 		question: 'Какой диагноз?',
 		questionHtml: '<p>Какой диагноз?</p>',
 		variants: ['A', 'B', 'C'],
-		extVersion: '4.3.0',
+		extVersion: '5.0.0',
 		userAgent: 'Test/1.0',
 		...overrides,
 	};
@@ -39,26 +38,26 @@ beforeEach(async () => {
 
 describe('computeFingerprint', () => {
 	it('одинаковые входы → одинаковый отпечаток', () => {
-		const fp1 = computeFingerprint({ topic: 'T', question: 'Q', activeUrl: 'U' });
-		const fp2 = computeFingerprint({ topic: 'T', question: 'Q', activeUrl: 'U' });
+		const fp1 = computeFingerprint({ topic: 'T', question: 'Q', url: 'U' });
+		const fp2 = computeFingerprint({ topic: 'T', question: 'Q', url: 'U' });
 		expect(fp1).toBe(fp2);
 	});
 
 	it('разный question → разный отпечаток', () => {
-		const fp1 = computeFingerprint({ topic: 'T', question: 'Q1', activeUrl: 'U' });
-		const fp2 = computeFingerprint({ topic: 'T', question: 'Q2', activeUrl: 'U' });
+		const fp1 = computeFingerprint({ topic: 'T', question: 'Q1', url: 'U' });
+		const fp2 = computeFingerprint({ topic: 'T', question: 'Q2', url: 'U' });
 		expect(fp1).not.toBe(fp2);
 	});
 
 	it('разный topic → разный отпечаток', () => {
-		const fp1 = computeFingerprint({ topic: 'T1', question: 'Q', activeUrl: 'U' });
-		const fp2 = computeFingerprint({ topic: 'T2', question: 'Q', activeUrl: 'U' });
+		const fp1 = computeFingerprint({ topic: 'T1', question: 'Q', url: 'U' });
+		const fp2 = computeFingerprint({ topic: 'T2', question: 'Q', url: 'U' });
 		expect(fp1).not.toBe(fp2);
 	});
 
-	it('разный activeUrl → разный отпечаток', () => {
-		const fp1 = computeFingerprint({ topic: 'T', question: 'Q', activeUrl: 'U1' });
-		const fp2 = computeFingerprint({ topic: 'T', question: 'Q', activeUrl: 'U2' });
+	it('разный url → разный отпечаток', () => {
+		const fp1 = computeFingerprint({ topic: 'T', question: 'Q', url: 'U1' });
+		const fp2 = computeFingerprint({ topic: 'T', question: 'Q', url: 'U2' });
 		expect(fp1).not.toBe(fp2);
 	});
 });
@@ -210,13 +209,19 @@ describe('submitBugReport', () => {
 
 	it('fetch вызван с правильным URL, методом и телом', async () => {
 		mockFetch.mockResolvedValue({ error: false, status: 200, text: '{"ok":true}' });
-		const payload = makePayload();
+		const payload = makePayload({mode: 'sites:search'});
 		await submitBugReport(payload);
 		expect(mockFetch).toHaveBeenCalledTimes(1);
 		const [url, opts] = mockFetch.mock.calls[0];
 		expect(url).toBe('https://nmo-helper.ru/api/v2/bug-report');
 		expect(opts.method).toBe('POST');
 		expect(opts.headers).toEqual({ 'Content-Type': 'application/json' });
-		expect(JSON.parse(opts.body)).toEqual(payload);
+		const {mode, url: activeUrl, ...rest} = payload;
+		expect(JSON.parse(opts.body)).toEqual({
+			panelMode: 'sites',
+			panelTab: mode,
+			activeUrl,
+			...rest,
+		});
 	});
 });

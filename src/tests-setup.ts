@@ -19,6 +19,7 @@ globalThis.chrome = {
 		},
 	},
 	runtime: {
+		getURL: (path: string) => `chrome-extension://nmo-helper/${path}`,
 		sendMessage: (_msg: unknown, cb: (res: unknown) => void) => {
 			cb({ error: false, status: 200, text: '{}' });
 		},

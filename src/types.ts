@@ -6,6 +6,14 @@
 /** Доступные варианты подключения AI. */
 export type AiProvider = 'free' | 'proxy' | 'custom';
 
+/** Раздел панели и, если он есть, активный подраздел для баг-репорта. */
+export type BugReportMode =
+	| 'auto'
+	| 'sites:search'
+	| 'sites:url'
+	| `ai:${AiProvider}`
+	| 'pdf';
+
 /** Сохранённое состояние панели расширения из chrome.storage */
 export interface IExtensionState {
   /** URL страницы с ответами */
@@ -36,6 +44,8 @@ export interface IExtensionState {
   readonly savedAutoSolveDelayMinSeconds: number;
   /** Максимальный интервал автопрохождения вопроса, секунды */
   readonly savedAutoSolveDelayMaxSeconds: number;
+  /** Пользователь явно разрешил делиться данными тестов */
+  readonly savedTestDataSharingEnabled: boolean;
 }
 
 /** Описание AI-модели для выбора в панели */
@@ -51,7 +61,14 @@ export interface IAiModel {
 }
 
 /** Ключ источника ответов */
-export type ISourceKey = 'primary' | 'secondary' | 'nmo-helper';
+export type ISourceKey = 'first' | 'second' | 'third' | 'nmo-helper';
+
+/** Найденный вариант источника ответов. */
+export interface ISearchResult {
+	readonly source: ISourceKey;
+	readonly title: string;
+	readonly url: string;
+}
 
 /** Варианты статуса панели */
 export const Status = {

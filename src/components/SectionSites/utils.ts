@@ -5,7 +5,7 @@
  */
 
 import {Status, type ISourceKey} from '../../types';
-import {ALTERNATIVE_ANSWER_SOURCE_HOST} from '../../utils/constants';
+import {NMO_API_HOST, THIRD_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import type {IToast} from '../ui/InlineToast';
 
 const DISPLAY_URL_PREFIX = 'nmo-helper/id/';
@@ -13,14 +13,11 @@ const FNV_OFFSET_BASIS_64 = 0xcbf29ce484222325n;
 const FNV_PRIME_64 = 0x100000001b3n;
 const DISPLAY_ID_LENGTH = 10;
 
-export const SOURCE_DETAILS: Record<ISourceKey, {
-	readonly label: string;
-	readonly className: string;
-	readonly priority: number;
-}> = {
-	'primary': {label: 'rosmed', className: 'primary', priority: 0},
-	'secondary': {label: '24fc', className: 'secondary', priority: 1},
-	'nmo-helper': {label: 'nmo-helper', className: 'secondary', priority: 2},
+export const SOURCE_DETAILS: Record<ISourceKey, { label: string; className: string;	priority: number;}> = {
+	'nmo-helper': {label: 'nmo-helper', className: 'primary', priority: 0},
+	'first': {label: 'база 1', className: 'secondary', priority: 1},
+	'second': {label: 'база 2', className: 'secondary', priority: 2},
+	'third': {label: 'база 3', className: 'secondary', priority: 3},
 };
 
 /**
@@ -54,7 +51,11 @@ export function formatUrlForDisplay(value: string): string {
 		return value;
 	}
 
-	if (url.protocol !== 'https:' || url.hostname.toLowerCase() !== ALTERNATIVE_ANSWER_SOURCE_HOST) return value;
+	const hostname = url.hostname.toLowerCase();
+	if (
+		url.protocol !== 'https:'
+		|| (hostname !== THIRD_ANSWER_SOURCE_HOST && hostname !== NMO_API_HOST)
+	) return value;
 
 	return `${DISPLAY_URL_PREFIX}${createSeededId(url.href)}`;
 }

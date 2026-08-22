@@ -4,14 +4,15 @@ import {MIN_AUTO_SOLVE_DELAY_SECONDS, useSettings} from '../../contexts/Settings
 import {IconCheck} from '../icons';
 
 const AutoSolveSettings: React.FC = () => {
+
 	const {
-		autoSolveEnabled,
-		setAutoSolveEnabled,
-		autoSolveDelayMinSeconds,
-		setAutoSolveDelayMinSeconds,
-		autoSolveDelayMaxSeconds,
-		setAutoSolveDelayMaxSeconds,
-	} = useSettings();
+		enabled: autoSolveEnabled,
+		setEnabled: setAutoSolveEnabled,
+		delayMinSeconds: autoSolveDelayMinSeconds,
+		setDelayMinSeconds: setAutoSolveDelayMinSeconds,
+		delayMaxSeconds: autoSolveDelayMaxSeconds,
+		setDelayMaxSeconds: setAutoSolveDelayMaxSeconds,
+	} = useSettings().autoSolve;
 
 	return (
 		<>

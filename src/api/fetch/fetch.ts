@@ -4,6 +4,11 @@
  * @module api/fetch/fetch
  */
 
+import {NMO_API_HOST} from '../../utils/constants';
+
+/** Точные пути NMO API, для которых разрешено создавать подпись. */
+const PROTECTED_NMO_API_PATHS = new Set(['/api/nmo/topics', '/api/nmo/topic']);
+
 /** Унифицированный ответ background-обработчика сетевого запроса. */
 export interface IRequestResponse {
 	/** `true`, если запрос не удалось выполнить из-за сетевой или runtime-ошибки. */
@@ -26,6 +31,27 @@ export interface IRequestOptions {
 	readonly body?: string | null;
 	/** Режим передачи cookies и других учётных данных. */
 	readonly credentials?: RequestCredentials | null;
+	/** Максимальное время запроса в миллисекундах; background прервёт fetch по таймеру. */
+	readonly timeoutMs?: number | null;
+}
+
+/**
+ * Проверяет, что абсолютный URL относится ровно к одному из подписываемых
+ * NMO-маршрутов: HTTPS, ожидаемый host без нестандартного порта и точный путь.
+ *
+ * @param value URL-кандидат для проверки.
+ * @returns `true`, если для URL разрешено формировать заголовки подписи.
+ */
+export function isProtectedNmoApiRequest(value: string): boolean {
+	try {
+		const url = new URL(value);
+		return url.protocol === 'https:'
+			&& url.hostname === NMO_API_HOST
+			&& url.port === ''
+			&& PROTECTED_NMO_API_PATHS.has(url.pathname);
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -53,6 +79,7 @@ export function fetchViaBackground(url: string, options: IRequestOptions = {}): 
 				headers: options.headers || null,
 				body: options.body || null,
 				credentials: options.credentials || null,
+				timeoutMs: options.timeoutMs || null,
 			}, (response: IRequestResponse | undefined) => {
 				const runtimeError = getRuntimeErrorMessage();
 				if (runtimeError) {
@@ -66,6 +93,23 @@ export function fetchViaBackground(url: string, options: IRequestOptions = {}): 
 			resolve(requestFailure(getErrorMessage(error)));
 		}
 	});
+}
+
+/**
+ * Возвращает текст успешного ответа или бросает единообразную ошибку запроса.
+ *
+ * @param response Ответ {@link fetchViaBackground}.
+ * @returns Непустое текстовое тело ответа.
+ * @throws {Error} При сетевой ошибке, ошибочном HTTP-статусе или пустом теле.
+ */
+export function getResponseText(response: IRequestResponse): string {
+	if (response.error) throw new Error('ошибка сети — проверь URL');
+	if (response.status < 200 || response.status >= 400) {
+		throw new Error(`ошибка ${response.status}: сервер отклонил запрос`);
+	}
+	if (!response.text.trim()) throw new Error('пустой ответ от сервера');
+
+	return response.text;
 }
 
 /**

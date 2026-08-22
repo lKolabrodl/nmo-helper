@@ -27,6 +27,8 @@ const AIProxyLoader = ({ active, apiKey, model, aiUrl, onChange }: IAiSolverProp
 	const { question, variants, isSingle, topic } = useQuestionFinder();
 	const { setStatus } = usePanelStatus();
 	const pendingRef = useRef(false);
+	const onChangeRef = useRef(onChange);
+	onChangeRef.current = onChange;
 
 	useEffect(() => {
 		if (!active || !question || !variants.length) return;
@@ -36,18 +38,19 @@ const AIProxyLoader = ({ active, apiKey, model, aiUrl, onChange }: IAiSolverProp
 
 		const q = question;
 		const t = topic ?? '';
+		let cancelled = false;
 
 		async function solve() {
 			pendingRef.current = true;
-			onChange({ running: true, disabled: false });
+			onChangeRef.current({ running: true, disabled: false });
 			setStatus({ title: StatusTitle.AI_THINKING, status: Status.LOADING });
 
 			try {
 				const correctIndexes = await askAI(apiKey, q, variants, isSingle, t, model, aiUrl);
+				if (cancelled) return;
 
 				if (correctIndexes.length === 0) {
 					setStatus({ title: StatusTitle.AI_NO_ANSWER, status: Status.WARN });
-					pendingRef.current = false;
 					return;
 				}
 
@@ -56,15 +59,21 @@ const AIProxyLoader = ({ active, apiKey, model, aiUrl, onChange }: IAiSolverProp
 
 				setStatus({ title: `AI: вариант${correctIndexes.length > 1 ? 'ы' : ''} ${correctIndexes.map(i => i + 1).join(', ')}`, status: Status.OK });
 			} catch (err) {
+				if (cancelled) return;
 				setStatus({ title: (err as Error).message, status: Status.ERR });
-				onChange({ running: false, disabled: false });
+				onChangeRef.current({ running: false, disabled: false });
+			} finally {
+				if (!cancelled) pendingRef.current = false;
 			}
-			pendingRef.current = false;
 		}
 
 		solve();
+		return () => {
+			cancelled = true;
+			pendingRef.current = false;
+		};
 
-	}, [active, question, variants, isSingle, topic, apiKey, model]);
+	}, [active, question, variants, isSingle, topic, apiKey, model, aiUrl, setStatus]);
 
 	return null;
 };

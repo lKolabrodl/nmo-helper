@@ -11,6 +11,7 @@
 import { storageGet, storageSet } from './storage';
 import { fetchViaBackground } from './fetch/fetch';
 import { BUG_REPORT_ENDPOINT, BUG_REPORT_STORAGE_KEY } from '../utils/constants';
+import type {BugReportMode} from '../types';
 
 /** Минимальный интервал между двумя отправками с одного устройства (мс) */
 const COOLDOWN_MS = 5 * 60 * 1000;
@@ -22,16 +23,14 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const DEDUP_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
- * Тело POST-запроса на сервер.
- * Повторяет контракт с `/opt/nmo-feedback/server.py::_handle_bug_report`.
+ * Данные баг-репорта внутри расширения.
+ * Перед отправкой преобразуются в действующий серверный контракт через {@link toServerPayload}.
  */
 export interface IBugReportPayload {
-	/** Активный верхний таб панели: auto / sites / ai / pdf */
-	readonly panelMode?: string;
-	/** Детализация внутри таба: auto / sites:url / sites:search / ai:proxy / etc. */
-	readonly panelTab?: string;
+	/** Раздел и подраздел панели: auto / sites:search / sites:url / ai:proxy / etc. */
+	readonly mode: BugReportMode;
 	/** URL страницы в одной из поддерживаемых баз ответов */
-	readonly activeUrl: string;
+	readonly url: string;
 	/** Внутренний ключ базы ответов или `''`, если источник не определён */
 	readonly source: string;
 	/** Тема теста как отображается у пользователя */
@@ -48,6 +47,26 @@ export interface IBugReportPayload {
 	readonly userAgent: string;
 	/** Свободный текст от пользователя (необязательно). Лимит на сервере — 2000 символов. */
 	readonly message?: string;
+}
+
+/** Текущий wire-контракт развёрнутого серверного обработчика. */
+interface IBugReportServerPayload extends Omit<IBugReportPayload, 'mode' | 'url'> {
+	readonly panelMode: string;
+	readonly panelTab: string;
+	readonly activeUrl: string;
+}
+
+function toServerPayload(payload: IBugReportPayload): IBugReportServerPayload {
+	const {mode, url, ...rest} = payload;
+	const separatorIndex = mode.indexOf(':');
+	const panelMode = separatorIndex === -1 ? mode : mode.slice(0, separatorIndex);
+
+	return {
+		panelMode,
+		panelTab: mode,
+		activeUrl: url,
+		...rest,
+	};
 }
 
 /**
@@ -111,7 +130,7 @@ function hash(input: string): string {
 }
 
 /**
- * Вычисляет отпечаток отчёта по тройке `topic + question + activeUrl`.
+ * Вычисляет отпечаток отчёта по тройке `topic + question + url`.
  * Два вызова с идентичными полями всегда возвращают одинаковую строку,
  * любое изменение любого поля даёт другой хеш.
  *
@@ -119,11 +138,11 @@ function hash(input: string): string {
  * полям, но SHA-256) — клиентский хеш нужен только как локальный ключ.
  *
  * @example
- * computeFingerprint({ topic: 'Кардиология', question: 'Что это?', activeUrl: 'https://...' })
+ * computeFingerprint({ topic: 'Кардиология', question: 'Что это?', url: 'https://...' })
  * // → '4a2c1f9b'
  */
-export function computeFingerprint(p: Pick<IBugReportPayload, 'topic' | 'question' | 'activeUrl'>): string {
-	return hash(`${p.topic}\n${p.question}\n${p.activeUrl}`);
+export function computeFingerprint(p: Pick<IBugReportPayload, 'topic' | 'question' | 'url'>): string {
+	return hash(`${p.topic}\n${p.question}\n${p.url}`);
 }
 
 /**
@@ -197,7 +216,7 @@ export async function submitBugReport(payload: IBugReportPayload): Promise<BugRe
 	const res = await fetchViaBackground(BUG_REPORT_ENDPOINT, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(payload),
+		body: JSON.stringify(toServerPayload(payload)),
 	});
 
 	if (res.error) return { ok: false, error: 'network' };

@@ -21,9 +21,13 @@ export const CACHE_MAX_TOPICS = 10;
 export const UPDATE_URL = 'https://nmo-helper.ru/update';
 
 /** Домены баз поиска ответов. Конкретные адреса хранятся только здесь. */
-export const PRIMARY_ANSWER_SOURCE_HOST = 'rosmedicinfo.ru';
-export const SECONDARY_ANSWER_SOURCE_HOST = '24forcare.com';
-export const ALTERNATIVE_ANSWER_SOURCE_HOST = 'testotvet.com';
+export const FIRST_ANSWER_SOURCE_HOST = 'rosmedicinfo.ru';
+export const SECOND_ANSWER_SOURCE_HOST = '24forcare.com';
+export const THIRD_ANSWER_SOURCE_HOST = 'testotvet.com';
+//
+export const NMO_API_HOST = 'nmo-helper.ru';
+export const NMO_API_BASE_URL = `https://${NMO_API_HOST}/api/nmo`;
+export const NMO_API_TOPIC_ENDPOINT = `${NMO_API_BASE_URL}/topic`;
 
 /**
  * DOM-селекторы страницы НМО.
@@ -32,59 +36,38 @@ export const ALTERNATIVE_ANSWER_SOURCE_HOST = 'testotvet.com';
  */
 export const SELECTORS = {
 	/** Заголовок темы теста */
-	topic: [
-		'.mat-card-title-quiz-custom',
-		'.mat-mdc-card-title',
-		'.v-label.v-label-h2'
-	],
+	topic: ['.mat-card-title-quiz-custom', '.mat-mdc-card-title', '.v-label.v-label-h2'],
 	/** Контейнер текущего вопроса */
-	questionAnchor: [
-		'#questionAnchor',
-	],
+	questionAnchor: ['#questionAnchor'],
 	/** Текст вопроса (внутри questionAnchor) */
-	questionText: [
-		'.question-title-text',
-	],
+	questionText: ['.question-title-text'],
 	/** Варианты ответов (внутри questionAnchor) */
-	variant: [
-		'.mdc-form-field span',
-	],
+	variant: ['.mdc-form-field span'],
 	/** Нативный input внутри варианта ответа */
-	answerInput: [
-		'input[type="radio"], input[type="checkbox"]',
-	],
+	answerInput: ['input[type="radio"], input[type="checkbox"]'],
 	/** Интерактивная область варианта ответа */
-	answerTouchTarget: [
-		'.mat-mdc-radio-touch-target',
-		'.mat-mdc-checkbox-touch-target',
-	],
+	answerTouchTarget: ['.mat-mdc-radio-touch-target', '.mat-mdc-checkbox-touch-target'],
 	/** Radio-инпут для определения типа «один ответ» */
-	radioInput: [
-		'input[type="radio"]',
-	],
+	radioInput: ['input[type="radio"]'],
 	/** Кнопка перехода после ответа: следующий вопрос или финальное завершение */
-	nextQuestionButton: [
-		'.question-buttons-primary',
-		'.question-buttons button',
-		'button',
-	],
+	nextQuestionButton: ['.question-buttons-primary', '.question-buttons button', 'button'],
 	/** Блок действий теста: список вопросов + завершение тестирования */
-	quizActions: [
-		'mat-card-actions.mat-mdc-card-actions',
-		'.mat-mdc-card-actions.mdc-card__actions',
-		'.mat-mdc-card-actions',
-	],
+	quizActions: ['mat-card-actions.mat-mdc-card-actions', '.mat-mdc-card-actions.mdc-card__actions', '.mat-mdc-card-actions'],
 	/** Кнопка завершения тестирования */
-	finishQuizButton: [
-		'.quiz-buttons-primary',
-		'button',
-	],
+	finishQuizButton: ['.quiz-buttons-primary', 'button'],
 	/** Кнопки в модалке подтверждения завершения тестирования */
-	finishQuizConfirmButton: [
-		'lib-quiz-finishing-confirm-dialog button',
-		'.mat-mdc-dialog-surface button',
-		'.mat-mdc-dialog-actions button',
-	],
+	finishQuizConfirmButton: ['lib-quiz-finishing-confirm-dialog button', '.mat-mdc-dialog-surface button', '.mat-mdc-dialog-actions button'],
+
+	/** Список вопросов в результатах завершённого теста */
+	quizResults: ['lib-questions-list .questionList'],
+	/** Элемент вопроса в списке результатов */
+	resultItem: ['.questionList-item'],
+	/** Заголовок вопроса в списке результатов */
+	resultTitle: ['.questionList-item-content-title'],
+	/** Статус правильного ответа в списке результатов */
+	resultCorrect: ['.questionList-item-status-wright'],
+	/** Статус завершённого теста */
+	completedStatus: ['.text_value.text-success'],
 } as const;
 
 /** Тексты статусов панели */

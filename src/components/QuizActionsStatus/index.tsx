@@ -7,7 +7,7 @@ import './styles.scss';
 const STATUS_HOST_ID = 'nmo-quiz-actions-status-host';
 
 const QuizActionsStatus: React.FC = () => {
-	const {autoSolveEnabled} = useSettings();
+	const {enabled: autoSolveEnabled} = useSettings().autoSolve;
 	const [host, setHost] = useState<HTMLElement | null>(null);
 
 	useEffect(() => {
@@ -73,9 +73,6 @@ const QuizActionsStatus: React.FC = () => {
 
 export default QuizActionsStatus;
 
-function setHostIfChanged(
-	setHost: React.Dispatch<React.SetStateAction<HTMLElement | null>>,
-	nextHost: HTMLElement | null
-): void {
+function setHostIfChanged(setHost: React.Dispatch<React.SetStateAction<HTMLElement | null>>,nextHost: HTMLElement | null): void {
 	setHost(currentHost => currentHost === nextHost ? currentHost : nextHost);
 }

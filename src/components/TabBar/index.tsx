@@ -2,8 +2,10 @@ import React from 'react';
 import cn from 'classnames';
 import './styles.scss';
 import {usePanelUi} from '../../contexts/PanelUiContext';
+import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import type {UiMode} from '../../contexts/PanelUiContext';
 import {IconBolt, IconBrain, IconGlobe, IconFile} from '../icons';
+import {Status} from '../../types';
 
 const TABS: {mode: UiMode; label: string; Icon: React.FC<{size?: number}>}[] = [
 	{mode: 'auto',  label: 'Авто',  Icon: IconBolt},
@@ -14,6 +16,13 @@ const TABS: {mode: UiMode; label: string; Icon: React.FC<{size?: number}>}[] = [
 
 const TabBar: React.FC = () => {
 	const {mode, setMode} = usePanelUi();
+	const {setStatus} = usePanelStatus();
+
+	const selectMode = (nextMode: UiMode): void => {
+		if (nextMode === mode) return;
+		setStatus({title: '', status: Status.IDLE});
+		setMode(nextMode);
+	};
 
 	return (
 		<div className="nmo-tabs-wrap">
@@ -22,7 +31,7 @@ const TabBar: React.FC = () => {
 					<button key={m}
 						type="button"
 						className={cn({active: mode === m})}
-						onClick={() => setMode(m)}>
+						onClick={() => selectMode(m)}>
 						<Icon size={12}/>
 						<span>{label}</span>
 					</button>

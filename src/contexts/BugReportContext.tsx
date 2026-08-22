@@ -1,19 +1,18 @@
 import React, {createContext, useCallback, useContext, useMemo, useState} from 'react';
+import type {BugReportMode} from '../types';
 
 export interface IBugReportContextSnapshot {
-	readonly panelMode: string;
-	readonly panelTab: string;
-	readonly activeUrl: string;
+	readonly mode: BugReportMode | '';
+	readonly url: string;
 }
 
 interface IBugReportContextState extends IBugReportContextSnapshot {
-	readonly setBugReportContext: (next: Partial<IBugReportContextSnapshot>) => void;
+	readonly setBugReportContext: (next: IBugReportContextSnapshot) => void;
 }
 
 const EMPTY_CONTEXT: IBugReportContextSnapshot = {
-	panelMode: '',
-	panelTab: '',
-	activeUrl: '',
+	mode: '',
+	url: '',
 };
 
 const BugReportContext = createContext<IBugReportContextState>({
@@ -24,17 +23,12 @@ const BugReportContext = createContext<IBugReportContextState>({
 export const BugReportProvider: React.FC<React.PropsWithChildren> = ({children}) => {
 	const [snapshot, setSnapshot] = useState<IBugReportContextSnapshot>(EMPTY_CONTEXT);
 
-	const setBugReportContext = useCallback((next: Partial<IBugReportContextSnapshot>) => {
+	const setBugReportContext = useCallback((next: IBugReportContextSnapshot) => {
 		setSnapshot(prev => {
-			const merged = {...prev, ...next};
-			if (
-				merged.panelMode === prev.panelMode &&
-				merged.panelTab === prev.panelTab &&
-				merged.activeUrl === prev.activeUrl
-			) {
+			if (next.mode === prev.mode && next.url === prev.url) {
 				return prev;
 			}
-			return merged;
+			return next;
 		});
 	}, []);
 

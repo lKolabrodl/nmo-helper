@@ -1,0 +1,183 @@
+import {beforeEach, describe, expect, it, vi} from 'vitest';
+import {
+	FIRST_ANSWER_SOURCE_HOST,
+	NMO_API_HOST,
+	NMO_API_TOPIC_ENDPOINT,
+	SECOND_ANSWER_SOURCE_HOST,
+	THIRD_ANSWER_SOURCE_HOST,
+} from '../../utils/constants';
+import {fetchViaBackground} from './fetch';
+import {
+	clearNmoSearchCache,
+	searchFirstSource,
+	searchNmoSource,
+	searchSecondarySource,
+	searchThirdSource,
+} from './search-variant-sources';
+
+vi.mock('./fetch', async importOriginal => ({
+	...await importOriginal<typeof import('./fetch')>(),
+	fetchViaBackground: vi.fn(),
+}));
+
+const mockFetch = vi.mocked(fetchViaBackground);
+
+beforeEach(() => {
+	mockFetch.mockReset();
+	clearNmoSearchCache();
+});
+
+describe('searchSecondarySource', () => {
+	it('сериализует query и возвращает абсолютные ссылки', async () => {
+		mockFetch.mockResolvedValue(ok(`
+			<a class="item-name" href="/answer/42"> Диагностика заболевания </a>
+			<a class="item-name" href="/without-title"></a>
+		`));
+
+		await expect(searchSecondarySource('  Тема (тест) - 2026  ')).resolves.toEqual([{
+			source: 'second',
+			title: 'Диагностика заболевания',
+			url: `https://${SECOND_ANSWER_SOURCE_HOST}/answer/42`,
+		}]);
+
+		const expectedUrl = new URL('/search/', `https://${SECOND_ANSWER_SOURCE_HOST}`);
+		expectedUrl.searchParams.set('query', 'Тема (тест) - 2026');
+		expect(mockFetch).toHaveBeenCalledWith(expectedUrl.toString());
+	});
+
+	it('не отправляет пустой запрос', async () => {
+		await expect(searchSecondarySource('   ')).resolves.toEqual([]);
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
+});
+
+describe('searchFirstSource', () => {
+	it('отправляет query в формате поисковой формы и разбирает HTML', async () => {
+		const resultUrl = `https://${FIRST_ANSWER_SOURCE_HOST}/topic/42`;
+		mockFetch.mockResolvedValue(ok(`
+			<div class="short__title"><a href="${resultUrl}"> Основная тема </a></div>
+		`));
+
+		await expect(searchFirstSource('  Инфаркт миокарда  ')).resolves.toEqual([{
+			source: 'first',
+			title: 'Основная тема',
+			url: resultUrl,
+		}]);
+
+		expect(mockFetch).toHaveBeenCalledWith(`https://${FIRST_ANSWER_SOURCE_HOST}`, {
+			method: 'POST',
+			headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+			body: 'do=search&subaction=search&story=' + encodeURIComponent('Инфаркт миокарда'),
+		});
+	});
+
+	it('не отправляет пустой запрос', async () => {
+		await expect(searchFirstSource('   ')).resolves.toEqual([]);
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
+});
+
+describe('searchThirdSource', () => {
+	it('формирует варианты из categories и пропускает неполные элементы', async () => {
+		mockFetch.mockResolvedValue(ok(JSON.stringify({
+			categories: [
+				{name: 'Особенности реабилитации', slug: 'topic/42'},
+				{name: '', slug: 'without-title'},
+				{name: 'Без ссылки', slug: null},
+			],
+		})));
+
+		await expect(searchThirdSource('  КОВИД  ')).resolves.toEqual([{
+			source: 'third',
+			title: 'Особенности реабилитации',
+			url: `https://${THIRD_ANSWER_SOURCE_HOST}/test-medik/nmo/topic%2F42.html`,
+		}]);
+
+		expect(mockFetch).toHaveBeenCalledWith(
+			`https://${THIRD_ANSWER_SOURCE_HOST}/api/search/suggestions/categories?query=${encodeURIComponent('КОВИД')}`,
+		);
+	});
+
+	it('возвращает пустой массив при невалидном JSON', async () => {
+		mockFetch.mockResolvedValue(ok('not json'));
+
+		await expect(searchThirdSource('Тема')).resolves.toEqual([]);
+	});
+
+	it('не отправляет пустой запрос', async () => {
+		await expect(searchThirdSource('   ')).resolves.toEqual([]);
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
+});
+
+describe('searchNmoSource', () => {
+	it('возвращает результаты с короткоживущими UID', async () => {
+		mockFetch.mockResolvedValue(ok(JSON.stringify({
+			items: [{
+				title: ' Диагностика заболевания ',
+				uid: ' short-lived.uid ',
+			}],
+		})));
+
+		await expect(searchNmoSource('  диагностика  ')).resolves.toEqual([{
+			source: 'nmo-helper',
+			title: 'Диагностика заболевания',
+			url: `${NMO_API_TOPIC_ENDPOINT}/short-lived.uid`,
+		}]);
+
+		const expectedUrl = new URL(`https://${NMO_API_HOST}/api/nmo/topics`);
+		expectedUrl.searchParams.set('q', 'диагностика');
+		expect(mockFetch).toHaveBeenCalledWith(expectedUrl.toString(), {
+			headers: {'Accept': 'application/json'},
+			credentials: 'omit',
+		});
+	});
+
+	it('не отправляет запрос короче трёх символов', async () => {
+		await expect(searchNmoSource(' Я ')).resolves.toEqual([]);
+		expect(mockFetch).not.toHaveBeenCalled();
+	});
+
+	it('повторно использует результат нормализованного запроса', async () => {
+		mockFetch.mockResolvedValue(ok(JSON.stringify({
+			items: [{title: 'Тема', uid: 'cached.uid'}],
+		})));
+
+		const first = await searchNmoSource('  Ёлка   ВРАЧА ');
+		(first[0] as {title: string}).title = 'Изменено локально';
+		const repeated = await searchNmoSource('елка врача');
+
+		expect(mockFetch).toHaveBeenCalledTimes(1);
+		expect(repeated).toEqual([{
+			source: 'nmo-helper',
+			title: 'Тема',
+			url: `${NMO_API_TOPIC_ENDPOINT}/cached.uid`,
+		}]);
+	});
+
+	it('обновляет результат после четырёх минут', async () => {
+		const now = vi.spyOn(Date, 'now').mockReturnValue(1_000);
+		mockFetch.mockResolvedValue(ok('{"items":[]}'));
+
+		await searchNmoSource('Тема');
+		now.mockReturnValue(4 * 60 * 1000 + 1_001);
+		await searchNmoSource('Тема');
+
+		expect(mockFetch).toHaveBeenCalledTimes(2);
+		now.mockRestore();
+	});
+
+	it.each([
+		'not json',
+		'{}',
+		'{"items":{}}',
+	])('возвращает пустой массив для неожиданного ответа: %s', async text => {
+		mockFetch.mockResolvedValue(ok(text));
+
+		await expect(searchNmoSource('Тема')).resolves.toEqual([]);
+	});
+});
+
+function ok(text: string) {
+	return {error: false, status: 200, text};
+}

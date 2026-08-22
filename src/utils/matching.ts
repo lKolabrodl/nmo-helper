@@ -1,6 +1,6 @@
 import type { ISourceKey } from '../types';
 import { normalizeDashes, stripQuotes } from './text';
-import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_ANSWER_SOURCE_HOST, SIMILARITY_THRESHOLD} from './constants';
+import {FIRST_ANSWER_SOURCE_HOST, NMO_API_HOST, SECOND_ANSWER_SOURCE_HOST, SIMILARITY_THRESHOLD, THIRD_ANSWER_SOURCE_HOST} from './constants';
 
 /**
  * Определяет, к какому из поддерживаемых сайтов-источников относится URL.
@@ -9,9 +9,10 @@ import {SECONDARY_ANSWER_SOURCE_HOST, PRIMARY_ANSWER_SOURCE_HOST, ALTERNATIVE_AN
  * @returns Ключ источника или `null`, если домен не поддерживается.
  */
 export function detectSource(url: string): ISourceKey | null {
-	if (url.includes(SECONDARY_ANSWER_SOURCE_HOST)) return 'secondary';
-	if (url.includes(PRIMARY_ANSWER_SOURCE_HOST)) return 'primary';
-	if (url.includes(ALTERNATIVE_ANSWER_SOURCE_HOST)) return 'nmo-helper';
+	if (url.includes(NMO_API_HOST)) return 'nmo-helper';
+	if (url.includes(FIRST_ANSWER_SOURCE_HOST)) return 'first';
+	if (url.includes(SECOND_ANSWER_SOURCE_HOST)) return 'second';
+	if (url.includes(THIRD_ANSWER_SOURCE_HOST)) return 'third';
 	return null;
 }
 
@@ -138,6 +139,11 @@ const MIN_TITLE_SCORE = 0.5;
  */
 const TITLE_PREFIX_RE = /^Ответы\s+к\s+тестам\s+НМО:\s*/iu;
 
+/** Убирает служебный префикс источника из заголовка результата. */
+export function stripAnswerTitlePrefix(title: string): string {
+	return title.replace(TITLE_PREFIX_RE, '');
+}
+
 /** Минимальный shape элемента для {@link pickResult}: source + title. */
 export interface IPickResultItem {
 	readonly source: ISourceKey;
@@ -172,7 +178,7 @@ export function pickResult<T extends IPickResultItem>(results: readonly T[], sou
 		let bestDiff = Infinity;
 		const nt = normForMatch(topic);
 		filtered.forEach((r, i) => {
-			const stripped = r.title.replace(TITLE_PREFIX_RE, '');
+			const stripped = stripAnswerTitlePrefix(r.title);
 			const s = variantScore(stripped, topic);
 			const diff = Math.abs(normForMatch(stripped).length - nt.length);
 			if (s > bestScore || (s === bestScore && diff < bestDiff)) {

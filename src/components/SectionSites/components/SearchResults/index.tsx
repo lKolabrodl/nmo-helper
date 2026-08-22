@@ -1,7 +1,8 @@
 import React from 'react';
 import cn from 'classnames';
 import './styles.scss';
-import type {ISearchResult} from '../../../Loader/VariantLoader';
+import type {ISearchResult} from '../../../../types';
+import {stripAnswerTitlePrefix} from '../../../../utils/matching';
 import {IconStar} from '../../../icons';
 import {SOURCE_DETAILS} from '../../utils';
 
@@ -24,20 +25,21 @@ const SearchResults: React.FC<ISearchResultsProps> = ({results, selectedUrl, onS
 				{sortedResults.map(result => {
 					const source = SOURCE_DETAILS[result.source];
 					const isSelected = result.url === selectedUrl;
+					const displayTitle = stripAnswerTitlePrefix(result.title);
 
 					return (
 						<button
 							key={`${result.source}:${result.url}`}
 							type="button"
 							className={cn('nmo-results-item', source.className, {selected: isSelected})}
-							title={result.title}
+							title={displayTitle}
 							aria-pressed={isSelected}
 							onClick={() => onSelect(result)}>
-							<div className="nmo-results-title">{result.title}</div>
+							<div className="nmo-results-title">{displayTitle}</div>
 							<div className="nmo-results-meta-row">
 								<span className={cn('nmo-results-src', source.className)}>
 									{source.label}
-									{result.source === 'primary' && <> <IconStar size={9}/></>}
+									{result.source === 'nmo-helper' && <> <IconStar size={9}/></>}
 								</span>
 							</div>
 						</button>

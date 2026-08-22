@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from 'react';
-import cn from 'classnames';
 import './styles.scss';
 import {usePanelStatus} from '../../contexts/PanelStatusContext';
 import {useQuestionFinder} from '../../contexts/QuestionFinderContext';
@@ -7,19 +6,17 @@ import {useBugReportContext} from '../../contexts/BugReportContext';
 import {storageSet} from '../../utils';
 import {answerCache} from '../../utils/answer-cache';
 import {detectSource} from '../../utils/matching';
-import {findAnswers, extractCases} from '../../utils/cases';
+import {findAnswers} from '../../utils/cases';
 import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
-import type {ISearchResult, IVariantModel} from '../Loader/VariantLoader';
-import {Status} from '../../types';
+import type {IVariantModel} from '../Loader/VariantLoader';
+import {Status, type ISearchResult} from '../../types';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
-import {IconPlay, IconSearch} from '../icons';
+import {IconSearch} from '../icons';
 import InlineToast from '../ui/InlineToast';
 import SearchResults from './components/SearchResults';
-import {formatUrlForDisplay, SOURCE_DETAILS, statusToToast} from './utils';
-
-type Tab = 'url' | 'search';
+import {SOURCE_DETAILS, statusToToast} from './utils';
 
 const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	// context
@@ -27,8 +24,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const {question, variants, topic} = useQuestionFinder();
 	const {setBugReportContext} = useBugReportContext();
 
-	// url
-	const [tab, setTab] = useState<Tab>('search');
+	// url выбранного результата
 	const [url, setUrlRaw] = useState(initialUrl);
 	const [activeUrl, setActiveUrl] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
@@ -37,15 +33,11 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const [variantModel, setVariantModel] = useState<IVariantModel>({loading: false, error: null, data: []});
 	const [answerModel, setAnswerModel] = useState<IAnswerModel>({loading: false, error: null, data: null});
 
-	const setUrl = (v: string) => { setUrlRaw(v); storageSet('customUrl', v); };
+	// для дебаг мода
+	useEffect(() => setBugReportContext({mode: 'sites:search', url: activeUrl}), [activeUrl, setBugReportContext]);
 
 	const _updateHtml = (state: IAnswerModel) => {
 		setAnswerModel(state);
-		
-		// баг лог
-		if (activeUrl) {
-			setBugReportContext({panelMode: 'sites', panelTab: tab === 'search' ? 'sites:search' : 'sites:url',	activeUrl});
-		}
 
 		if (state.loading) setStatus({title: StatusTitle.LOADING_ANSWERS, status: Status.LOADING});
 		else if (state.error) setStatus({title: state.error, status: Status.ERR});
@@ -65,16 +57,13 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	};
 
 	const _onSelectResult = (result: ISearchResult): void => {
-		setUrl(result.url);
+		setUrlRaw(result.url);
+		// Короткоживущий URL серверного API не сохраняем.
+		if (result.source !== 'nmo-helper') storageSet('customUrl', result.url);
 		setActiveUrl(result.url);
 	};
 
-	const _run = (): void => {
-		if (!url.trim()) return setStatus({title: StatusTitle.ENTER_URL, status: Status.ERR});
-		setActiveUrl(url.trim());
-	};
-
-	const _stop = (): void => {
+	const _onStop = (): void => {
 		setActiveUrl('');
 		setAnswerModel({loading: false, error: null, data: null});
 		setStatus({title: StatusTitle.STOPPED, status: Status.IDLE});
@@ -87,8 +76,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		const source = detectSource(activeUrl);
 		if (!source) return;
 
-		const model = extractCases(source, answerModel.data);
-		const found = findAnswers(model, question, variants);
+		const found = findAnswers(answerModel.data, question, variants);
 
 		if (!found) return setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
 		if (!found.answers.length) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});
@@ -102,7 +90,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		}
 		else setStatus({title: `найдено • ${label}`, status: Status.OK});
 
-	}, [answerModel.data, question, variants, topic, activeUrl]);
+	}, [answerModel.data, question, variants, topic, activeUrl, setStatus]);
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key !== 'Enter') return;
@@ -115,7 +103,13 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const isError = status.status === Status.ERR;
 	const isOk = status.status === Status.OK;
 
-	const canSearch = searchQuery.trim().length > 0 && !variantModel.loading;
+	const isLoadingAll = variantModel.loading || answerModel.loading;
+	const canSearch = searchQuery.trim().length;
+
+	// теxt =/
+	let searchButtonText = 'Найти все варианты';
+	if (variantModel.loading) searchButtonText = 'Ищу в базе…';
+	if (answerModel.loading) searchButtonText = 'Загружаю ответы…';
 
 	return (
 		<div className="nmo-section">
@@ -123,78 +117,37 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 			<VariantLoader text={activeSearch} onChange={_updateSearchUrl}/>
 
 			<div className="nmo-section-inner">
-				<div className="nmo-sub-tabs">
-					<button type="button" className={cn({active: tab === 'search'})} onClick={() => setTab('search')}>
-						Найти тест
+				<div className="nmo-fade-up">
+					<label className="nmo-label">Вставьте название теста</label>
+					<textarea className="nmo-input"
+						rows={2}
+						disabled={isRunning || isLoadingAll}
+						value={searchQuery}
+						onChange={e => setSearchQuery(e.target.value)}
+						onKeyDown={handleKeyDown}
+						placeholder="Например: «Аритмии у взрослых, ФП, антиаритмики IC класса…»"/>
+
+					<button type="button"
+						className="nmo-btn nmo-btn-ghost nmo-search-btn"
+						disabled={!canSearch || isRunning || isLoadingAll}
+						aria-busy={isLoadingAll}
+						onClick={search}>
+						{isLoadingAll && <span className="nmo-spinner" style={{width: 11, height: 11, color: 'currentColor'}}/>}
+						{!isLoadingAll && <IconSearch size={11}/>}
+						{searchButtonText}
 					</button>
-					<button type="button" className={cn({active: tab === 'url'})}	onClick={() => setTab('url')}>
-						URL
-					</button>
+
+					<SearchResults results={variantModel.data} selectedUrl={url} onSelect={_onSelectResult}/>
 				</div>
-
-				{tab === 'url' ? (
-					<div className="nmo-fade-up">
-						<label className="nmo-label">URL базы ответов</label>
-						<input type="text"
-							className="nmo-input mono"
-							placeholder="https://example.com/answers"
-							value={formatUrlForDisplay(url)}
-							onChange={e => setUrl(e.target.value)}/>
-						<div className="nmo-sites-help">
-							Поддерживаются базы поиска ответов и nmo-helper
-						</div>
-					</div>
-				) : (
-					<div className="nmo-fade-up">
-						<label className="nmo-label">Вставьте название теста</label>
-						<textarea className="nmo-input"
-							rows={2}
-							value={searchQuery}
-							onChange={e => setSearchQuery(e.target.value)}
-							onKeyDown={handleKeyDown}
-							placeholder="Например: «Аритмии у взрослых, ФП, антиаритмики IC класса…»"/>
-
-						<button type="button"
-							className="nmo-btn nmo-btn-ghost nmo-search-btn"
-							disabled={!canSearch}
-							onClick={search}>
-							{variantModel.loading ? (
-								<>
-									<span className="nmo-spinner" style={{width: 11, height: 11, color: 'currentColor'}}/>
-									Ищу в базе…
-								</>
-							) : (
-								<>
-									<IconSearch size={11}/>Проверить базу
-								</>
-							)}
-						</button>
-
-						<SearchResults
-							results={variantModel.data}
-							selectedUrl={url}
-							onSelect={_onSelectResult}/>
-					</div>
-				)}
 			</div>
 
 			{(isOk || isWarning || isError) && status.title && 	<InlineToast toast={statusToToast(status.title, status.status)}/>}
 
-			{(tab === 'url' || isRunning) && (
+			{isRunning && (
 				<div className="nmo-footer">
-					{!isRunning &&
-						<button type="button"
-							className="nmo-btn nmo-btn-primary nmo-btn-cta"
-							disabled={!url.trim() || answerModel.loading}
-							onClick={_run}>
-							<IconPlay size={14}/>Запустить
-						</button>
-					}
-					{isRunning &&
-						<button type="button" className="nmo-btn nmo-btn-stop nmo-btn-cta" onClick={_stop}>
-							Остановить
-						</button>
-					}
+					<button type="button" className="nmo-btn nmo-btn-stop nmo-btn-cta" onClick={_onStop}>
+						Остановить
+					</button>
 				</div>
 			)}
 		</div>
