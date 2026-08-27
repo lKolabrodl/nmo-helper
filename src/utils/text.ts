@@ -21,8 +21,8 @@
 export function cleanTopic(topic: string | null): string | null {
 	if (!topic) return null;
 	return topic
-		.replace(/\s*-\s*(\d{4})\s*-\s*(?:Предварительное|Контрольное|Итоговое)[\s\S]*$/i, ' - $1')
 		.replace(/\s*-\s*(?:Предварительное|Контрольное|Итоговое)[\s\S]*$/i, '')
+		.replace(/\s*-\s*(\d{4})\s*$/i, ' - $1')
 		.trim();
 }
 
