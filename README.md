@@ -12,7 +12,7 @@
 
 🌐 **Сайт:** [nmo-helper.ru](https://nmo-helper.ru)<br>
 📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)<br>
-💬 **Обратная связь:** [nmo-helper.ru/feedback](https://nmo-helper.ru/feedback)
+💬 **Обратная связь:** [nmo-helper.ru/feedback](https://nmo-helper.ru/feedback)<br>
 🐞 **Баги и предложения:** [GitHub Issues](https://github.com/lKolabrodl/nmo-helper/issues)
 
 ---
