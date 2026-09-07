@@ -162,8 +162,7 @@ build.js               # Сборка расширения
 
 ```bash
 npm install
-npm run build       # Собрать dist/chrome, dist/firefox, dist/firefox-store
-npm run dev         # Сборка в watch-режиме
+npm run build       # Собрать dist/chrome, dist/chrome-store, dist/firefox, dist/firefox-store
 npm test            # Запустить тесты
 ```
 

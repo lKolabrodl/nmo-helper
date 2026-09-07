@@ -5,10 +5,10 @@ const path = require('path');
 
 const SRC = path.join(__dirname, 'src');
 const DIST = path.join(__dirname, 'dist');
-const WATCH = process.argv.includes('--watch');
 
 const BROWSERS = [
   { name: 'chrome', manifest: 'manifest.chrome.json' },
+  { name: 'chrome-store', manifest: 'manifest.chrome-store.json' },
   { name: 'firefox', manifest: 'manifest.firefox.json' },             // приватный .xpi (NMO Helper, id=nmo-helper@extension)
   { name: 'firefox-store', manifest: 'manifest.firefox-store.json' }, // для Firefox Add-ons (NMO-Helper, id=nmo-helper-amo@extension)
 ];
@@ -37,70 +37,31 @@ async function build() {
 
     const commonOptions = {
       bundle: true,
-      minify: !WATCH,
+      minify: true,
       format: 'iife',
       target: 'es2020',
       charset: 'utf8',
-      define: { __DEV__: WATCH ? 'true' : 'false' },
+      define: {
+        __BUILD_TARGET__: JSON.stringify(browser.name),
+      },
       jsx: 'automatic',
       jsxImportSource: 'react',
     };
 
-    if (WATCH) {
-      const rebuildPlugin = {
-        name: 'rebuild-log',
-        setup(build) {
-          build.onEnd((result) => {
-            const time = new Date().toLocaleTimeString();
-            if (result.errors.length > 0) {
-              console.log(`[${time}] Build failed with ${result.errors.length} error(s)`);
-            } else {
-              console.log(`[${time}] Rebuilt ${browser.name} successfully`);
-              fs.writeFileSync(
-                path.join(outDir, 'dev-reload.json'),
-                JSON.stringify({ timestamp: Date.now() })
-              );
-            }
-          });
-        },
-      };
+    await esbuild.build({
+      ...commonOptions,
+      entryPoints: [path.join(SRC, 'content.ts')],
+      outfile: path.join(outDir, 'content.js'),
+      plugins: [sassPlugin()],
+    });
 
-      const contentCtx = await esbuild.context({
-        ...commonOptions,
-        entryPoints: [path.join(SRC, 'content.ts')],
-        outfile: path.join(outDir, 'content.js'),
-        plugins: [sassPlugin(), rebuildPlugin],
-      });
+    await esbuild.build({
+      ...commonOptions,
+      entryPoints: [path.join(SRC, 'background.ts')],
+      outfile: path.join(outDir, 'background.js'),
+    });
 
-      const backgroundCtx = await esbuild.context({
-        ...commonOptions,
-        entryPoints: [path.join(SRC, 'background.ts')],
-        outfile: path.join(outDir, 'background.js'),
-        plugins: [rebuildPlugin],
-      });
-
-      await Promise.all([
-        contentCtx.watch(),
-        backgroundCtx.watch(),
-      ]);
-
-      console.log(`[WATCH] ${browser.name} -> dist/${browser.name}/`);
-    } else {
-      await esbuild.build({
-        ...commonOptions,
-        entryPoints: [path.join(SRC, 'content.ts')],
-        outfile: path.join(outDir, 'content.js'),
-        plugins: [sassPlugin()],
-      });
-
-      await esbuild.build({
-        ...commonOptions,
-        entryPoints: [path.join(SRC, 'background.ts')],
-        outfile: path.join(outDir, 'background.js'),
-      });
-
-      console.log(`[OK] ${browser.name} -> dist/${browser.name}/`);
-    }
+    console.log(`[OK] ${browser.name} -> dist/${browser.name}/`);
 
     // Copy manifest
     fs.copyFileSync(
@@ -127,12 +88,7 @@ async function build() {
     // иначе при упаковке firefox-зипа он попадает внутрь и раздувает его.
   }
 
-  if (WATCH) {
-    console.log('\nWatching for changes... (Ctrl+C to stop)');
-    console.log('Reload the extension in chrome://extensions after each change.');
-  } else {
-    console.log('Build complete!');
-  }
+  console.log('Build complete!');
 }
 
 build().catch((err) => {

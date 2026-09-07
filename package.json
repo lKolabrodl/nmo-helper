@@ -5,7 +5,6 @@
   "main": "ai.js",
   "scripts": {
     "build": "node build.js",
-    "dev": "node build.js --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src/",

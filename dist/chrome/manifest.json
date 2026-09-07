@@ -27,7 +27,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["dev-reload.json", "pdf.worker.min.mjs"],
+      "resources": ["pdf.worker.min.mjs"],
       "matches": ["<all_urls>"]
     },
     {

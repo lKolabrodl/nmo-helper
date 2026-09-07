@@ -16,21 +16,6 @@ import {
 	normalizeAiProvider,
 } from './contexts/SettingsContext';
 
-declare const __DEV__: boolean;
-
-/** Refreshes the host page after a watch build invalidates this content script. */
-function initDevReloadListener(): void {
-	chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-		if (msg?.type !== 'NMO_DEV_RELOAD') return false;
-
-		window.setTimeout(() => window.location.reload(), 250);
-		sendResponse({ok: true});
-		return false;
-	});
-}
-
-if (__DEV__) initDevReloadListener();
-
 function waitForBody(): Promise<void> {
 	if (document.body) return Promise.resolve();
 
