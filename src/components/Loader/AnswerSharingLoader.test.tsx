@@ -143,7 +143,7 @@ describe('createAnswerSharingSnapshot', () => {
 	it.each([
 		['correct' as const, 'два зелёных результата'],
 		['wrong' as const, 'зелёный и неверный результаты'],
-	])('не отправляет одинаковый вопрос: %s — %s', (secondStatus) => {
+	])('не отправляет одинаковый вопрос: %s — %s', (secondStatus, _description) => {
 		document.body.innerHTML = createResultsMarkup([
 			resultItem(1, 'Первый вопрос', 'correct', []),
 			resultItem(2, '  ПЕРВЫЙ   ВОПРОС  ', secondStatus, []),

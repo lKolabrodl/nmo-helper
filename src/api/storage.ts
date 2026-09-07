@@ -7,7 +7,7 @@
 export function storageGet<T>(key: string, defaultValue: T): Promise<T> {
 	return new Promise<T>(resolve => {
 		try {
-			chrome.storage.local.get(key, (result: Record<string, unknown> | undefined) => {
+			chrome.storage.local.get<Record<string, unknown>>(key, result => {
 				if (hasRuntimeError() || !result) {
 					resolve(defaultValue);
 					return;

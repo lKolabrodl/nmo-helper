@@ -1,3 +1,4 @@
+import {describe, expect, it} from 'vitest';
 import {constrainPanelPosition} from './Panel';
 
 describe('panel position', () => {

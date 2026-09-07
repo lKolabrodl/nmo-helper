@@ -1,4 +1,4 @@
-# NMO Helper v4.3.0
+# NMO Helper v5.0.0
 
 > Умный помощник в прохождении тестов НМО на портале [edu.rosminzdrav.ru](https://a.edu.rosminzdrav.ru) — бесплатное расширение для браузера с открытым исходным кодом.
 
@@ -12,7 +12,8 @@
 
 🌐 **Сайт:** [nmo-helper.ru](https://nmo-helper.ru)<br>
 📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)<br>
-💬 **Обратная связь:** [nmo-helper.ru/feedback](https://nmo-helper.ru/feedback)
+💬 **Обратная связь:** [nmo-helper.ru/feedback](https://nmo-helper.ru/feedback)<br>
+🐞 **Баги и предложения:** [GitHub Issues](https://github.com/lKolabrodl/nmo-helper/issues)
 
 ---
 
@@ -21,7 +22,8 @@
 | Функция | Описание |
 |---|---|
 | **Авто-поиск** | Автоматически находит тему теста и ищет её в базах ответов |
-| **AI-режим** | Решает тесты с помощью GPT, Gemini, Claude, DeepSeek через ProxyAPI или свой endpoint |
+| **AI-режим** | Решает тесты бесплатными моделями без ключа либо через ProxyAPI / свой endpoint |
+| **Общая база NMO Helper** | Ищет ответы в собственной базе; завершённым тестом можно поделиться только с согласия пользователя |
 | **PDF-режим** | Поиск по клиническим рекомендациям из локального PDF, со score для вариантов |
 | **Ручной поиск** | Поиск ответов по названию теста в поддерживаемых базах |
 | **Автоподсветка** | Правильные ответы подсвечиваются при переходе между вопросами |
@@ -34,7 +36,7 @@
 ## Требования
 
 - **Google Chrome** / Яндекс Браузер / Edge / Brave / Opera (любой Chromium-браузер)
-- **Mozilla Firefox 109+**
+- **Mozilla Firefox 140+**
 
 ---
 
@@ -42,12 +44,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-chrome-4.3.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.3.0/nmo-helper-chrome-4.3.0.zip)
+1. Скачайте [`nmo-helper-chrome-5.0.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.0/nmo-helper-chrome-5.0.0.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-chrome-4.3.0`
+6. Выберите папку `nmo-helper-chrome-5.0.0`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
@@ -63,7 +65,7 @@
 
 **Способ 2 — прямая установка `.xpi`:**
 
-1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v4.3.0/firefox_nmo_helper.xpi)
+1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.0/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
 3. Подтвердите установку
 
@@ -175,6 +177,7 @@ npm test            # Запустить тесты
 - Проверено через [VirusTotal](https://www.virustotal.com/gui/file/dd746259d7a4eefdaadd88e33c2fec39eca2ee848b05cee036a6713b29459c7d?nocache=1)
 - Подписано и опубликовано в [Firefox Add-ons](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/)
 - PDF-файлы обрабатываются локально в браузере и не отправляются на сервер
+- Вопросы и правильные ответы из завершённого теста отправляются в общую базу только после согласия пользователя
 - Баг-репорт отправляется только вручную после подтверждения пользователя
 - Политика конфиденциальности: [nmo-helper.ru/privacy](https://nmo-helper.ru/privacy)
 
@@ -189,6 +192,7 @@ npm test            # Запустить тесты
 
 Ниже только последние релизы минорных веток. Полная история доступна в [GitHub Releases](https://github.com/lKolabrodl/nmo-helper/releases).
 
+- [v4.3.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.3.0) — обновлённая панель, расширенный поиск по базам и просмотр источника PDF
 - [v4.2.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.2.0) — автоответ с настраиваемым интервалом
 - [v4.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v4.1.1) — обновление подписанного Firefox-пакета
 - [v4.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.0.0) — крупное обновление панели и подготовка к релизам 4.x
