@@ -144,6 +144,17 @@ export function stripAnswerTitlePrefix(title: string): string {
 	return title.replace(TITLE_PREFIX_RE, '');
 }
 
+/** Оформление названия не должно влиять на выбор года темы. */
+function normTitleForMatch(title: string): string {
+	return normForMatch(stripAnswerTitlePrefix(title).replace(/ё/gi, 'е'))
+		.replace(/\s*-\s*/g, '-');
+}
+
+/** Год в конце названия, в том числе перед «г.» или «год». */
+function getTitleYear(title: string): string | undefined {
+	return stripQuotes(title).trim().match(/(?:^|\D)((?:19|20)\d{2})(?:\s*г(?:од)?\.?)?$/i)?.[1];
+}
+
 /** Минимальный shape элемента для {@link pickResult}: source + title. */
 export interface IPickResultItem {
 	readonly source: ISourceKey;
@@ -155,12 +166,11 @@ export interface IPickResultItem {
  * указанного источника.
  *
  * Алгоритм:
- *  1. Фильтрует по `source`. Пусто → `undefined`. Один элемент → он.
- *  2. Если задан `topic` — для каждого title считает {@link variantScore}
- *     с предварительным стрипом префикса «Ответы к тестам НМО: "..."».
- *     Возвращает аргмакс при score ≥ {@link MIN_TITLE_SCORE}.
- *  3. Иначе fallback — последний элемент (основная база возвращает старые → новые,
- *     свежий обычно правильнее).
+ *  1. Фильтрует по `source` и исключает явно другой год. Названия без года допустимы.
+ *  2. Нормализует префикс, ё/е и пробелы у дефиса только для названий тем.
+ *  3. Выбирает лучший {@link variantScore}; при равенстве предпочитает совпадающий
+ *     год, затем ближайшую длину названия. Минимальный score — {@link MIN_TITLE_SCORE}.
+ *  4. Fallback — последний оставшийся элемент, если год не противоречит запросу.
  *
  * Та же идеология, что и {@link findAnswers} в `cases.ts`: «лучший по score»
  * вместо «первый прошедший includes». Это решает кейс, когда сайт усекает
@@ -168,27 +178,33 @@ export interface IPickResultItem {
  * падает на обе стороны.
  */
 export function pickResult<T extends IPickResultItem>(results: readonly T[], source: ISourceKey, topic: string | null): T | undefined {
-	const filtered = results.filter(r => r.source === source);
+	const topicYear = topic ? getTitleYear(topic) : undefined;
+	const filtered = results
+		.filter(r => r.source === source)
+		.map(item => ({item, title: normTitleForMatch(item.title), year: getTitleYear(item.title)}))
+		.filter(({year}) => !topicYear || !year || year === topicYear);
 	if (!filtered.length) return undefined;
-	if (filtered.length === 1) return filtered[0];
+	if (filtered.length === 1) return filtered[0].item;
 
 	if (topic) {
 		let bestIdx = -1;
 		let bestScore = 0;
+		let bestYearMatch = 0;
 		let bestDiff = Infinity;
-		const nt = normForMatch(topic);
-		filtered.forEach((r, i) => {
-			const stripped = stripAnswerTitlePrefix(r.title);
-			const s = variantScore(stripped, topic);
-			const diff = Math.abs(normForMatch(stripped).length - nt.length);
-			if (s > bestScore || (s === bestScore && diff < bestDiff)) {
+		const nt = normTitleForMatch(topic);
+		filtered.forEach(({title, year}, i) => {
+			const s = variantScore(title, nt);
+			const yearMatch = topicYear && year === topicYear ? 1 : 0;
+			const diff = Math.abs(title.length - nt.length);
+			if (s > bestScore || (s === bestScore && (yearMatch > bestYearMatch || (yearMatch === bestYearMatch && diff < bestDiff)))) {
 				bestScore = s;
 				bestIdx = i;
+				bestYearMatch = yearMatch;
 				bestDiff = diff;
 			}
 		});
-		if (bestIdx >= 0 && bestScore >= MIN_TITLE_SCORE) return filtered[bestIdx];
+		if (bestIdx >= 0 && bestScore >= MIN_TITLE_SCORE) return filtered[bestIdx].item;
 	}
 
-	return filtered[filtered.length - 1];
+	return filtered[filtered.length - 1].item;
 }
