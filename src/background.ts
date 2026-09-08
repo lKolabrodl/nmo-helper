@@ -7,6 +7,12 @@
 
 import {isProtectedNmoApiRequest} from './api/fetch/fetch';
 import {fetchSignedNmoRequest} from './api/nmo-auth';
+import {getHostPermissionPattern} from './api/host-permissions';
+
+interface IHostPermissionMessage {
+	readonly action: 'requestHostPermission';
+	readonly url: string;
+}
 
 /** Формат сообщения от content-скрипта */
 interface IFetchMessage {
@@ -28,8 +34,21 @@ function normalizeRequestTimeout(timeoutMs: number | null): number | null {
 }
 
 chrome.runtime.onMessage.addListener(
-	(message: IFetchMessage, _sender: chrome.runtime.MessageSender, sendResponse: (response: unknown) => void) => {
-		if (message.action !== 'fetch') return false;
+	(message: IFetchMessage | IHostPermissionMessage, _sender: chrome.runtime.MessageSender, sendResponse: (response: unknown) => void) => {
+		if (__BUILD_TARGET__ === 'chrome-store' && message?.action === 'requestHostPermission') {
+			try {
+				const origin = getHostPermissionPattern(message.url);
+				// Не вставлять await/contains перед request: нужен жест из клика в панели.
+				chrome.permissions.request({origins: [origin]}, granted => {
+					const message = chrome.runtime.lastError?.message;
+					sendResponse({granted: !message && granted, message});
+				});
+			} catch (error) {
+				sendResponse({granted: false, message: (error as Error).message});
+			}
+			return true;
+		}
+		if (message?.action !== 'fetch') return false;
 
 		const timeoutMs = normalizeRequestTimeout(message.timeoutMs);
 		const abortController = timeoutMs ? new AbortController() : null;
@@ -46,9 +65,18 @@ chrome.runtime.onMessage.addListener(
 			credentials: message.credentials || undefined,
 			signal: abortController?.signal,
 		};
-		const request = isProtectedNmoApiRequest(message.url)
-			? fetchSignedNmoRequest(message.url, requestInit)
-			: fetch(message.url, requestInit);
+		const request = (async () => {
+			if (__BUILD_TARGET__ === 'chrome-store') {
+				const origin = getHostPermissionPattern(message.url);
+				if (!await chrome.permissions.contains({origins: [origin]})) {
+					throw new Error('нет разрешения на доступ к серверу; разрешите доступ и запустите AI снова');
+				}
+			}
+
+			return isProtectedNmoApiRequest(message.url)
+				? fetchSignedNmoRequest(message.url, requestInit)
+				: fetch(message.url, requestInit);
+		})();
 
 		request
 			.then(async (res) => {
