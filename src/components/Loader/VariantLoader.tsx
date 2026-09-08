@@ -2,6 +2,9 @@ import {useEffect} from 'react';
 import type {ISearchResult} from '../../types';
 import {searchFirstSource, searchNmoSource, searchSecondarySource, searchThirdSource} from '../../api/fetch/search-variant-sources';
 
+// не грузим если хром - магазин.
+const USE_EXTERNAL_SOURCES = __BUILD_TARGET__ !== 'chrome-store';
+
 export interface IVariantModel {
 	readonly loading: boolean;
 	readonly error: string | null;
@@ -27,9 +30,11 @@ const VariantLoader = ({text, onChange}: IVariantLoaderProps) => {
 		async function search() {
 			const resultGroups = await Promise.all([
 				searchNmoSource(query).catch(() => []),
-				searchSecondarySource(query).catch(() => []),
-				searchFirstSource(query).catch(() => []),
-				searchThirdSource(query).catch(() => []),
+				...(USE_EXTERNAL_SOURCES ? [
+					searchSecondarySource(query).catch(() => []),
+					searchFirstSource(query).catch(() => []),
+					searchThirdSource(query).catch(() => []),
+				] : []),
 			]);
 
 			if (cancelled) return;

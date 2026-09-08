@@ -1,9 +1,7 @@
 import '@testing-library/jest-dom/vitest';
-import {beforeEach, vi} from 'vitest';
+import {vi} from 'vitest';
 
-beforeEach(() => {
-	vi.stubGlobal('__BUILD_TARGET__', 'chrome');
-});
+vi.stubGlobal('__BUILD_TARGET__', 'chrome');
 
 // Мок chrome.storage.local
 const store: Record<string, unknown> = {};
