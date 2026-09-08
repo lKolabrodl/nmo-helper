@@ -6,6 +6,16 @@ const path = require('path');
 const SRC = path.join(__dirname, 'src');
 const DIST = path.join(__dirname, 'dist');
 
+// Runtime packages shipped in the extension, including transitive dependencies.
+const LICENSE_PACKAGES = [
+  'react',
+  'react-dom',
+  'scheduler',
+  'classnames',
+  'med-pdf-nmo',
+  'pdfjs-dist',
+];
+
 const BROWSERS = [
   { name: 'chrome', manifest: 'manifest.chrome.json' },
   { name: 'chrome-store', manifest: 'manifest.chrome-store.json' },
@@ -27,6 +37,19 @@ function copyDir(src, dest) {
 }
 
 async function build() {
+  // Read every license before cleaning dist so a missing file fails the build early.
+  const licenses = LICENSE_PACKAGES.map((packageName) => {
+    const licensePath = path.join(__dirname, 'node_modules', packageName, 'LICENSE');
+    try {
+      return {
+        filename: `${packageName}-LICENSE.txt`,
+        contents: fs.readFileSync(licensePath),
+      };
+    } catch (error) {
+      throw new Error(`Cannot read license for ${packageName}: ${licensePath}`, { cause: error });
+    }
+  });
+
   if (fs.existsSync(DIST)) {
     fs.rmSync(DIST, { recursive: true });
   }
@@ -61,8 +84,6 @@ async function build() {
       outfile: path.join(outDir, 'background.js'),
     });
 
-    console.log(`[OK] ${browser.name} -> dist/${browser.name}/`);
-
     // Copy manifest
     fs.copyFileSync(
       path.join(SRC, browser.manifest),
@@ -82,6 +103,15 @@ async function build() {
       path.join(__dirname, 'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs'),
       path.join(outDir, 'pdf.worker.min.mjs')
     );
+
+    // Keep the original license contents from the installed package versions.
+    const licensesDir = path.join(outDir, 'licenses');
+    fs.mkdirSync(licensesDir, { recursive: true });
+    for (const license of licenses) {
+      fs.writeFileSync(path.join(licensesDir, license.filename), license.contents);
+    }
+
+    console.log(`[OK] ${browser.name} -> dist/${browser.name}/`);
 
     // Подписанный .xpi (firefox_nmo_helper.xpi) лежит в корне репо и
     // распространяется как отдельный артефакт релиза. В dist/ не копируем —

@@ -166,6 +166,12 @@ npm run build       # Собрать dist/chrome, dist/chrome-store, dist/firefo
 npm test            # Запустить тесты
 ```
 
+При каждой сборке в `dist/<вариант>/licenses/` копируются лицензии установленных
+версий `react`, `react-dom`, `scheduler`, `classnames`, `med-pdf-nmo` и `pdfjs-dist`.
+Файлы имеют имена `<пакет>-LICENSE.txt`. Если лицензия отсутствует, сборка
+завершается с ошибкой. При добавлении зависимостей, которые входят в расширение,
+нужно обновить `LICENSE_PACKAGES` в `build.js`.
+
 ---
 
 ## Безопасность
