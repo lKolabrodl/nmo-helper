@@ -76,6 +76,13 @@ export function stripQuotes(s: string): string {
  */
 const DASH_RE = /[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u00AD\uFE58\uFE63\uFF0D]/g;
 
+/** Приводит «80ºС», «80oС» и «80 ° C» к «80°С», сохраняя число и единицу. */
+function normalizeTemperatureUnits(s: string): string {
+	return s
+		.replace(/℃/g, '°C').replace(/℉/g, '°F')
+		.replace(/(\d)\s*[°º˚oо]\s*([cсf])(?=$|[^\p{L}\p{N}])/giu, '$1°$2');
+}
+
 /**
  * Универсальная нормализация для fuzzy-сравнения строк: тире, пробелы,
  * кириллица-двойники → латиница, trim, lowercase.
@@ -84,19 +91,20 @@ const DASH_RE = /[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\u00AD\uFE58\uFE63\u
  * обросла остальными шагами. По сути эквивалентна {@link normalizeText}.
  *
  * Шаги по порядку:
- *  1. Все виды тире/дефисов (см. {@link DASH_RE}) → ASCII `-`.
- *  2. Любые последовательности пробельных символов → один пробел.
- *  3. Кириллические омоглифы `А Е О Р С Х` (визуально неотличимые от латинских
+ *  1. Обозначения градусов температуры → `°` без пробелов перед единицей.
+ *  2. Все виды тире/дефисов (см. {@link DASH_RE}) → ASCII `-`.
+ *  3. Любые последовательности пробельных символов → один пробел.
+ *  4. Кириллические омоглифы `А Е О Р С Х` (визуально неотличимые от латинских
  *     `A E O P C X`) → соответствующие латинские. Без этого «Антибиотик» на
  *     одном сайте и «Aнтибиотик» (латинская A) на другом не совпадут.
- *  4. `trim()` + `toLowerCase()`.
+ *  5. `trim()` + `toLowerCase()`.
  *
  * @param s Произвольная строка.
  * @returns Нормализованная строка, готовая к сравнению через `===`, `includes`
  *          или {@link similarity}.
  */
 export function normalizeDashes(s: string): string {
-	return s
+	return normalizeTemperatureUnits(s)
 		.replace(DASH_RE, '-')
 		.replace(/\s+/g, ' ')
 		.replace(/\u0410/gi, 'a').replace(/\u0415/gi, 'e')
@@ -110,7 +118,8 @@ export function normalizeDashes(s: string): string {
  * Нормализация для точного сравнения (`===`) текстов вариантов ответа.
  *
  * По итоговому результату эквивалентна {@link normalizeDashes} — обе возвращают
- * lowercase-строку с латинскими омоглифами, нормализованными пробелами и тире.
+ * lowercase-строку с латинскими омоглифами, нормализованными пробелами, тире
+ * и обозначениями температуры.
  * Историческое дублирование: `normalizeText` выделен отдельно для модуля
  * `matching.ts` (сопоставление вариантов), тогда как `normalizeDashes`
  * используется парсерами для вопроса.
@@ -123,7 +132,7 @@ export function normalizeDashes(s: string): string {
  * @returns Нормализованная строка для сравнения через `===`.
  */
 export function normalizeText(s: string): string {
-	return s
+	return normalizeTemperatureUnits(s)
 		.replace(DASH_RE, '-')
 		.replace(/\s+/g, ' ')
 		.replace(/\u0410/g, 'A').replace(/\u0430/g, 'a')

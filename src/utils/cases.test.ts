@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { findAnswers, type QaCaseModel } from './cases';
-import {extractFirstCases, extractSecondCases} from './extractors';
+import {extractFirstCases, extractNmoAnswer, extractSecondCases} from './extractors';
 
 /**
  * jsdom не поддерживает innerText, поэтому патчим через textContent
@@ -160,6 +160,19 @@ describe('findAnswers — базовый матчинг по вопросу', ()
 
 		const res = findAnswers(model, 'АД - что это', ['a']);
 		expect(res).not.toBeNull();
+	});
+});
+
+describe('findAnswers — температура из баг-репорта', () => {
+	it('возвращает исходный вариант пользователя при разных обозначениях градусов в API', () => {
+		const question = 'Температура воды при проведении горячих ингаляций';
+		const model = extractNmoAnswer(JSON.stringify({questions: [
+			{text: question, options: ['40-50oС', '90-100oС', '70-80oС', '20-30oС'], correct_answers: ['70-80oС']},
+			{text: question, options: ['20-30°С', '40-50°С', '70-80°С', '90-100°С'], correct_answers: ['70-80°С']},
+		]}));
+		const variants = ['90-100ºС', '20-30ºС', '40-50ºС', '70-80ºС'];
+
+		expect(findAnswers(model, question, variants)).toEqual({answers: ['70-80ºС'], score: 1});
 	});
 });
 

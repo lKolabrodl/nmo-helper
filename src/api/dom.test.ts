@@ -63,6 +63,70 @@ describe('fn getTopicElement', () => {
 		expect(getTopicElement()?.textContent).toBe('new');
 	});
 
+	it('предпочитает заголовок темы общей карточке Material', () => {
+		document.body.innerHTML = `
+			<div class="mat-mdc-card-title">Посторонняя карточка</div>
+			<div class="v-label v-label-h2">Хирургия - 2024</div>
+		`;
+		expect(getTopicElement()?.textContent).toBe('Хирургия - 2024');
+	});
+
+	it('не принимает заголовок вопроса внутри questionAnchor за тему', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<div class="mat-mdc-card-title question-title-text">Машинное обучение</div>
+			</div>
+			<div class="v-label v-label-h2">Применение искусственного интеллекта</div>
+		`;
+		expect(getTopicElement()?.textContent).toBe('Применение искусственного интеллекта');
+	});
+
+	it('пропускает карточку с вложенным вопросом и проверяет следующий заголовок', () => {
+		document.body.innerHTML = `
+			<div class="mat-mdc-card-title">
+				<div id="questionAnchor"><div class="question-title-text">Вопрос</div></div>
+			</div>
+			<div class="mat-mdc-card-title">Настоящая тема</div>
+		`;
+		expect(getTopicElement()?.textContent).toBe('Настоящая тема');
+	});
+
+	it('ищет тему внутри активной страницы теста', () => {
+		document.body.innerHTML = `
+			<div class="mat-card-title-quiz-custom">Другая страница</div>
+			<lib-quiz-page>
+				<div class="mat-mdc-card-title">Хирургия - 2024</div>
+				<div id="questionAnchor"><div class="question-title-text">Вопрос</div></div>
+			</lib-quiz-page>
+		`;
+		expect(getTopicElement()?.textContent).toBe('Хирургия - 2024');
+	});
+
+	it('не подставляет вопрос, когда заголовок темы отсутствует', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<div class="mat-mdc-card-title question-title-text">Вопрос</div>
+			</div>
+		`;
+		expect(getTopicElement()).toBeNull();
+	});
+
+	it('пропускает пустой заголовок перед настоящей темой', () => {
+		document.body.innerHTML = `
+			<div class="mat-card-title-quiz-custom"> </div>
+			<div class="mat-card-title-quiz-custom">Хирургия</div>
+		`;
+		expect(getTopicElement()?.textContent).toBe('Хирургия');
+	});
+
+	it('допускает одинаковый текст настоящей темы и вопроса', () => {
+		document.body.innerHTML = `
+			<div class="v-label v-label-h2">Машинное обучение</div>
+			<div id="questionAnchor"><div class="question-title-text">Машинное обучение</div></div>
+		`;
+		expect(getTopicElement()?.textContent).toBe('Машинное обучение');
+	});
+
 	it('null если темы нет', () => {
 		expect(getTopicElement()).toBeNull();
 	});

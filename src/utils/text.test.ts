@@ -84,6 +84,34 @@ describe('normalizeText', () => {
 	});
 });
 
+describe.each([
+	{name: 'normalizeDashes', normalize: normalizeDashes},
+	{name: 'normalizeText', normalize: normalizeText},
+])('$name — температура', ({normalize}) => {
+	it('сопоставляет обозначения градусов из баг-репорта', () => {
+		for (const text of ['70-80ºС', '70-80°С', '70-80oС', '70-80оС', '70-80˚С', '70-80 ° C', '70-80 ℃']) {
+			expect(normalize(text)).toBe('70-80°c');
+		}
+	});
+
+	it('нормализует градусы Фаренгейта, сохраняя единицу', () => {
+		expect(normalize('104 º F')).toBe('104°f');
+		expect(normalize('104oF')).toBe('104°f');
+		expect(normalize('104℉')).toBe('104°f');
+		expect(normalize('104°F')).not.toBe(normalize('104°C'));
+	});
+
+	it('сохраняет разные значения температуры', () => {
+		expect(normalize('40-50ºС')).not.toBe(normalize('70-80oС'));
+	});
+
+	it('не принимает буквы внутри слов за обозначение температуры', () => {
+		expect(normalize('80occlusion')).toBe('80occlusion');
+		expect(normalize('80oсновных')).not.toContain('°');
+		expect(normalize('CO2')).toBe('co2');
+	});
+});
+
 describe('cleanAnswer', () => {
 	it('пустая строка → пустая', () => {
 		expect(cleanAnswer('')).toBe('');

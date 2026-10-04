@@ -35,8 +35,8 @@ export const NMO_API_TOPIC_ENDPOINT = `${NMO_API_BASE_URL}/topic`;
  * При изменении вёрстки портала — правим только здесь.
  */
 export const SELECTORS = {
-	/** Заголовок темы теста */
-	topic: ['.mat-card-title-quiz-custom', '.mat-mdc-card-title', '.v-label.v-label-h2'],
+	/** Заголовок темы теста: специфичные классы раньше общей карточки Material. */
+	topic: ['.mat-card-title-quiz-custom', '.v-label.v-label-h2', '.mat-mdc-card-title'],
 	/** Контейнер текущего вопроса */
 	questionAnchor: ['#questionAnchor'],
 	/** Текст вопроса (внутри questionAnchor) */
