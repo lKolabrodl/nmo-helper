@@ -57,7 +57,7 @@ const FreeAi: React.FC<IFreeAiProps> = ({onBusyChange}) => {
 				</div>
 
 				<div className="nmo-ai-free-note">
-					Ответ может занять несколько минут — скорость зависит от нагрузки.
+					Бесплатные модели менее точны. При нагрузке ответ может занять несколько минут.
 				</div>
 			</div>
 
