@@ -32,14 +32,14 @@
     },
     {
       "resources": ["icons/new_icon.png"],
-      "matches": ["https://edu.rosminzdrav.ru/*", "https://*.edu.rosminzdrav.ru/*"]
+      "matches": ["https://rosminzdrav.ru/*", "https://*.rosminzdrav.ru/*"]
     }
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://edu.rosminzdrav.ru/*",
-        "https://*.edu.rosminzdrav.ru/*"
+        "https://rosminzdrav.ru/*",
+        "https://*.rosminzdrav.ru/*"
       ],
       "js": ["content.js"],
       "css": ["content.css"],

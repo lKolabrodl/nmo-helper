@@ -20,8 +20,8 @@
     "storage"
   ],
   "host_permissions": [
-    "https://edu.rosminzdrav.ru/*",
-    "https://*.edu.rosminzdrav.ru/*",
+    "https://rosminzdrav.ru/*",
+    "https://*.rosminzdrav.ru/*",
     "https://nmo-helper.ru/*",
     "https://api.proxyapi.ru/*",
     "https://proxyapi.ru/*",
@@ -39,18 +39,18 @@
   "web_accessible_resources": [
     {
       "resources": ["pdf.worker.min.mjs"],
-      "matches": ["https://edu.rosminzdrav.ru/*", "https://*.edu.rosminzdrav.ru/*"]
+      "matches": ["https://rosminzdrav.ru/*", "https://*.rosminzdrav.ru/*"]
     },
     {
       "resources": ["icons/new_icon.png"],
-      "matches": ["https://edu.rosminzdrav.ru/*", "https://*.edu.rosminzdrav.ru/*"]
+      "matches": ["https://rosminzdrav.ru/*", "https://*.rosminzdrav.ru/*"]
     }
   ],
   "content_scripts": [
     {
       "matches": [
-        "https://edu.rosminzdrav.ru/*",
-        "https://*.edu.rosminzdrav.ru/*"
+        "https://rosminzdrav.ru/*",
+        "https://*.rosminzdrav.ru/*"
       ],
       "js": ["content.js"],
       "css": ["content.css"],
