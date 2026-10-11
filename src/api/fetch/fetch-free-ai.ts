@@ -1,7 +1,7 @@
 import {fetchViaBackground} from './fetch';
-import {askAI, type IAiRequestOptions} from './fetch-ai';
+import {AiRequestError, askAI, type IAiRequestOptions} from './fetch-ai';
 
-export type FreeAiService = 'ovh' | 'horde';
+export type FreeAiService = 'gpt-oss' | 'qwen' | 'ovh' | 'horde';
 
 export interface IFreeAiRequestConfig {
 	readonly apiKey: string;
@@ -12,7 +12,20 @@ export interface IFreeAiRequestConfig {
 
 export interface IFreeAiAnswer {
 	readonly correctIndexes: number[];
-	readonly source: 'OVH' | 'AI Horde';
+	readonly source: 'GPT-OSS 120B' | 'Qwen 3.8 27B' | 'OVH' | 'AI Horde';
+}
+
+export interface IFreeAiRetryInfo {
+	readonly attempt: number;
+	readonly maxAttempts: number;
+	readonly delayMs: number;
+	readonly reason: string;
+}
+
+export interface IFreeAiRequestControls {
+	/** Отменяет дальнейшие запросы и ожидание повтора. */
+	readonly signal?: AbortSignal;
+	readonly onRetry?: (retry: IFreeAiRetryInfo) => void;
 }
 
 interface IHordeModel {
@@ -26,6 +39,9 @@ interface IHordeModel {
 
 export const OVH_AI_URL = 'https://llama-3-3-70b-instruct.endpoints.kepler.ai.cloud.ovh.net/api/openai_compat/v1/chat/completions';
 export const OVH_AI_MODEL = 'Meta-Llama-3_3-70B-Instruct';
+export const OVH_OPENAI_URL = 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions';
+export const OVH_GPT_OSS_MODEL = 'gpt-oss-120b';
+export const OVH_QWEN_MODEL = 'Qwen3.8-27B';
 export const HORDE_AI_URL = 'https://oai.aihorde.net/v1/chat/completions';
 export const HORDE_MODELS_URL = 'https://oai.aihorde.net/v1/models';
 export const HORDE_ANONYMOUS_KEY = '0000000000';
@@ -34,33 +50,77 @@ const OVH_TIMEOUT_MS = 30_000;
 const HORDE_QUEUE_TIMEOUT_SECONDS = 120;
 const HORDE_CLIENT_TIMEOUT_MS = 125_000;
 const HORDE_MODELS_TIMEOUT_MS = 10_000;
+const HORDE_MAX_ATTEMPTS = 3;
+const HORDE_RETRY_DELAY_MS = 3000;
+const OVH_ROUTES = [
+	{service: 'gpt-oss', source: 'GPT-OSS 120B'},
+	{service: 'qwen', source: 'Qwen 3.8 27B'},
+	{service: 'ovh', source: 'OVH'},
+] as const;
 
 /**
- * Бесплатный автоматический маршрут: сначала быстрый OVH, при любой ошибке или
- * пустом ответе — AI Horde. Пользователь не выбирает ни сервис, ни модель.
+ * Бесплатный автоматический маршрут: GPT-OSS → Qwen → Llama → AI Horde.
+ * При ошибке или пустом ответе пробует следующую модель без регистрации.
+ * Временные ошибки Horde повторяются с паузой,
+ * каждый раз со свежим выбором доступной модели.
  */
-export async function askFreeAI(question: string, options: string[], isSingle: boolean, topic: string): Promise<IFreeAiAnswer> {
-	let ovhFailure = 'не определил ответ';
+export async function askFreeAI(question: string, options: string[], isSingle: boolean, topic: string, controls: IFreeAiRequestControls = {}): Promise<IFreeAiAnswer> {
+	const {signal, onRetry} = controls;
+	throwIfAborted(signal);
+	const ovhFailures: string[] = [];
 
-	try {
-		const config = await resolveFreeAiRequest('ovh');
-		const correctIndexes = await askWithConfig(config, question, options, isSingle, topic);
-		if (correctIndexes.length) return {correctIndexes, source: 'OVH'};
-	} catch (error) {
-		ovhFailure = getErrorMessage(error);
+	for (const {service, source} of OVH_ROUTES) {
+		throwIfAborted(signal);
+		try {
+			const config = await resolveFreeAiRequest(service);
+			throwIfAborted(signal);
+			const correctIndexes = await askWithConfig(config, question, options, isSingle, topic);
+			throwIfAborted(signal);
+			if (correctIndexes.length) return {correctIndexes, source};
+			ovhFailures.push(`${source} — не определил ответ`);
+		} catch (error) {
+			throwIfAborted(signal);
+			ovhFailures.push(`${source} — ${getErrorMessage(error)}`);
+		}
 	}
 
-	try {
-		const config = await resolveFreeAiRequest('horde');
-		const correctIndexes = await askWithConfig(config, question, options, isSingle, topic);
-		return {correctIndexes, source: 'AI Horde'};
-	} catch (error) {
-		throw createErrorWithCause(`бесплатный AI недоступен: OVH — ${ovhFailure}; Horde — ${getErrorMessage(error)}`, error);
+	for (let attempt = 1; ; attempt += 1) {
+		throwIfAborted(signal);
+		try {
+			const config = await resolveFreeAiRequest('horde');
+			throwIfAborted(signal);
+			const correctIndexes = await askWithConfig(config, question, options, isSingle, topic);
+			throwIfAborted(signal);
+			return {correctIndexes, source: 'AI Horde'};
+		} catch (error) {
+			throwIfAborted(signal);
+			if (!(error instanceof AiRequestError && error.retryable) || attempt >= HORDE_MAX_ATTEMPTS) {
+				throw createErrorWithCause(`бесплатный AI недоступен: ${ovhFailures.join('; ')}; Horde — ${getErrorMessage(error)}`, error);
+			}
+			const delayMs = HORDE_RETRY_DELAY_MS * attempt;
+			onRetry?.({attempt: attempt + 1, maxAttempts: HORDE_MAX_ATTEMPTS, delayMs, reason: getErrorMessage(error)});
+			await waitForRetry(delayMs, signal);
+		}
 	}
 }
 
 /** Готовит параметры бесплатного запроса; для Horde сначала выбирает живую instruct-модель. */
 export async function resolveFreeAiRequest(service: FreeAiService): Promise<IFreeAiRequestConfig> {
+	if (service === 'gpt-oss' || service === 'qwen') {
+		const isGptOss = service === 'gpt-oss';
+		return {
+			apiKey: '',
+			endpoint: OVH_OPENAI_URL,
+			model: isGptOss ? OVH_GPT_OSS_MODEL : OVH_QWEN_MODEL,
+			requestOptions: {
+				timeoutMs: OVH_TIMEOUT_MS,
+				// Лимит включает рассуждение: 32 токена обрывают ответ до выбора варианта.
+				maxTokens: 2048,
+				extraBody: isGptOss ? {temperature: 0, reasoning_effort: 'low'} : {temperature: 0},
+			},
+		};
+	}
+
 	if (service === 'ovh') {
 		return {
 			apiKey: '',
@@ -97,10 +157,10 @@ export async function resolveHordeModel(): Promise<string> {
 	});
 
 	if (res.error) {
-		if (res.message?.startsWith('таймаут')) throw new Error('AI Horde не отвечает за 10 с');
-		throw new Error('не удалось получить модели AI Horde');
+		if (res.message?.startsWith('таймаут')) throw new AiRequestError('AI Horde не отвечает за 10 с', 0);
+		throw new AiRequestError('не удалось получить модели AI Horde', 0);
 	}
-	if (res.status < 200 || res.status >= 400) throw new Error(`AI Horde: ошибка ${res.status}`);
+	if (res.status < 200 || res.status >= 400) throw new AiRequestError(`AI Horde: ошибка ${res.status}`, res.status);
 
 	let payload: unknown;
 	try {
@@ -173,6 +233,26 @@ function askWithConfig(config: IFreeAiRequestConfig, question: string, options: 
 
 function getErrorMessage(error: unknown): string {
 	return error instanceof Error ? error.message : String(error);
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+	if (signal?.aborted) throw new DOMException('Запрос отменён', 'AbortError');
+}
+
+/** Убирает таймер при остановке режима или переходе к другому вопросу. */
+function waitForRetry(delayMs: number, signal?: AbortSignal): Promise<void> {
+	throwIfAborted(signal);
+	return new Promise((resolve, reject) => {
+		const onAbort = () => {
+			clearTimeout(timer);
+			reject(new DOMException('Запрос отменён', 'AbortError'));
+		};
+		const timer = setTimeout(() => {
+			signal?.removeEventListener('abort', onAbort);
+			resolve();
+		}, delayMs);
+		signal?.addEventListener('abort', onAbort, {once: true});
+	});
 }
 
 /** Совместимый с ES2020 вариант `new Error(message, {cause})`. */

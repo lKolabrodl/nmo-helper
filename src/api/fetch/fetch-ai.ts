@@ -12,6 +12,18 @@ export interface IAiRequestOptions {
 	readonly extraBody?: Readonly<Record<string, unknown>>;
 }
 
+/** Сохраняет HTTP-статус и признак временного сбоя для бесплатного маршрута. */
+export class AiRequestError extends Error {
+	constructor(
+		message: string,
+		readonly status: number,
+		readonly retryable = status === 0 || status === 408 || status === 429 || (status >= 500 && status < 600),
+	) {
+		super(message);
+		this.name = 'AiRequestError';
+	}
+}
+
 /**
  * Отправляет вопрос теста в LLM через ProxyAPI (или кастомный endpoint) и
  * возвращает номера правильных вариантов.
@@ -43,8 +55,8 @@ export async function askAI(apiKey: string, question: string, options: string[],
 	const res: IRequestResponse = await fetchViaBackground(url, init);
 
 	if (res.error) {
-		if (res.message?.startsWith('таймаут')) throw new Error(`${res.message} — попробуйте ещё раз`);
-		throw new Error('ошибка сети');
+		if (res.message?.startsWith('таймаут')) throw new AiRequestError(`${res.message} — попробуйте ещё раз`, 0);
+		throw new AiRequestError('ошибка сети', 0);
 	}
 	if (res.status < 200 || res.status >= 400) handleError(res);
 
@@ -152,12 +164,12 @@ export function handleError(res: IRequestResponse): never {
 		detail = json?.error?.message || json?.detail || json?.message || res.text;
 	} catch { detail = res.text; }
 	console.error(`NMO AI [${res.status}]:`, detail);
-	if (res.status === 401 || res.status === 403) throw new Error('неверный API-ключ');
-	if (res.status === 402) throw new Error('нет средств на балансе');
-	if (res.status === 429) throw new Error('лимит запросов — подождите');
-	if (res.status === 406 && /timed out|timeout/i.test(detail)) throw new Error('таймаут очереди — попробуйте ещё раз');
-	if (res.status === 406 && /not possible|not enough generations/i.test(detail)) throw new Error('нет доступного AI-узла — попробуйте позже');
-	throw new Error(`ошибка ${res.status}`);
+	if (res.status === 401 || res.status === 403) throw new AiRequestError('неверный API-ключ', res.status);
+	if (res.status === 402) throw new AiRequestError('нет средств на балансе', res.status);
+	if (res.status === 429) throw new AiRequestError('лимит запросов — подождите', res.status);
+	if (res.status === 406 && /timed out|timeout/i.test(detail)) throw new AiRequestError('таймаут очереди — попробуйте ещё раз', res.status, true);
+	if (res.status === 406 && /not possible|not enough generations/i.test(detail)) throw new AiRequestError('нет доступного AI-узла — попробуйте позже', res.status, true);
+	throw new AiRequestError(`ошибка ${res.status}`, res.status);
 }
 
 /** Удаляет повторы и числа, которые не соответствуют вариантам на странице. */

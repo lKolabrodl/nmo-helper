@@ -17,8 +17,8 @@ interface IAIProxyFreeLoaderProps {
 }
 
 /**
- * Headless-загрузчик бесплатного AI. Сам запускает маршрут OVH → AI Horde,
- * сохраняет найденный ответ в кеш и показывает фактически ответивший сервис.
+ * Headless-загрузчик бесплатного AI. Сам запускает маршрут GPT-OSS → Qwen → Llama → AI Horde,
+ * сохраняет найденный ответ в кеш и показывает фактически ответившую модель или сервис.
  */
 const AIProxyFreeLoader = ({active, onChange}: IAIProxyFreeLoaderProps) => {
 	const {question, variants, isSingle, topic} = useQuestionFinder();
@@ -35,6 +35,7 @@ const AIProxyFreeLoader = ({active, onChange}: IAIProxyFreeLoaderProps) => {
 		const currentQuestion = question;
 		const currentTopic = topic ?? '';
 		let cancelled = false;
+		const controller = new AbortController();
 
 		async function solve() {
 			pendingRef.current = true;
@@ -42,7 +43,16 @@ const AIProxyFreeLoader = ({active, onChange}: IAIProxyFreeLoaderProps) => {
 			setStatus({title: StatusTitle.AI_THINKING, status: Status.LOADING});
 
 			try {
-				const {correctIndexes, source} = await askFreeAI(currentQuestion, variants, isSingle, currentTopic);
+				const {correctIndexes, source} = await askFreeAI(currentQuestion, variants, isSingle, currentTopic, {
+					signal: controller.signal,
+					onRetry: ({attempt, maxAttempts, delayMs, reason}) => {
+						if (cancelled) return;
+						setStatus({
+							title: `AI Horde: ${reason}. Повтор через ${delayMs / 1000} с (${attempt}/${maxAttempts})`,
+							status: Status.LOADING,
+						});
+					},
+				});
 				if (cancelled) return;
 
 				if (!correctIndexes.length) {
@@ -59,7 +69,6 @@ const AIProxyFreeLoader = ({active, onChange}: IAIProxyFreeLoaderProps) => {
 			} catch (error) {
 				if (cancelled) return;
 				setStatus({title: (error as Error).message, status: Status.ERR});
-				onChangeRef.current({running: false, disabled: false});
 			} finally {
 				if (!cancelled) pendingRef.current = false;
 			}
@@ -68,6 +77,7 @@ const AIProxyFreeLoader = ({active, onChange}: IAIProxyFreeLoaderProps) => {
 		solve();
 		return () => {
 			cancelled = true;
+			controller.abort();
 			pendingRef.current = false;
 		};
 	}, [active, question, variants, isSingle, topic, setStatus]);

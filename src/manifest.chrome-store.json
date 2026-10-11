@@ -24,6 +24,7 @@
     "https://*.edu.rosminzdrav.ru/*",
     "https://nmo-helper.ru/*",
     "https://openai.api.proxyapi.ru/*",
+    "https://oai.endpoints.kepler.ai.cloud.ovh.net/*",
     "https://llama-3-3-70b-instruct.endpoints.kepler.ai.cloud.ovh.net/*",
     "https://oai.aihorde.net/*"
   ],
