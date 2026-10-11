@@ -3,6 +3,7 @@
 .nmo-md { position: relative; }
 
 .nmo-md-selected {
+  box-sizing: border-box;
   width: 100%;
   display: flex;
   align-items: center;
@@ -27,6 +28,8 @@
 
 .nmo-md.open .nmo-md-selected {
   border-color: $accent;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .nmo-md-name {
@@ -40,7 +43,7 @@
   gap: 6px;
 }
 
-.nmo-md-rec { color: $warning; flex-shrink: 0; }
+.nmo-md-rec { color: $warning; flex-shrink: 0; display: inline-flex; }
 .nmo-md-pricey {
   color: $danger;
   font-weight: 700;
@@ -69,11 +72,14 @@
   position: fixed;
   background: $bg-frame-2;
   border: 1px solid $border-strong;
-  border-radius: $r-md;
+  border-top: 0;
+  border-radius: 0 0 $r-md $r-md;
   z-index: 100000;
   box-shadow: $shadow-dropdown;
-  max-height: 240px;
-  overflow-y: auto;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   // dropdown в document.body, не наследует от #nmo-panel
   font-family: $font-ui;
   font-size: $fs-base;
@@ -82,7 +88,35 @@
   -webkit-font-smoothing: antialiased;
   font-feature-settings: 'ss01', 'cv11';
 
+  &, * { box-sizing: border-box; }
   *, button { font-family: inherit; letter-spacing: inherit; }
+
+}
+
+.nmo-md-search {
+  padding: 8px;
+  border-bottom: 1px solid $border;
+  flex-shrink: 0;
+
+  input { width: 100%; box-sizing: border-box; }
+}
+
+.nmo-md-caption, .nmo-md-price, .nmo-md-current-price {
+  font-size: $fs-xs;
+  color: $text-2;
+  line-height: 1.5;
+}
+
+.nmo-md-caption { margin-top: 6px; }
+.nmo-md-current-price { margin-top: 4px; }
+.nmo-md-price-note { margin-top: 4px; color: $text-3; }
+
+.nmo-md-options {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-width: 0;
+  min-height: 0;
 
   &::-webkit-scrollbar { width: 4px; }
   &::-webkit-scrollbar-thumb {
@@ -91,11 +125,30 @@
   }
 }
 
+.nmo-md-empty { padding: 12px; color: $text-2; }
+
+.nmo-md-item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.nmo-md-model-label, .nmo-md-price {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .nmo-md-item {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   padding: 8px 10px;
   background: transparent;
   border: 0;

@@ -3,7 +3,7 @@ import type { IExtensionState } from './types';
 import { storageGet, storageSet } from './utils';
 import { createPanel, initPanelBehavior } from './Panel';
 import { unlockPageInteractions } from './api/page-interaction-unlock';
-import {DEFAULT_AI_MODEL, normalizeAiModel} from './utils/constants';
+import {getApiModel} from './components/SectionAi/utils';
 import {
 	AI_PROVIDER_STORAGE_KEY,
 	AUTO_SOLVE_DELAY_MAX_STORAGE_KEY,
@@ -42,8 +42,8 @@ unlockPageInteractions();
 	'use strict';
 
 	await waitForBody();
-	const storedModel = await storageGet('aiModel', DEFAULT_AI_MODEL);
-	const savedModel = normalizeAiModel(storedModel);
+	const storedModel = await storageGet<unknown>('aiModel', '');
+	const savedModel = typeof storedModel === 'string' ? getApiModel(storedModel) : '';
 	if (savedModel !== storedModel) storageSet('aiModel', savedModel);
 	const storedMode = await storageGet('mode', 'auto');
 	const storedAiProvider = await storageGet<unknown>(AI_PROVIDER_STORAGE_KEY, null);

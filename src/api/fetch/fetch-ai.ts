@@ -1,6 +1,9 @@
-import {AI_URL} from '../../utils/constants';
+import {AI_RESPONSES_URL, AI_URL} from '../../utils/constants';
 import {buildPrompt, getApiModel} from '../../components/SectionAi/utils';
-import {fetchViaBackground, type IRequestResponse} from './fetch';
+import {fetchViaBackground, type IRequestOptions, type IRequestResponse} from './fetch';
+
+// Маршрут запоминается только после успешного ответа, без списка ID моделей.
+const responsesModels = new Set<string>();
 
 /** Необязательные параметры конкретного AI-провайдера. */
 export interface IAiRequestOptions {
@@ -12,7 +15,7 @@ export interface IAiRequestOptions {
 	readonly extraBody?: Readonly<Record<string, unknown>>;
 }
 
-/** Сохраняет HTTP-статус и признак временного сбоя для бесплатного маршрута. */
+/** Сохраняет HTTP-статус и признак временного сбоя AI-запроса. */
 export class AiRequestError extends Error {
 	constructor(
 		message: string,
@@ -43,7 +46,8 @@ export class AiRequestError extends Error {
  * @returns Массив 0-индексированных номеров вариантов, помеченных моделью как правильные.
  *          Пустой массив — если в ответе не нашлось ни одной цифры.
  * @throws {Error} `ошибка сети` — сетевой сбой.
- * @throws {Error} `неверный API-ключ` — HTTP 401/403.
+ * @throws {Error} `неверный API-ключ` — HTTP 401.
+ * @throws {Error} При запрете доступа к модели или недоступной модели.
  * @throws {Error} `нет средств на балансе` — HTTP 402.
  * @throws {Error} `лимит запросов — подождите` — HTTP 429.
  * @throws {Error} `ошибка <status>` — любой другой не-2xx HTTP-статус.
@@ -52,7 +56,7 @@ export async function askAI(apiKey: string, question: string, options: string[],
 	const { systemPrompt, userPrompt } = buildPrompt(question, options, isSingle, topic);
 	const { url, init } = buildRequest(apiKey, model, systemPrompt, userPrompt, endpoint, requestOptions);
 
-	const res: IRequestResponse = await fetchViaBackground(url, init);
+	const res = await fetchAiRequest(url, init, !endpoint);
 
 	if (res.error) {
 		if (res.message?.startsWith('таймаут')) throw new AiRequestError(`${res.message} — попробуйте ещё раз`, 0);
@@ -64,8 +68,8 @@ export async function askAI(apiKey: string, question: string, options: string[],
 }
 
 /**
- * Проверяет, что API-ключ валиден: шлёт минимальный chat-completion
- * (одно сообщение «Ответь OK», `max_completion_tokens: 5`) и смотрит на статус.
+ * Проверяет ключ минимальным запросом «Ответь OK»: 5 токенов в Chat Completions
+ * или 16 в Responses (минимум этого API), если модель отклонила формат чата.
  *
  * HTTP 429 (rate limit) трактуется как валидный ключ — раз сервер применил
  * лимит именно к этому ключу, значит он его опознал.
@@ -75,32 +79,26 @@ export async function askAI(apiKey: string, question: string, options: string[],
  * @param endpoint Кастомный URL. По умолчанию используется {@link AI_URL} (ProxyAPI).
  * @returns `true`, если ключ принят сервером (включая 2xx и 429).
  * @throws {Error} `ошибка сети` — сетевой сбой.
- * @throws {Error} `неверный API-ключ` — HTTP 401/403.
+ * @throws {Error} `неверный API-ключ` — HTTP 401.
+ * @throws {Error} При запрете доступа к модели или недоступной модели.
  * @throws {Error} `ошибка <status>` — любой другой не-2xx статус (кроме 429).
  */
 export async function validateApiKey(apiKey: string, model: string, endpoint?: string): Promise<boolean> {
-	const res: IRequestResponse = await fetchViaBackground(endpoint || AI_URL, {
+	const res = await fetchAiRequest(endpoint || AI_URL, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
 			'Authorization': 'Bearer ' + apiKey,
 		},
 		body: JSON.stringify({
-			model: getApiModel(model),
+			model: endpoint ? model : getApiModel(model),
 			messages: [{ role: 'user', content: 'Ответь OK' }],
 			max_completion_tokens: 5,
 		}),
-	});
+	}, !endpoint);
 	if (res.error) throw new Error('ошибка сети');
-	if (res.status === 401 || res.status === 403) {
-		console.error(`NMO AI [${res.status}]:`, res.text);
-		throw new Error('неверный API-ключ');
-	}
 	if (res.status === 429) return true;
-	if (res.status < 200 || res.status >= 400) {
-		console.error(`NMO AI [${res.status}]:`, res.text);
-		throw new Error('ошибка ' + res.status);
-	}
+	if (res.status < 200 || res.status >= 400) handleError(res);
 	return true;
 }
 
@@ -144,6 +142,46 @@ export function buildRequest(apiKey: string, model: string, systemPrompt: string
 	};
 }
 
+/** Повторяет запрос через Responses только при явном отказе формата чата. */
+async function fetchAiRequest(url: string, init: IRequestOptions & {readonly body: string}, useProxyRouting: boolean): Promise<IRequestResponse> {
+	const {messages, max_completion_tokens, max_tokens, ...body}: Record<string, unknown> = JSON.parse(init.body);
+	const model = typeof body.model === 'string' ? body.model : '';
+	const sendResponses = async () => {
+		const responsesBody: Record<string, unknown> = {...body, input: messages, store: false};
+		const maxTokens = max_completion_tokens ?? max_tokens;
+		if (typeof maxTokens === 'number') responsesBody.max_output_tokens = Math.max(16, maxTokens);
+		const res = await fetchViaBackground(AI_RESPONSES_URL, {...init, body: JSON.stringify(responsesBody)});
+		if (!res.error && res.status >= 200 && res.status < 300) responsesModels.add(model);
+		return res;
+	};
+
+	if (useProxyRouting && responsesModels.has(model)) return sendResponses();
+	const res = await fetchViaBackground(url, init);
+	if (useProxyRouting && isChatFormatUnsupported(res)) return sendResponses();
+	return res;
+}
+
+function isChatFormatUnsupported(res: IRequestResponse): boolean {
+	if (res.error || ![400, 404, 422].includes(res.status)) return false;
+	const {detail} = getErrorDetails(res);
+	return /\bnot a chat model\b/i.test(detail) ||
+		/\b(?:not supported|unsupported)\b[^\n]{0,160}\bchat(?:\/|\s+)completions\b/i.test(detail) ||
+		/\bchat(?:\/|\s+)completions\b[^\n]{0,160}\b(?:not supported|unsupported)\b/i.test(detail) ||
+		/\bonly supported\b[^\n]{0,160}\bresponses\b/i.test(detail);
+}
+
+function getErrorDetails(res: IRequestResponse): {detail: string; code: unknown} {
+	let detail = res.text;
+	let code: unknown;
+	try {
+		const json = JSON.parse(res.text);
+		const message = json?.error?.message || json?.detail || json?.message;
+		if (typeof message === 'string') detail = message;
+		code = json?.error?.code;
+	} catch { /* Не-JSON ответ остаётся текстом для диагностики. */ }
+	return {detail, code};
+}
+
 /**
  * Маппит неуспешный HTTP-ответ ProxyAPI в осмысленное исключение для UI.
  * Детали сервера (`error.message` из JSON-тела, либо raw-текст) логирует
@@ -152,21 +190,24 @@ export function buildRequest(apiKey: string, model: string, systemPrompt: string
  * Никогда не возвращается нормально — тип `never` это отражает.
  *
  * @param res Ответ от {@link fetchViaBackground} со статусом вне `[200, 400)`.
- * @throws {Error} `неверный API-ключ` — 401/403.
+ * @throws {Error} `неверный API-ключ` — 401.
+ * @throws {Error} При запрете доступа к модели или недоступной модели.
  * @throws {Error} `нет средств на балансе` — 402.
  * @throws {Error} `лимит запросов — подождите` — 429.
  * @throws {Error} `ошибка <status>` — любой другой статус.
  */
 export function handleError(res: IRequestResponse): never {
-	let detail: string;
-	try {
-		const json = JSON.parse(res.text);
-		detail = json?.error?.message || json?.detail || json?.message || res.text;
-	} catch { detail = res.text; }
+	const {detail, code} = getErrorDetails(res);
 	console.error(`NMO AI [${res.status}]:`, detail);
-	if (res.status === 401 || res.status === 403) throw new AiRequestError('неверный API-ключ', res.status);
+	if (res.status === 401) throw new AiRequestError('неверный API-ключ', res.status);
+	if (res.status === 403) throw new AiRequestError('доступ запрещён — проверьте ограничения API-ключа', res.status);
 	if (res.status === 402) throw new AiRequestError('нет средств на балансе', res.status);
 	if (res.status === 429) throw new AiRequestError('лимит запросов — подождите', res.status);
+	if (isChatFormatUnsupported(res)) throw new AiRequestError('модель не поддерживает этот формат API — выберите другую модель или адрес', res.status);
+	if (code === 'model_not_found' || /\bmodel\b[^\n]{0,200}\b(?:does not exist|not found|not supported|not available|do not have access)\b/i.test(detail)) {
+		throw new AiRequestError('модель не найдена или недоступна — выберите другую', res.status);
+	}
+	if (res.status === 404) throw new AiRequestError('модель или адрес API не найдены — проверьте выбор модели и адрес', res.status);
 	if (res.status === 406 && /timed out|timeout/i.test(detail)) throw new AiRequestError('таймаут очереди — попробуйте ещё раз', res.status, true);
 	if (res.status === 406 && /not possible|not enough generations/i.test(detail)) throw new AiRequestError('нет доступного AI-узла — попробуйте позже', res.status, true);
 	throw new AiRequestError(`ошибка ${res.status}`, res.status);
@@ -178,9 +219,10 @@ export function normalizeAnswerIndexes(indexes: number[], optionCount: number): 
 }
 
 /**
- * Достаёт номера правильных ответов из успешного chat-completion.
+ * Достаёт номера ответов из Chat Completions или Responses.
  *
- * Берёт `choices[0].message.content`, вытягивает все подряд идущие цифры
+ * Берёт `choices[0].message.content` или текст сообщений assistant в `output`.
+ * Рассуждения и вызовы инструментов в `output` пропускаются. Вытягивает цифры
  * регуляркой (так переносится и «2», и «1, 3», и «Ответы: 1 и 3») и сдвигает
  * в 0-индексированный массив. Если цифр нет — возвращает пустой массив
  * (вызывающий трактует это как «модель не смогла определиться»).
@@ -189,9 +231,25 @@ export function normalizeAnswerIndexes(indexes: number[], optionCount: number): 
  * @returns Массив 0-индексированных номеров вариантов.
  */
 export function parseAnswer(res: IRequestResponse): number[] {
-	const data = JSON.parse(res.text);
-	const text: string = data?.choices?.[0]?.message?.content || '';
+	const data: unknown = JSON.parse(res.text);
+	if (!isRecord(data)) return [];
+	const choice = Array.isArray(data.choices) ? data.choices[0] : null;
+	const message = isRecord(choice) && isRecord(choice.message) ? choice.message : null;
+	const text = typeof message?.content === 'string' ? message.content : responseOutputText(data);
 	const nums = text.match(/\d+/g);
 	if (!nums) return [];
 	return nums.map(n => parseInt(n, 10) - 1);
+}
+
+function responseOutputText(data: Record<string, unknown>): string {
+	if (typeof data.output_text === 'string') return data.output_text;
+	if (!Array.isArray(data.output)) return '';
+	return data.output.flatMap(item => {
+		if (!isRecord(item) || item.type !== 'message' || item.role !== 'assistant' || !Array.isArray(item.content)) return [];
+		return item.content.flatMap(part => isRecord(part) && part.type === 'output_text' && typeof part.text === 'string' ? [part.text] : []);
+	}).join('\n');
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

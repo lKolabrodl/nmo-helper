@@ -7,15 +7,16 @@ import { QuestionFinderProvider } from '../src/contexts/QuestionFinderContext';
 import { PdfScoreProvider } from '../src/contexts/PdfScoreContext';
 import { SettingsProvider } from '../src/contexts/SettingsContext';
 import type { AiProvider, IExtensionState } from '../src/types';
-import {DEFAULT_AI_MODEL} from '../src/utils/constants';
 
 interface IProviderOptions {
 	readonly initialMode?: string;
 	readonly initialAiProvider?: AiProvider;
+	readonly initialApiKey?: string;
+	readonly initialAiModel?: string;
 	readonly initialCollapsed?: boolean;
 }
 
-const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({children, initialMode = 'auto', initialAiProvider = 'free', initialCollapsed = false}) => {
+const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({children, initialMode = 'auto', initialAiProvider = 'free', initialApiKey = '', initialAiModel = '', initialCollapsed = false}) => {
 	const initialState: IExtensionState = {
 		savedUrl: '',
 		savedCollapsed: initialCollapsed,
@@ -23,8 +24,8 @@ const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({childre
 		savedTop: null,
 		savedMode: initialMode,
 		savedAiProvider: initialAiProvider,
-		savedApiKey: '',
-		savedModel: DEFAULT_AI_MODEL,
+		savedApiKey: initialApiKey,
+		savedModel: initialAiModel,
 		savedCustomAiUrl: '',
 		savedCustomAiToken: '',
 		savedCustomAiModel: '',
@@ -51,13 +52,15 @@ const Providers: React.FC<React.PropsWithChildren<IProviderOptions>> = ({childre
 
 export function renderWithProviders(ui: React.ReactElement,	options?: RenderOptions & IProviderOptions) {
 
-	const { initialMode, initialAiProvider, initialCollapsed, ...renderOptions } = options ?? {};
+	const { initialMode, initialAiProvider, initialApiKey, initialAiModel, initialCollapsed, ...renderOptions } = options ?? {};
 
 	return render(ui, {
 		wrapper: ({ children }) => (
 			<Providers
 				initialMode={initialMode}
 				initialAiProvider={initialAiProvider}
+				initialApiKey={initialApiKey}
+				initialAiModel={initialAiModel}
 				initialCollapsed={initialCollapsed}>
 				{children}
 			</Providers>

@@ -1,5 +1,6 @@
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {
+	AiRequestError,
 	askAI,
 	buildRequest,
 	handleError,
@@ -24,12 +25,20 @@ describe('fn getApiModel', () => {
 		expect(getApiModel('claude-sonnet-5')).toBe('anthropic/claude-sonnet-5');
 	});
 
-	it('gemini-* → gemini/gemini-*', () => {
-		expect(getApiModel('gemini-3.1-flash-preview')).toBe('gemini/gemini-3.1-flash-preview');
+	it('gemini-* → google/gemini-*', () => {
+		expect(getApiModel('gemini-3.1-flash-preview')).toBe('google/gemini-3.1-flash-preview');
 	});
 
-	it('прочие модели возвращаются как есть', () => {
-		expect(getApiModel('gpt-5.4-mini')).toBe('gpt-5.4-mini');
+	it('короткая модель OpenAI получает полный идентификатор', () => {
+		expect(getApiModel('gpt-5.4-mini')).toBe('openai/gpt-5.4-mini');
+	});
+
+	it('мигрирует прежние префиксы и сохраняет новые идентификаторы', () => {
+		expect(getApiModel('gemini/gemini-2.5-flash')).toBe('google/gemini-2.5-flash');
+		expect(getApiModel('openrouter/deepseek/deepseek-chat')).toBe('deepseek/deepseek-chat');
+		expect(getApiModel('qwen/new-model')).toBe('qwen/new-model');
+		expect(getApiModel('  google/new-model  ')).toBe('google/new-model');
+		expect(getApiModel('')).toBe('');
 	});
 });
 
@@ -39,11 +48,11 @@ describe('fn validateApiKey', () => {
 		const ok = await validateApiKey('sk-test', 'gpt-5.4-mini');
 		expect(ok).toBe(true);
 		const [msg] = sendMessage.mock.calls[0] as [Record<string, unknown>, unknown];
-		expect(msg.url).toBe('https://openai.api.proxyapi.ru/v1/chat/completions');
+		expect(msg.url).toBe('https://api.proxyapi.ru/v1/chat/completions');
 		expect(msg.method).toBe('POST');
 		expect((msg.headers as Record<string, string>).Authorization).toBe('Bearer sk-test');
 		const body = JSON.parse(msg.body as string);
-		expect(body.model).toBe('gpt-5.4-mini');
+		expect(body.model).toBe('openai/gpt-5.4-mini');
 		expect(body.max_completion_tokens).toBe(5);
 	});
 
@@ -53,7 +62,7 @@ describe('fn validateApiKey', () => {
 		const [msg] = sendMessage.mock.calls[0] as [Record<string, unknown>, unknown];
 		expect(msg.url).toBe('https://custom.example/v1/chat');
 		const body = JSON.parse(msg.body as string);
-		expect(body.model).toBe('anthropic/claude-sonnet-5');
+		expect(body.model).toBe('claude-sonnet-5');
 	});
 
 	it('429 → true (ключ валиден, просто лимит)', async () => {
@@ -73,10 +82,34 @@ describe('fn validateApiKey', () => {
 		errSpy.mockRestore();
 	});
 
-	it('403 → "неверный API-ключ"', async () => {
+	it('403 → запрет доступа, а не неверный ключ', async () => {
 		const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 403, text: 'forbidden' }));
-		await expect(validateApiKey('sk', 'gpt-5.4-mini')).rejects.toThrow('неверный API-ключ');
+		await expect(validateApiKey('sk', 'gpt-5.4-mini')).rejects.toThrow('доступ запрещён — проверьте ограничения API-ключа');
+		errSpy.mockRestore();
+	});
+
+	it('недоступный алиас модели при проверке ключа → предложение выбрать другую модель', async () => {
+		const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		sendMessage.mockImplementation((_msg, cb) => cb({
+			error: false,
+			status: 404,
+			text: JSON.stringify({error: {
+				message: 'The model `gpt-4-1106-preview` does not exist or you do not have access to it.',
+				code: 'model_not_found',
+			}}),
+		}));
+
+		await expect(validateApiKey('sk-test', 'openai/gpt-4-turbo-preview'))
+			.rejects.toThrow('модель не найдена или недоступна — выберите другую');
+		expect(JSON.parse(sendMessage.mock.calls[0][0].body).model).toBe('openai/gpt-4-turbo-preview');
+		errSpy.mockRestore();
+	});
+
+	it('402 при проверке ключа → ошибка баланса', async () => {
+		const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		sendMessage.mockImplementation((_msg, cb) => cb({error: false, status: 402, text: '{"detail":"Insufficient balance"}'}));
+		await expect(validateApiKey('sk-test', 'vendor/model')).rejects.toThrow('нет средств на балансе');
 		errSpy.mockRestore();
 	});
 
@@ -125,7 +158,7 @@ describe('fn buildPrompt', () => {
 describe('fn buildRequest', () => {
 	it('обычная модель → url=AI_URL и model с префиксом', () => {
 		const { url, init } = buildRequest('sk', 'claude-opus-4-8', 'sys', 'usr');
-		expect(url).toBe('https://openai.api.proxyapi.ru/v1/chat/completions');
+		expect(url).toBe('https://api.proxyapi.ru/v1/chat/completions');
 		expect(init.method).toBe('POST');
 		expect(init.headers.Authorization).toBe('Bearer sk');
 		const body = JSON.parse(init.body);
@@ -180,8 +213,23 @@ describe('fn handleError', () => {
 		expect(() => handleError(res(401))).toThrow('неверный API-ключ');
 	});
 
-	it('403 → "неверный API-ключ"', () => {
-		expect(() => handleError(res(403))).toThrow('неверный API-ключ');
+	it('403 → проверка ограничений ключа', () => {
+		expect(() => handleError(res(403))).toThrow('доступ запрещён — проверьте ограничения API-ключа');
+	});
+
+	it.each([
+		{error: {code: 'model_not_found', message: 'Unavailable'}},
+		{error: {message: 'The model `old-preview` does not exist or you do not have access to it.'}},
+		{detail: 'Model not supported: vendor/model'},
+	])('распознаёт отказ модели по коду или сообщению: %j', payload => {
+		expect(() => handleError(res(400, JSON.stringify(payload))))
+			.toThrow('модель не найдена или недоступна — выберите другую');
+	});
+
+	it('404 без подробностей → модель или адрес API не найдены', () => {
+		expect(() => handleError(res(404))).toThrow(new AiRequestError(
+			'модель или адрес API не найдены — проверьте выбор модели и адрес', 404, false,
+		));
 	});
 
 	it('402 → "нет средств на балансе"', () => {
@@ -273,7 +321,7 @@ describe('fn askAI', () => {
 		sendMessage.mockImplementation((_msg, cb) => cb({ error: false, status: 200, text: body }));
 		await askAI('sk-test', 'Что?', ['a', 'b'], true, 'Тема', 'claude-sonnet-5');
 		const [msg] = sendMessage.mock.calls[0] as [Record<string, unknown>, unknown];
-		expect(msg.url).toBe('https://openai.api.proxyapi.ru/v1/chat/completions');
+		expect(msg.url).toBe('https://api.proxyapi.ru/v1/chat/completions');
 		expect(msg.method).toBe('POST');
 		expect((msg.headers as Record<string, string>).Authorization).toBe('Bearer sk-test');
 		const sentBody = JSON.parse(msg.body as string);

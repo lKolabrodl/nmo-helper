@@ -54,10 +54,17 @@ export interface IAiModel {
   readonly id: string;
   /** Отображаемое название */
   readonly name: string;
-  /** Уровень: low — дешёвые, ultra — максимальная точность */
-  readonly tier: 'low' | 'medium' | 'high' | 'ultra';
+  /** Провайдер из полного идентификатора модели */
+  readonly vendor: string;
+  /** Уровень стоимости относительно остальных доступных текстовых моделей */
+  readonly tier?: 'low' | 'medium' | 'high' | 'ultra';
   /** Метка: rec — рекомендованная, pricey — дорогая */
   readonly tag?: 'rec' | 'pricey';
+  /** Тарифы в рублях за миллион токенов, с НДС */
+  readonly inputPrice?: number;
+  readonly outputPrice?: number;
+  /** Рассуждения тарифицируются как дополнительный выход. */
+  readonly reasoning?: boolean;
 }
 
 /** Ключ источника ответов */

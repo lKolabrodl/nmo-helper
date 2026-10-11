@@ -2,9 +2,8 @@ import {Status} from '../../types';
 import type {IToast} from '../ui/InlineToast';
 
 /**
- * Добавляет префикс провайдера к имени модели, как того требует ProxyAPI:
- * `claude-*` → `anthropic/claude-*`, `gemini-*` → `gemini/gemini-*`.
- * Модели OpenAI (и прочие) возвращаются без изменений.
+ * Переводит сохранённые короткие имена и прежние префиксы ProxyAPI
+ * в полные идентификаторы единого API. Готовый полный ID не меняется.
  *
  * Для кастомных endpoint'ов префикс не нужен — вызывающий код сам решает,
  * применять ли эту функцию.
@@ -13,9 +12,13 @@ import type {IToast} from '../ui/InlineToast';
  * @returns Имя модели, готовое к отправке в ProxyAPI.
  */
 export function getApiModel(model: string): string {
-	if (model.startsWith('claude')) return 'anthropic/' + model;
-	if (model.startsWith('gemini')) return 'gemini/' + model;
-	return model;
+	let id = model.trim();
+	if (!id) return '';
+	if (id.startsWith('openrouter/')) id = id.slice('openrouter/'.length);
+	if (id.startsWith('gemini/')) return 'google/' + id.slice('gemini/'.length);
+	if (id.includes('/')) return id;
+	const vendor = id.startsWith('claude') ? 'anthropic' : id.startsWith('gemini') ? 'google' : 'openai';
+	return `${vendor}/${id}`;
 }
 
 /**
