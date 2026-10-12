@@ -1,0 +1,60 @@
+{
+  "manifest_version": 3,
+  "name": "NMO Helper",
+  "version": "5.0.1",
+  "description": "Автоподсветка правильных ответов на тестах НМО",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://rosminzdrav.ru/*",
+    "https://*.rosminzdrav.ru/*",
+    "https://nmo-helper.ru/*",
+    "https://api.proxyapi.ru/*",
+    "https://proxyapi.ru/*",
+    "https://oai.endpoints.kepler.ai.cloud.ovh.net/*",
+    "https://llama-3-3-70b-instruct.endpoints.kepler.ai.cloud.ovh.net/*",
+    "https://oai.aihorde.net/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["pdf.worker.min.mjs"],
+      "matches": ["https://rosminzdrav.ru/*", "https://*.rosminzdrav.ru/*"]
+    },
+    {
+      "resources": ["icons/new_icon.png"],
+      "matches": ["https://rosminzdrav.ru/*", "https://*.rosminzdrav.ru/*"]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://rosminzdrav.ru/*",
+        "https://*.rosminzdrav.ru/*"
+      ],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_start"
+    }
+  ]
+}

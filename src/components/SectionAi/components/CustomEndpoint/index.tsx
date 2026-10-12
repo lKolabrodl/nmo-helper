@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import './styles.scss';
 import {validateApiKey} from '../../../../api/fetch/fetch-ai';
+import {requestCustomEndpointPermission} from '../../../../api/host-permissions';
 import {usePanelStatus} from '../../../../contexts/PanelStatusContext';
 import {useSettings} from '../../../../contexts/SettingsContext';
 import {Status} from '../../../../types';
@@ -38,9 +39,13 @@ const CustomEndpoint: React.FC<ICustomEndpointProps> = ({onBusyChange}) => {
 
 		setAiDisabled(true);
 		onBusyChange(true);
-		setStatus({title: StatusTitle.CHECKING_KEY, status: Status.LOADING});
+		setStatus({title: 'проверяю доступ к endpoint…', status: Status.LOADING});
 
 		try {
+			if (!await requestCustomEndpointPermission(customAiUrl.trim())) {
+				throw new Error('доступ к endpoint не разрешён; AI не запущен');
+			}
+			setStatus({title: StatusTitle.CHECKING_KEY, status: Status.LOADING});
 			await validateApiKey(customAiToken, customAiModel.trim(), customAiUrl.trim());
 		} catch (error) {
 			setStatus({title: (error as Error).message, status: Status.ERR});
@@ -91,6 +96,12 @@ const CustomEndpoint: React.FC<ICustomEndpointProps> = ({onBusyChange}) => {
 							disabled={aiRunning || aiDisabled}
 							value={customAiUrl}
 							onChange={event => setCustomAiUrl(event.target.value.trim())}/>
+						{__BUILD_TARGET__ === 'chrome-store' && (
+							<p className="nmo-hint">
+								При первом запуске Chrome попросит доступ к указанному сайту.
+								Токен, тема, вопросы и варианты ответов будут отправляться на этот endpoint.
+							</p>
+						)}
 					</div>
 					<div className="nmo-ai-custom-field">
 						<label className="nmo-label" htmlFor="nmo-ai-custom-token">API Token</label>

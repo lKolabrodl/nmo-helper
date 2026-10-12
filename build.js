@@ -5,10 +5,20 @@ const path = require('path');
 
 const SRC = path.join(__dirname, 'src');
 const DIST = path.join(__dirname, 'dist');
-const WATCH = process.argv.includes('--watch');
+
+// Runtime packages shipped in the extension, including transitive dependencies.
+const LICENSE_PACKAGES = [
+  'react',
+  'react-dom',
+  'scheduler',
+  'classnames',
+  'med-pdf-nmo',
+  'pdfjs-dist',
+];
 
 const BROWSERS = [
   { name: 'chrome', manifest: 'manifest.chrome.json' },
+  { name: 'chrome-store', manifest: 'manifest.chrome-store.json' },
   { name: 'firefox', manifest: 'manifest.firefox.json' },             // приватный .xpi (NMO Helper, id=nmo-helper@extension)
   { name: 'firefox-store', manifest: 'manifest.firefox-store.json' }, // для Firefox Add-ons (NMO-Helper, id=nmo-helper-amo@extension)
 ];
@@ -27,6 +37,19 @@ function copyDir(src, dest) {
 }
 
 async function build() {
+  // Read every license before cleaning dist so a missing file fails the build early.
+  const licenses = LICENSE_PACKAGES.map((packageName) => {
+    const licensePath = path.join(__dirname, 'node_modules', packageName, 'LICENSE');
+    try {
+      return {
+        filename: `${packageName}-LICENSE.txt`,
+        contents: fs.readFileSync(licensePath),
+      };
+    } catch (error) {
+      throw new Error(`Cannot read license for ${packageName}: ${licensePath}`, { cause: error });
+    }
+  });
+
   if (fs.existsSync(DIST)) {
     fs.rmSync(DIST, { recursive: true });
   }
@@ -37,70 +60,29 @@ async function build() {
 
     const commonOptions = {
       bundle: true,
-      minify: !WATCH,
+      minify: true,
       format: 'iife',
       target: 'es2020',
       charset: 'utf8',
-      define: { __DEV__: WATCH ? 'true' : 'false' },
+      define: {
+        __BUILD_TARGET__: JSON.stringify(browser.name),
+      },
       jsx: 'automatic',
       jsxImportSource: 'react',
     };
 
-    if (WATCH) {
-      const rebuildPlugin = {
-        name: 'rebuild-log',
-        setup(build) {
-          build.onEnd((result) => {
-            const time = new Date().toLocaleTimeString();
-            if (result.errors.length > 0) {
-              console.log(`[${time}] Build failed with ${result.errors.length} error(s)`);
-            } else {
-              console.log(`[${time}] Rebuilt ${browser.name} successfully`);
-              fs.writeFileSync(
-                path.join(outDir, 'dev-reload.json'),
-                JSON.stringify({ timestamp: Date.now() })
-              );
-            }
-          });
-        },
-      };
+    await esbuild.build({
+      ...commonOptions,
+      entryPoints: [path.join(SRC, 'content.ts')],
+      outfile: path.join(outDir, 'content.js'),
+      plugins: [sassPlugin()],
+    });
 
-      const contentCtx = await esbuild.context({
-        ...commonOptions,
-        entryPoints: [path.join(SRC, 'content.ts')],
-        outfile: path.join(outDir, 'content.js'),
-        plugins: [sassPlugin(), rebuildPlugin],
-      });
-
-      const backgroundCtx = await esbuild.context({
-        ...commonOptions,
-        entryPoints: [path.join(SRC, 'background.ts')],
-        outfile: path.join(outDir, 'background.js'),
-        plugins: [rebuildPlugin],
-      });
-
-      await Promise.all([
-        contentCtx.watch(),
-        backgroundCtx.watch(),
-      ]);
-
-      console.log(`[WATCH] ${browser.name} -> dist/${browser.name}/`);
-    } else {
-      await esbuild.build({
-        ...commonOptions,
-        entryPoints: [path.join(SRC, 'content.ts')],
-        outfile: path.join(outDir, 'content.js'),
-        plugins: [sassPlugin()],
-      });
-
-      await esbuild.build({
-        ...commonOptions,
-        entryPoints: [path.join(SRC, 'background.ts')],
-        outfile: path.join(outDir, 'background.js'),
-      });
-
-      console.log(`[OK] ${browser.name} -> dist/${browser.name}/`);
-    }
+    await esbuild.build({
+      ...commonOptions,
+      entryPoints: [path.join(SRC, 'background.ts')],
+      outfile: path.join(outDir, 'background.js'),
+    });
 
     // Copy manifest
     fs.copyFileSync(
@@ -122,17 +104,21 @@ async function build() {
       path.join(outDir, 'pdf.worker.min.mjs')
     );
 
+    // Keep the original license contents from the installed package versions.
+    const licensesDir = path.join(outDir, 'licenses');
+    fs.mkdirSync(licensesDir, { recursive: true });
+    for (const license of licenses) {
+      fs.writeFileSync(path.join(licensesDir, license.filename), license.contents);
+    }
+
+    console.log(`[OK] ${browser.name} -> dist/${browser.name}/`);
+
     // Подписанный .xpi (firefox_nmo_helper.xpi) лежит в корне репо и
     // распространяется как отдельный артефакт релиза. В dist/ не копируем —
     // иначе при упаковке firefox-зипа он попадает внутрь и раздувает его.
   }
 
-  if (WATCH) {
-    console.log('\nWatching for changes... (Ctrl+C to stop)');
-    console.log('Reload the extension in chrome://extensions after each change.');
-  } else {
-    console.log('Build complete!');
-  }
+  console.log('Build complete!');
 }
 
 build().catch((err) => {

@@ -49,11 +49,25 @@ export function queryAll<T extends Element = HTMLElement>(key: SelectorKey, root
  * Используется в двух местах: показ темы в панели и передача темы в
  * system-prompt AI. Текст из него достаётся отдельно через {@link cleanTopic}
  * в `utils/text.ts`.
+ * Заголовки внутри текущего вопроса и карточки, содержащие текст вопроса,
+ * пропускаются. При наличии `lib-quiz-page` поиск ограничен этой страницей.
  *
  * @returns DOM-элемент заголовка или `null`, если пользователь ещё не открыл тест.
  */
 export function getTopicElement(): HTMLElement | null {
-	return queryFirst('topic');
+	const anchor = getQuestionAnchor();
+	const root = anchor?.closest('lib-quiz-page') ?? document;
+	const questionSelector = SELECTORS.questionText.join(', ');
+
+	for (const selector of SELECTORS.topic) {
+		for (const element of root.querySelectorAll<HTMLElement>(selector)) {
+			if (!element.textContent?.trim()) continue;
+			if (anchor && (anchor.contains(element) || element.contains(anchor))) continue;
+			if (element.closest(questionSelector) || element.querySelector(questionSelector)) continue;
+			return element;
+		}
+	}
+	return null;
 }
 
 /**

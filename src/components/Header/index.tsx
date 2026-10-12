@@ -11,6 +11,9 @@ import Settings from '../Settings';
 import {UPDATE_URL} from '../../utils/constants';
 import type {IVersionInfo} from '../../api/version-check';
 
+// не показываем если сборочка под магазин
+const SHOW_VERSION_CHECK = __BUILD_TARGET__ !== 'firefox-store' && __BUILD_TARGET__ !== 'chrome-store';
+
 const Header: React.FC = (): React.JSX.Element => {
 	const {setCollapsed} = usePanelUi();
 	const {topic, question, variants} = useQuestionFinder();
@@ -27,7 +30,7 @@ const Header: React.FC = (): React.JSX.Element => {
 				<div className="nmo-brand">
 					<span className={cn('nmo-brand-dot', status.status)}/>
 					<span className="nmo-brand-name">NMO Helper</span>
-					<VersionCheck onOutdated={setUpdate}/>
+					{SHOW_VERSION_CHECK && <VersionCheck onOutdated={setUpdate}/>}
 				</div>
 				<div className="nmo-titlebar-ctrl">
 					{canReport && (

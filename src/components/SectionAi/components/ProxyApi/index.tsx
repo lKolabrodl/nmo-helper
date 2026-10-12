@@ -1,16 +1,17 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import './styles.scss';
 import {validateApiKey} from '../../../../api/fetch/fetch-ai';
 import {usePanelStatus} from '../../../../contexts/PanelStatusContext';
 import {useSettings} from '../../../../contexts/SettingsContext';
 import {Status} from '../../../../types';
 import {StatusTitle} from '../../../../utils/constants';
+import AIModelLoader, {type IAiModelLoaderState} from '../../../Loader/AIModelLoader';
 import AIProxyLoader from '../../../Loader/AIProxyLoader';
 import ModelDropdown from '../ModelDropdown';
 import {IconPlay} from '../../../icons';
 import InlineToast from '../../../ui/InlineToast';
 import ThinkingStrip from '../../../ui/ThinkingStrip';
-import {statusToToast} from '../../utils';
+import {getApiModel, statusToToast} from '../../utils';
 
 interface IProxyApiProps {
 	readonly onBusyChange: (busy: boolean) => void;
@@ -24,9 +25,23 @@ const ProxyApi: React.FC<IProxyApiProps> = ({onBusyChange}) => {
 	// state
 	const [aiRunning, setAiRunning] = useState(false);
 	const [aiDisabled, setAiDisabled] = useState(false);
+	const [modelsState, setModelsState] = useState<IAiModelLoaderState>({models: [], loading: true, fresh: false, error: '', warning: ''});
+	const {models, loading: modelsLoading, fresh: modelsFresh, error: modelsError, warning: modelsWarning} = modelsState;
+
+	useEffect(() => {
+		if (!models.length || aiRunning || aiDisabled) return;
+		const selected = models.find(model => model.id === getApiModel(aiModel));
+		// Пропавшую модель заменяем только после успешного обновления API.
+		if (!selected && aiModel && !modelsFresh) return;
+		const nextModel = selected ?? models.find(model => model.tag === 'rec') ?? models[0];
+		if (nextModel.id !== aiModel) setAiModel(nextModel.id);
+	}, [models, modelsFresh, aiModel, setAiModel, aiRunning, aiDisabled]);
+
+	const modelAvailable = models.some(model => model.id === aiModel);
 
 	const _run = async (): Promise<void> => {
 		if (!apiKey) return setStatus({title: StatusTitle.ENTER_KEY, status: Status.ERR});
+		if (!modelAvailable) return setStatus({title: 'выберите доступную модель', status: Status.ERR});
 
 
 		setAiDisabled(true);
@@ -59,6 +74,7 @@ const ProxyApi: React.FC<IProxyApiProps> = ({onBusyChange}) => {
 
 	return (
 		<>
+			<AIModelLoader apiKey={apiKey} onChange={setModelsState}/>
 			<AIProxyLoader
 				active={aiRunning}
 				apiKey={apiKey}
@@ -96,8 +112,11 @@ const ProxyApi: React.FC<IProxyApiProps> = ({onBusyChange}) => {
 
 					</div>
 					<div className="nmo-ai-proxy-field">
-						<label className="nmo-label">Модель</label>
-						<ModelDropdown model={aiModel} setModel={setAiModel} disabled={aiRunning || aiDisabled}/>
+						<label className="nmo-label" htmlFor="nmo-ai-proxy-model">Модель</label>
+						<ModelDropdown models={models} model={aiModel} setModel={setAiModel} loading={modelsLoading} disabled={aiRunning || aiDisabled || !models.length}/>
+						{modelsLoading && <span className="nmo-hint" role="status">{models.length ? 'обновляю модели и цены…' : 'загружаю модели и цены…'}</span>}
+						{modelsWarning && <span className="nmo-hint nmo-models-warning" role="status">{modelsWarning}</span>}
+						{modelsError && <span className="nmo-hint nmo-models-warning" role="status">{modelsError}{models.length ? ' — показан сохранённый список' : ''}</span>}
 					</div>
 				</div>
 			</div>
@@ -111,7 +130,7 @@ const ProxyApi: React.FC<IProxyApiProps> = ({onBusyChange}) => {
 					<button
 						type="button"
 						className="nmo-btn nmo-btn-primary nmo-btn-cta"
-						disabled={aiDisabled}
+						disabled={aiDisabled || !modelAvailable}
 						onClick={_run}>
 						<IconPlay size={14}/>Запустить AI
 					</button>

@@ -15,6 +15,10 @@
   flex-direction: column;
 }
 
+.nmo-models-warning {
+  color: $warning;
+}
+
 .nmo-hint.nmo-api-key-link {
   align-self: flex-start;
   margin-top: $gap-6;

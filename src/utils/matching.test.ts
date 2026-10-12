@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { detectSource, matchQuestion, pickResult, similarity, variantScore } from './matching';
+import { cleanTopic } from './text';
 import type { ISourceKey } from '../types';
 import {
 	FIRST_ANSWER_SOURCE_HOST,
@@ -307,6 +308,55 @@ describe('pickResult — ранжирование по похожести', () =
 		];
 		const res = pickResult(results, 'first', topic);
 		expect(res?.title).toBe('Хроническая обструктивная болезнь лёгких: терапия и реабилитация');
+	});
+});
+
+describe('pickResult — год и оформление названия темы', () => {
+	it('выбирает тему 2020 из баг-репорта, а не похожую тему 2024', () => {
+		const topic = cleanTopic('Сахарный диабет 2 типа у детей (по утверждённым клиническим рекомендациям)-2020 - Предварительное тестирование');
+		const expected = mk('nmo-helper', 'Сахарный диабет 2 типа у детей (по утверждённым клиническим рекомендациям)-2020');
+		const other = mk('nmo-helper', 'Сахарный диабет 2 типа у детей (по утвержденным клиническим рекомендациям) - 2024');
+
+		expect(pickResult([expected, other], 'nmo-helper', topic)).toBe(expected);
+		expect(pickResult([other, expected], 'nmo-helper', topic)).toBe(expected);
+	});
+
+	it('нормализует ё/е и пробелы у тире при сравнении названий', () => {
+		const topic = 'Болезни лёгких у детей - 2020';
+		const expected = mk('first', 'Ответы к тестам НМО: «Болезни легких у детей—2020»');
+		const other = mk('first', 'Болезни лёгких у детей - 2020 и взрослых');
+
+		expect(pickResult([other, expected], 'first', topic)).toBe(expected);
+	});
+
+	it.each(['first', 'second', 'third', 'nmo-helper'] as const)('не подменяет год единственной темой другого года в %s', source => {
+		const results = [mk(source, 'Ответы к тестам НМО: «Болезни лёгких - 2024»')];
+
+		expect(pickResult(results, source, 'Болезни лёгких - 2020')).toBeUndefined();
+	});
+
+	it('не возвращает тему другого года через fallback на последний результат', () => {
+		const results = [
+			mk('nmo-helper', 'Болезни лёгких - 2022'),
+			mk('nmo-helper', 'Болезни лёгких - 2024'),
+		];
+
+		expect(pickResult(results, 'nmo-helper', 'Болезни лёгких - 2020')).toBeUndefined();
+	});
+
+	it('допускает название без года, если нужного года в источнике нет', () => {
+		const expected = mk('second', 'Болезни лёгких');
+		const results = [mk('second', 'Болезни лёгких - 2024'), expected];
+
+		expect(pickResult(results, 'second', 'Болезни лёгких - 2020')).toBe(expected);
+	});
+
+	it('при равной похожести предпочитает совпадающий год названию без года', () => {
+		const topic = 'Болезни лёгких у детей - 2020';
+		const expected = mk('first', `${topic} год`);
+		const results = [mk('first', 'Болезни лёгких у детей'), expected];
+
+		expect(pickResult(results, 'first', topic)).toBe(expected);
 	});
 });
 

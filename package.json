@@ -1,11 +1,10 @@
 {
   "name": "nmo-helper",
-  "version": "5.0.0",
-  "description": "Расширение для браузера, которое поможет вам решить тесты (ИОМ'ы) на портале НМО — https://a.edu.rosminzdrav.ru\r </br>\r Прост в установке, работает из коробки.\r </br>\r Ответы берутся из баз поиска ответов, а также с помощью AI.\r </br>",
+  "version": "5.0.1",
+  "description": "Расширение для браузера, которое поможет вам решить тесты (ИОМ'ы) на порталах НМО в домене rosminzdrav.ru и его поддоменах.\r </br>\r Прост в установке, работает из коробки.\r </br>\r Ответы берутся из баз поиска ответов, а также с помощью AI.\r </br>",
   "main": "ai.js",
   "scripts": {
     "build": "node build.js",
-    "dev": "node build.js --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint src/",

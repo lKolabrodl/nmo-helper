@@ -7,6 +7,12 @@
 
 import {isProtectedNmoApiRequest} from './api/fetch/fetch';
 import {fetchSignedNmoRequest} from './api/nmo-auth';
+import {getHostPermissionPattern} from './api/host-permissions';
+
+interface IHostPermissionMessage {
+	readonly action: 'requestHostPermission';
+	readonly url: string;
+}
 
 /** Формат сообщения от content-скрипта */
 interface IFetchMessage {
@@ -27,66 +33,22 @@ function normalizeRequestTimeout(timeoutMs: number | null): number | null {
 	return Math.min(Math.round(timeoutMs), MAX_REQUEST_TIMEOUT_MS);
 }
 
-/** Dev-mode auto-reload: polls dev-reload.json and reloads extension on change */
-declare const __DEV__: boolean;
-
-if (__DEV__) {
-	const devReloadMessage = {type: 'NMO_DEV_RELOAD'} as const;
-	const nmoTabUrls = [
-		'https://edu.rosminzdrav.ru/*',
-		'https://*.edu.rosminzdrav.ru/*',
-	];
-	let lastTimestamp = 0;
-
-	const prepareNmoTabsForReload = async (): Promise<void> => {
-		try {
-			const tabs = await chrome.tabs.query({url: nmoTabUrls});
-
-			await Promise.all(tabs.map(tab => {
-				if (tab.id === undefined) return Promise.resolve();
-				const tabId = tab.id;
-
-				const notification = new Promise<void>(resolve => {
-					try {
-						chrome.tabs.sendMessage(tabId, devReloadMessage, () => {
-							// Reading lastError prevents a harmless "Receiving end does not exist"
-							// warning for tabs whose content script has not started yet.
-							void chrome.runtime.lastError;
-							resolve();
-						});
-					} catch {
-						resolve();
-					}
-				});
-
-				const timeout = new Promise<void>(resolve => setTimeout(resolve, 500));
-				return Promise.race([notification, timeout]);
-			}));
-		} catch {
-			// Extension reload must still proceed if a tab disappears mid-query.
-		}
-	};
-
-	setInterval(async () => {
-		try {
-			const url = chrome.runtime.getURL('dev-reload.json');
-			const res = await fetch(url, { cache: 'no-store' });
-			const { timestamp } = await res.json();
-
-			if (lastTimestamp && timestamp !== lastTimestamp) {
-				// eslint-disable-next-line no-console
-				console.log('[NMO Dev] Reloading extension...');
-				await prepareNmoTabsForReload();
-				chrome.runtime.reload();
-			}
-			lastTimestamp = timestamp;
-		} catch { /* ignore */ }
-	}, 1000);
-}
-
 chrome.runtime.onMessage.addListener(
-	(message: IFetchMessage, _sender: chrome.runtime.MessageSender, sendResponse: (response: unknown) => void) => {
-		if (message.action !== 'fetch') return false;
+	(message: IFetchMessage | IHostPermissionMessage, _sender: chrome.runtime.MessageSender, sendResponse: (response: unknown) => void) => {
+		if (__BUILD_TARGET__ === 'chrome-store' && message?.action === 'requestHostPermission') {
+			try {
+				const origin = getHostPermissionPattern(message.url);
+				// Не вставлять await/contains перед request: нужен жест из клика в панели.
+				chrome.permissions.request({origins: [origin]}, granted => {
+					const message = chrome.runtime.lastError?.message;
+					sendResponse({granted: !message && granted, message});
+				});
+			} catch (error) {
+				sendResponse({granted: false, message: (error as Error).message});
+			}
+			return true;
+		}
+		if (message?.action !== 'fetch') return false;
 
 		const timeoutMs = normalizeRequestTimeout(message.timeoutMs);
 		const abortController = timeoutMs ? new AbortController() : null;
@@ -103,9 +65,18 @@ chrome.runtime.onMessage.addListener(
 			credentials: message.credentials || undefined,
 			signal: abortController?.signal,
 		};
-		const request = isProtectedNmoApiRequest(message.url)
-			? fetchSignedNmoRequest(message.url, requestInit)
-			: fetch(message.url, requestInit);
+		const request = (async () => {
+			if (__BUILD_TARGET__ === 'chrome-store') {
+				const origin = getHostPermissionPattern(message.url);
+				if (!await chrome.permissions.contains({origins: [origin]})) {
+					throw new Error('нет разрешения на доступ к серверу; разрешите доступ и запустите AI снова');
+				}
+			}
+
+			return isProtectedNmoApiRequest(message.url)
+				? fetchSignedNmoRequest(message.url, requestInit)
+				: fetch(message.url, requestInit);
+		})();
 
 		request
 			.then(async (res) => {
