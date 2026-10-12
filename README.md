@@ -1,8 +1,8 @@
-# NMO Helper v5.0.0
+# NMO Helper v5.0.1
 
 > Умный помощник в прохождении тестов НМО — бесплатное расширение для браузера с открытым исходным кодом.
 
-Расширение запускается на `https://rosminzdrav.ru/` и всех HTTPS-поддоменах `rosminzdrav.ru`.
+Расширение помогает проходить тесты на портале НМО [edu.rosminzdrav.ru](http://edu.rosminzdrav.ru/).
 
 Авто-поиск по базам ответов, автоответ с настраиваемым интервалом, AI-режим (GPT, Gemini, Claude, DeepSeek), PDF-режим: поиск по клиническим рекомендациям — всё работает из коробки.
 
@@ -10,7 +10,7 @@
 [![Downloads](https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper/releases)
 [![Stars](https://img.shields.io/github/stars/lKolabrodl/nmo-helper?style=flat-square&color=fbbf24&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/lKolabrodl/nmo-helper/blob/main/LICENSE)
-[![VirusTotal](https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/dd746259d7a4eefdaadd88e33c2fec39eca2ee848b05cee036a6713b29459c7d?nocache=1)
+[![VirusTotal](https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/2c6ac190cde11dc59832e5e28db07e508fa0d5381167cc2b4e406026686c9b02?nocache=1)
 
 🌐 **Сайт:** [nmo-helper.ru](https://nmo-helper.ru)<br>
 📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)<br>
@@ -46,12 +46,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-chrome-5.0.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.0/nmo-helper-chrome-5.0.0.zip)
+1. Скачайте [`nmo-helper-chrome-5.0.1.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.1/nmo-helper-chrome-5.0.1.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-chrome-5.0.0`
+6. Выберите папку `nmo-helper-chrome-5.0.1`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
@@ -67,7 +67,7 @@
 
 **Способ 2 — прямая установка `.xpi`:**
 
-1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.0/firefox_nmo_helper.xpi)
+1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.1/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
 3. Подтвердите установку
 
@@ -208,10 +208,15 @@ npm test            # Запустить тесты
 [![Support on Boosty](https://img.shields.io/badge/Boosty-Поддержать-orange?style=for-the-badge)](https://boosty.to/kolabrod/donate)
 [![Support on CloudTips](https://img.shields.io/badge/CloudTips-Поддержать-blue?style=for-the-badge)](https://pay.cloudtips.ru/p/181ccc33)
 
-## Предыдущие минорные версии
+## Лицензия
 
-Ниже только последние релизы минорных веток. Полная история доступна в [GitHub Releases](https://github.com/lKolabrodl/nmo-helper/releases).
+MIT
 
+## Предыдущие версии
+
+Ниже основные предыдущие релизы. Полная история доступна в [GitHub Releases](https://github.com/lKolabrodl/nmo-helper/releases).
+
+- [v5.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v5.0.0) — собственная база ответов NMO Helper, бесплатный AI без ключа и улучшенный авто-поиск
 - [v4.3.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.3.0) — обновлённая панель, расширенный поиск по базам и просмотр источника PDF
 - [v4.2.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.2.0) — автоответ с настраиваемым интервалом
 - [v4.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v4.1.1) — обновление подписанного Firefox-пакета
@@ -223,7 +228,3 @@ npm test            # Запустить тесты
 - [v2.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.1) — реструктуризация, esbuild сборка
 - [v2.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.0.0) — AI-режим, авто-поиск
 - [v1.4.2](https://github.com/lKolabrodl/nmo-helper/tree/v1.4.2) — только поиск по сайтам, без AI
-
-## Лицензия
-
-MIT
