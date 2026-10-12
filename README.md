@@ -208,10 +208,15 @@ npm test            # Запустить тесты
 [![Support on Boosty](https://img.shields.io/badge/Boosty-Поддержать-orange?style=for-the-badge)](https://boosty.to/kolabrod/donate)
 [![Support on CloudTips](https://img.shields.io/badge/CloudTips-Поддержать-blue?style=for-the-badge)](https://pay.cloudtips.ru/p/181ccc33)
 
-## Предыдущие минорные версии
+## Лицензия
 
-Ниже только последние релизы минорных веток. Полная история доступна в [GitHub Releases](https://github.com/lKolabrodl/nmo-helper/releases).
+MIT
 
+## Предыдущие версии
+
+Ниже основные предыдущие релизы. Полная история доступна в [GitHub Releases](https://github.com/lKolabrodl/nmo-helper/releases).
+
+- [v5.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v5.0.0) — собственная база ответов NMO Helper, бесплатный AI без ключа и улучшенный авто-поиск
 - [v4.3.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.3.0) — обновлённая панель, расширенный поиск по базам и просмотр источника PDF
 - [v4.2.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.2.0) — автоответ с настраиваемым интервалом
 - [v4.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v4.1.1) — обновление подписанного Firefox-пакета
@@ -223,7 +228,3 @@ npm test            # Запустить тесты
 - [v2.1.1](https://github.com/lKolabrodl/nmo-helper/tree/v2.1.1) — реструктуризация, esbuild сборка
 - [v2.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v2.0.0) — AI-режим, авто-поиск
 - [v1.4.2](https://github.com/lKolabrodl/nmo-helper/tree/v1.4.2) — только поиск по сайтам, без AI
-
-## Лицензия
-
-MIT
