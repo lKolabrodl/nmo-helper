@@ -28,6 +28,7 @@ export {
 	getQuestionAnchor,
 	getQuestionText,
 	getQuestionHtml,
+	findVariantElements,
 	getVariantElements,
 	getVariantTexts,
 	isSingleAnswer,

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
 import {
 	findCompletedQuizResults,
+	findVariantElements,
 	getTopicElement,
 	getQuestionAnchor,
 	getQuestionText,
@@ -235,6 +236,115 @@ describe('fn getVariantElements', () => {
 		const els = getVariantElements();
 		expect(els).toHaveLength(1);
 		expect(els[0].textContent).toBe('in');
+	});
+});
+
+describe('fn findVariantElements', () => {
+	it('находит варианты без известных классов и контейнера вопроса', () => {
+		document.body.innerHTML = '<main><label id="a">A</label><label id="b">B</label></main>';
+
+		expect(findVariantElements(['A', 'B'])).toEqual([
+			document.getElementById('a'), document.getElementById('b'),
+		]);
+	});
+
+	it('сохраняет порядок контекста и выбирает полный текст во вложенной разметке', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<label id="b">Вариант <b>B</b></label>
+				<label><span id="a">Вариант A</span></label>
+			</div>
+		`;
+
+		expect(findVariantElements(['Вариант A', 'Вариант B'])).toEqual([
+			document.getElementById('a'), document.getElementById('b'),
+		]);
+	});
+
+	it('сравнивает полный текст с учётом пробелов, переносов и регистра', () => {
+		document.body.innerHTML = '<div id="questionAnchor"><p id="a">  Вариант&nbsp;\n A  </p><p>Вариант A и B</p></div>';
+
+		expect(findVariantElements(['вариант A'])).toEqual([document.getElementById('a')]);
+		expect(findVariantElements(['A'])).toEqual([null]);
+	});
+
+	it('не принимает совпадение снаружи активного вопроса', () => {
+		document.body.innerHTML = '<p>A</p><div id="questionAnchor"><p id="a">A</p></div>';
+
+		expect(findVariantElements(['A'])).toEqual([document.getElementById('a')]);
+	});
+
+	it('пропускает панель расширения, скрытые элементы и скрипты', () => {
+		document.body.innerHTML = `
+			<div id="nmo-panel"><span>A</span></div>
+			<p hidden>A</p><div aria-hidden="true"><span>A</span></div>
+			<script>A</script><style>/* A */</style><main><p id="a">A</p></main>
+		`;
+		let excludedTextReads = 0;
+		for (const element of document.querySelectorAll('#nmo-panel, #nmo-panel *, [hidden], [aria-hidden="true"], [aria-hidden="true"] *, script, style')) {
+			Object.defineProperty(element, 'innerText', {
+				get() {
+					excludedTextReads += 1;
+					return element.textContent ?? '';
+				},
+			});
+		}
+
+		expect(findVariantElements(['A'])).toEqual([document.getElementById('a')]);
+		expect(excludedTextReads).toBe(0);
+	});
+
+	it.each([
+		'<section hidden><div id="questionAnchor"><div class="mdc-form-field"><span>A</span></div></div></section>',
+		'<div id="questionAnchor"><div class="mdc-form-field"><span hidden>1. A</span></div></div>',
+	])('не возвращает скрытый вариант даже через запасной селектор: %s', html => {
+		document.body.innerHTML = html;
+
+		expect(findVariantElements(['A'])).toEqual([null]);
+	});
+
+	it('возвращает разные элементы для одинаковых вариантов', () => {
+		document.body.innerHTML = '<div id="questionAnchor"><label><span id="a1">A</span></label><label id="a2">A</label></div>';
+
+		expect(findVariantElements(['A', 'A'])).toEqual([
+			document.getElementById('a1'), document.getElementById('a2'),
+		]);
+	});
+
+	it('предпочитает совпадение по тексту элементу из известного селектора', () => {
+		document.body.innerHTML = '<div id="questionAnchor"><div class="mdc-form-field"><span>Другое</span></div><p id="a">A</p></div>';
+
+		expect(findVariantElements(['A'])).toEqual([document.getElementById('a')]);
+	});
+
+	it('использует селекторы для ненайденного текста и сохраняет найденный элемент', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<div class="mdc-form-field"><span id="a">1. A</span></div>
+				<div class="mdc-form-field"><span><b id="b">B</b></span></div>
+			</div>
+		`;
+
+		expect(findVariantElements(['A', 'B'])).toEqual([
+			document.getElementById('a'), document.getElementById('b'),
+		]);
+	});
+
+	it('оставляет пропуски, чтобы индексы найденных вариантов не сдвигались', () => {
+		document.body.innerHTML = '<div id="questionAnchor"><p id="b">B</p></div>';
+
+		expect(findVariantElements(['A', 'B'])).toEqual([null, document.getElementById('b')]);
+	});
+
+	it('не использует fallback-элемент, который уже занят другим вариантом', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<div class="mdc-form-field"><span><b id="b">B</b></span></div>
+				<div class="mdc-form-field"><span>Другое</span></div>
+			</div>
+		`;
+
+		expect(findVariantElements(['A', 'B'])).toEqual([null, document.getElementById('b')]);
 	});
 });
 
