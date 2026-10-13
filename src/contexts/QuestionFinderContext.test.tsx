@@ -1,7 +1,8 @@
-import {render, screen, waitFor} from '@testing-library/react';
-import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
+import {act, cleanup, render, screen, waitFor} from '@testing-library/react';
+import {afterEach, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 import {QuestionFinderProvider, useQuestionFinder} from './QuestionFinderContext';
 import {pickResult} from '../utils/matching';
+import {PAGE_STATE_UPDATED} from '../patch/subscribePageState';
 
 beforeAll(() => {
 	if (!Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'innerText')) {
@@ -14,12 +15,15 @@ beforeAll(() => {
 
 beforeEach(() => {
 	document.body.innerHTML = '';
+	delete window.__NMO_HELPER_STATE__;
 });
+
+afterEach(cleanup);
 
 const TOPIC = 'Выпадение прямой кишки (по утвержденным клиническим рекомендациям)';
 
 function QuestionState() {
-	const {topic, rawTopic, question} = useQuestionFinder();
+	const {topic, rawTopic, question, variants, isSingle} = useQuestionFinder();
 	const result = pickResult([
 		{source: 'nmo-helper' as const, title: `${TOPIC} - 2021`, url: 'topic-2021'},
 		{source: 'nmo-helper' as const, title: `${TOPIC} - 2024`, url: 'topic-2024'},
@@ -28,6 +32,8 @@ function QuestionState() {
 		<output data-testid="topic">{topic}</output>
 		<output data-testid="raw-topic">{rawTopic}</output>
 		<output data-testid="question">{question}</output>
+		<output data-testid="variants">{JSON.stringify(variants)}</output>
+		<output data-testid="single">{String(isSingle)}</output>
 		<output data-testid="result">{result?.url}</output>
 	</>;
 }
@@ -55,5 +61,50 @@ describe('QuestionFinderProvider — тема и год', () => {
 
 		expect(screen.getByTestId('topic')).toHaveTextContent(`${TOPIC} - 2024`);
 		expect(screen.getByTestId('result')).toHaveTextContent('topic-2024');
+	});
+});
+
+describe('QuestionFinderProvider — глобальная переменная', () => {
+	it('берёт тему, вопрос и варианты из переменной вместо HTML', () => {
+		document.body.innerHTML = '<div id="questionAnchor"><div class="question-title-text">Вопрос из HTML</div></div>';
+		window.__NMO_HELPER_STATE__ = {
+			topic: `${TOPIC} - 2024 - Контрольное тестирование`,
+			question: 'Вопрос из State', variants: ['B', 'A'], isSingle: true,
+		};
+		render(<QuestionFinderProvider><QuestionState/></QuestionFinderProvider>);
+		expect(screen.getByTestId('topic')).toHaveTextContent(`${TOPIC} - 2024`);
+		expect(screen.getByTestId('question')).toHaveTextContent('Вопрос из State');
+		expect(screen.getByTestId('variants')).toHaveTextContent('["B","A"]');
+		expect(screen.getByTestId('single')).toHaveTextContent('true');
+	});
+
+	it('реагирует на обновление переменной без изменений DOM', () => {
+		document.body.innerHTML = `
+			<div class="v-label v-label-h2">${TOPIC} - 2024 - Итоговое тестирование</div>
+			<div id="questionAnchor"><input type="radio"></div>
+		`;
+		render(<QuestionFinderProvider><QuestionState/></QuestionFinderProvider>);
+		act(() => {
+			window.__NMO_HELPER_STATE__ = {
+				topic: null, question: 'Новый вопрос', variants: ['C', 'D'], isSingle: false,
+			};
+			window.dispatchEvent(new Event(PAGE_STATE_UPDATED));
+		});
+		expect(screen.getByTestId('topic')).toHaveTextContent(`${TOPIC} - 2024`);
+		expect(screen.getByTestId('question')).toHaveTextContent('Новый вопрос');
+		expect(screen.getByTestId('variants')).toHaveTextContent('["C","D"]');
+		expect(screen.getByTestId('single')).toHaveTextContent('false');
+	});
+
+	it('использует HTML, если в переменной нет вариантов', () => {
+		document.body.innerHTML = '<div id="questionAnchor"><div class="question-title-text">Вопрос из HTML</div></div>';
+		window.__NMO_HELPER_STATE__ = {topic: 'Тема', question: 'Неполный вопрос', variants: [], isSingle: true};
+		render(<QuestionFinderProvider><QuestionState/></QuestionFinderProvider>);
+		expect(screen.getByTestId('question')).toHaveTextContent('Вопрос из HTML');
+		act(() => {
+			window.__NMO_HELPER_STATE__ = null;
+			window.dispatchEvent(new Event(PAGE_STATE_UPDATED));
+		});
+		expect(screen.getByTestId('question')).toHaveTextContent('Вопрос из HTML');
 	});
 });

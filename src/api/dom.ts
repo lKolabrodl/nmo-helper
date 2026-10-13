@@ -70,6 +70,11 @@ export function getTopicElement(): HTMLElement | null {
 	return null;
 }
 
+/** Текст темы теста с обрезанными пробелами по краям. */
+export function getTopicText(): string | null {
+	return getTopicElement()?.innerText.trim() ?? null;
+}
+
 /**
  * Находит полностью завершённый тест со списком результатов.
  *

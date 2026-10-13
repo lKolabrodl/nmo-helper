@@ -14,6 +14,7 @@ export {
 } from './html';
 export { cleanTopic, normalizeDashes, normalizeText } from './text';
 export { similarity, detectSource, pickResult } from './matching';
+export {getTopicState, getQuestionState, getVariantsState, isSingleAnswerState} from '../api/state';
 export {
 	findCompletedQuizResults,
 	getAnswerClickTarget,
@@ -23,6 +24,7 @@ export {
 	getNextQuestionButton,
 	getQuizActionsElement,
 	getTopicElement,
+	getTopicText,
 	getQuestionAnchor,
 	getQuestionText,
 	getQuestionHtml,

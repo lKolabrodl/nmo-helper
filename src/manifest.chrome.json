@@ -37,6 +37,12 @@
   ],
   "content_scripts": [
     {
+      "matches": ["https://rosminzdrav.ru/*", "https://*.rosminzdrav.ru/*"],
+      "js": ["patch.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
       "matches": [
         "https://rosminzdrav.ru/*",
         "https://*.rosminzdrav.ru/*"

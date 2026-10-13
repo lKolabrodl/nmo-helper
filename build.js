@@ -73,6 +73,12 @@ async function build() {
 
     await esbuild.build({
       ...commonOptions,
+      entryPoints: [path.join(SRC, 'patch.ts')],
+      outfile: path.join(outDir, 'patch.js'),
+    });
+
+    await esbuild.build({
+      ...commonOptions,
       entryPoints: [path.join(SRC, 'content.ts')],
       outfile: path.join(outDir, 'content.js'),
       plugins: [sassPlugin()],

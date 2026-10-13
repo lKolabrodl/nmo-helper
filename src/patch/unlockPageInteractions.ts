@@ -1,13 +1,13 @@
 /**
  * Снимает клиентские запреты страницы НМО на выделение текста, контекстное
- * меню и стандартные команды копирования/вырезания.
+ * меню и стандартные команды копирования, вырезания и вставки.
  *
  * Модуль не эмулирует действия пользователя и не вызывает `preventDefault`:
  * он останавливает только обработчики страницы, после чего браузер выполняет
  * своё стандартное действие. Элементы панели `#nmo-panel` исключены из этой
  * обработки, чтобы расширение не вмешивалось в собственный интерфейс.
  *
- * @module api/page-interaction-unlock
+ * @module patch/unlockPageInteractions
  */
 
 /** ID элемента `<style>`, включающего выделение текста вне панели расширения. */
@@ -26,7 +26,7 @@ type WindowWithUnlockFlag = Window & {
  * Однократно включает стандартные взаимодействия браузера на странице НМО.
  *
  * Функция добавляет CSS для `user-select: text` и capture-обработчики событий
- * `contextmenu`, `copy`, `cut`, `keydown`, `keypress` и `keyup`. Повторные
+ * `contextmenu`, `copy`, `cut`, `paste`, `keydown`, `keypress` и `keyup`. Повторные
  * вызовы безопасны: флаг хранится непосредственно в `window` страницы.
  *
  * @returns Ничего.
@@ -41,16 +41,17 @@ export function unlockPageInteractions(): void {
 	document.addEventListener('contextmenu', stopPageHandler, {capture: true});
 	document.addEventListener('copy', stopPageHandler, {capture: true});
 	document.addEventListener('cut', stopPageHandler, {capture: true});
-	document.addEventListener('keydown', stopCopyShortcutHandler, {capture: true});
-	document.addEventListener('keypress', stopCopyShortcutHandler, {capture: true});
-	document.addEventListener('keyup', stopCopyShortcutHandler, {capture: true});
+	document.addEventListener('paste', stopPageHandler, {capture: true});
+	document.addEventListener('keydown', stopClipboardShortcutHandler, {capture: true});
+	document.addEventListener('keypress', stopClipboardShortcutHandler, {capture: true});
+	document.addEventListener('keyup', stopClipboardShortcutHandler, {capture: true});
 }
 
 /**
  * Не позволяет обработчикам страницы перехватить контекстное меню, копирование
- * или вырезание, сохраняя стандартное действие браузера.
+ * вырезание или вставку, сохраняя стандартное действие браузера.
  *
- * @param event Событие `contextmenu`, `copy` или `cut` на этапе capture.
+ * @param event Событие `contextmenu`, `copy`, `cut` или `paste` на этапе capture.
  */
 function stopPageHandler(event: Event): void {
 	if (isInsidePanel(event.target)) return;
@@ -60,26 +61,27 @@ function stopPageHandler(event: Event): void {
 
 /**
  * Останавливает обработчики страницы только для поддерживаемых клавиатурных
- * комбинаций копирования и вырезания.
+ * комбинаций копирования, вырезания и вставки.
  *
  * @param event Клавиатурное событие на этапе capture.
  */
-function stopCopyShortcutHandler(event: KeyboardEvent): void {
+function stopClipboardShortcutHandler(event: KeyboardEvent): void {
 	if (isInsidePanel(event.target)) return;
-	if (!isCopyShortcut(event)) return;
+	if (!isClipboardShortcut(event)) return;
 
 	event.stopImmediatePropagation();
 }
 
 /**
- * Определяет сочетание Ctrl/Command с `C`, `X` или `Insert`.
+ * Определяет Ctrl/Command с `C`, `X`, `V`, Ctrl+Insert и Shift+Insert.
  *
  * @param event Клавиатурное событие.
- * @returns `true`, если событие соответствует копированию или вырезанию.
+ * @returns `true`, если событие соответствует операции с буфером обмена.
  */
-function isCopyShortcut(event: KeyboardEvent): boolean {
+function isClipboardShortcut(event: KeyboardEvent): boolean {
 	const key = event.key.toLowerCase();
-	return (event.ctrlKey || event.metaKey) && (key === 'c' || key === 'x' || key === 'insert');
+	return ((event.ctrlKey || event.metaKey) && (key === 'c' || key === 'x' || key === 'v' || key === 'insert'))
+		|| (event.shiftKey && key === 'insert');
 }
 
 /**
