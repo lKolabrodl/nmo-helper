@@ -214,7 +214,6 @@ MIT
 
 Ниже основные предыдущие релизы. Полная история доступна в [GitHub Releases](https://github.com/lKolabrodl/nmo-helper/releases).
 
-- [v5.0.1](https://github.com/lKolabrodl/nmo-helper/tree/v5.0.1) — новые бесплатные AI-модели, обновляемый каталог ProxyAPI и исправления поиска НМО
 - [v5.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v5.0.0) — собственная база ответов NMO Helper, бесплатный AI без ключа и улучшенный авто-поиск
 - [v4.3.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.3.0) — обновлённая панель, расширенный поиск по базам и просмотр источника PDF
 - [v4.2.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.2.0) — автоответ с настраиваемым интервалом
