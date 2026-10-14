@@ -3,12 +3,13 @@
 This file records the project release flow so the next release does not depend
 on memory.
 
-## Version 5.0.2 preparation
+## Version 5.0.2
 
-Changes included from `dev`:
+This maintenance release fixes quiz topic detection that could prevent
+automatic answer search from finding results on the NMO portal.
 
-- Read the current quiz state without an installed Redux DevTools extension,
-  with DOM fallback when state is unavailable.
+Other changes included from `dev`:
+
 - Match answer highlights against the current variant texts and restore them
   after the page replaces DOM elements or reorders variants.
 - Restore standard selection and clipboard commands on the quiz page.
@@ -21,6 +22,11 @@ Local validation:
 - `npm run build`: all four browser targets built successfully.
 - Package metadata, all four source and built manifests, and every popup use
   `5.0.2`.
+- A clean build from the AMO source archive matches all four prepared browser
+  targets byte-for-byte.
+- The signed Firefox package contains version `5.0.2`. Its code and resources
+  match `dist/firefox/`; the manifest has identical settings and differs only
+  in formatting.
 
 Local archives:
 
@@ -29,16 +35,13 @@ Local archives:
 - `nmo-helper-firefox-store-5.0.2.zip`
 - `nmo-helper-source-5.0.2.zip`, including updated `BUILD.md`.
 
-Remaining before publication:
+Public GitHub Release assets:
 
-1. Smoke-test quiz navigation and highlighting in Chromium and Firefox,
-   including a browser without Redux DevTools and standard clipboard commands.
-2. Submit the Firefox store and source archives to AMO and obtain the signed
-   `5.0.2` package. The existing `firefox_nmo_helper.xpi` is still `5.0.1`.
-3. Replace the signed xpi, update README installation links to `5.0.2`, and
-   remove the preparation notice.
-4. Create the annotated `v5.0.2` tag and publish the GitHub Release with only
-   the signed xpi and Chromium zip as manual assets.
+- `firefox_nmo_helper.xpi` — signed Firefox package, version `5.0.2`.
+- `nmo-helper-chrome-5.0.2.zip` — Chromium build, version `5.0.2`.
+
+Release title: `NMO Helper v5.0.2 — исправление поиска темы`.
+The annotated tag is `v5.0.2`. README installation links point to this release.
 
 ## Branch flow
 
