@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "NMO-Helper",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "Автоподсветка правильных ответов на тестах НМО",
   "icons": {
     "16": "icons/icon16.png",
@@ -36,6 +36,12 @@
     }
   ],
   "content_scripts": [
+    {
+      "matches": ["https://rosminzdrav.ru/*", "https://*.rosminzdrav.ru/*"],
+      "js": ["patch.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
     {
       "matches": [
         "https://rosminzdrav.ru/*",

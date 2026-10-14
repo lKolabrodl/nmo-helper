@@ -3,6 +3,43 @@
 This file records the project release flow so the next release does not depend
 on memory.
 
+## Version 5.0.2 preparation
+
+Changes included from `dev`:
+
+- Read the current quiz state without an installed Redux DevTools extension,
+  with DOM fallback when state is unavailable.
+- Match answer highlights against the current variant texts and restore them
+  after the page replaces DOM elements or reorders variants.
+- Restore standard selection and clipboard commands on the quiz page.
+- Add the Support link to the extension popup.
+
+Local validation:
+
+- `npm test`: 772/772 tests, 54/54 files.
+- `npx tsc --noEmit --pretty false`: clean.
+- `npm run build`: all four browser targets built successfully.
+- Package metadata, all four source and built manifests, and every popup use
+  `5.0.2`.
+
+Local archives:
+
+- `nmo-helper-chrome-5.0.2.zip`
+- `nmo-helper-firefox-5.0.2.zip`
+- `nmo-helper-firefox-store-5.0.2.zip`
+- `nmo-helper-source-5.0.2.zip`, including updated `BUILD.md`.
+
+Remaining before publication:
+
+1. Smoke-test quiz navigation and highlighting in Chromium and Firefox,
+   including a browser without Redux DevTools and standard clipboard commands.
+2. Submit the Firefox store and source archives to AMO and obtain the signed
+   `5.0.2` package. The existing `firefox_nmo_helper.xpi` is still `5.0.1`.
+3. Replace the signed xpi, update README installation links to `5.0.2`, and
+   remove the preparation notice.
+4. Create the annotated `v5.0.2` tag and publish the GitHub Release with only
+   the signed xpi and Chromium zip as manual assets.
+
 ## Branch flow
 
 1. Finish and test changes on `dev`.
@@ -30,6 +67,7 @@ Then make sure the same version is present in:
 - `package.json`
 - `package-lock.json`
 - `src/manifest.chrome.json`
+- `src/manifest.chrome-store.json`
 - `src/manifest.firefox.json`
 - `src/manifest.firefox-store.json`
 - `src/popup.html`

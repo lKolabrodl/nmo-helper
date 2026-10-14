@@ -70,6 +70,11 @@ export function getTopicElement(): HTMLElement | null {
 	return null;
 }
 
+/** Текст темы теста с обрезанными пробелами по краям. */
+export function getTopicText(): string | null {
+	return getTopicElement()?.innerText.trim() ?? null;
+}
+
 /**
  * Находит полностью завершённый тест со списком результатов.
  *
@@ -143,6 +148,74 @@ export function getVariantElements(): HTMLElement[] {
 	const anchor = getQuestionAnchor();
 	if (!anchor) return [];
 	return queryAll('variant', anchor);
+}
+
+/**
+ * Находит элементы по текстам вариантов из контекста, сохраняя их порядок.
+ *
+ * Поиск ограничен текущим вопросом, если его контейнер известен; иначе ищем
+ * в body. TreeWalker исключает панель расширения и скрытые служебные элементы
+ * вместе с их дочерними узлами ещё до чтения текста. Для
+ * вложенной разметки выбираем самый глубокий элемент с полным текстом варианта.
+ * Если текст не найден, используем элемент по известным селекторам и позиции,
+ * только когда число элементов совпадает с числом вариантов.
+ *
+ * @returns По одному элементу или `null` на каждый вариант из контекста.
+ */
+export function findVariantElements(variants: readonly string[]): (HTMLElement | null)[] {
+	if (!variants.length) return [];
+
+	const root = getQuestionAnchor() ?? document.body;
+	const excludedSelector = '#nmo-panel, script, style, noscript, template, [hidden], [aria-hidden="true"]';
+	if (root.closest(excludedSelector)) return variants.map(() => null);
+
+	const keys = variants.map(normalizeVariantText);
+	const wanted = new Set(keys.filter(Boolean));
+	const candidates = new Map<string, HTMLElement[]>();
+
+	const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+		acceptNode(node) {
+			if (!(node instanceof Element)) return NodeFilter.FILTER_SKIP;
+			if (node.matches(excludedSelector)) return NodeFilter.FILTER_REJECT;
+			return node instanceof HTMLElement ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+		},
+	});
+
+	let node: Node | null;
+	while ((node = walker.nextNode())) {
+		if (!(node instanceof HTMLElement)) continue;
+		const element = node;
+		const text = normalizeVariantText(element.innerText ?? element.textContent ?? '');
+		if (!wanted.has(text)) continue;
+		const matches = candidates.get(text) ?? [];
+		// Обход идёт от родителя к детям: более глубокое совпадение заменяет предка.
+		if (matches[matches.length - 1]?.contains(element)) matches.pop();
+		matches.push(element);
+		candidates.set(text, matches);
+	}
+
+	const used = new Set<HTMLElement>();
+	const available = (element: HTMLElement): boolean => !Array.from(used)
+		.some(other => other.contains(element) || element.contains(other));
+	const elements = keys.map(key => {
+		const element = candidates.get(key)?.find(available) ?? null;
+		if (element) used.add(element);
+		return element;
+	});
+	if (elements.every(Boolean)) return elements;
+
+	const fallback = getVariantElements();
+	if (fallback.length !== variants.length) return elements;
+	return elements.map((element, index) => {
+		const fallbackElement = fallback[index];
+		if (element || !keys[index] || fallbackElement.closest(excludedSelector) || !available(fallbackElement)) return element;
+		used.add(fallbackElement);
+		return fallbackElement;
+	});
+}
+
+function normalizeVariantText(text: string): string {
+	return text.replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
 /**

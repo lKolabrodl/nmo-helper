@@ -2,7 +2,7 @@ import './content.scss';
 import type { IExtensionState } from './types';
 import { storageGet, storageSet } from './utils';
 import { createPanel, initPanelBehavior } from './Panel';
-import { unlockPageInteractions } from './api/page-interaction-unlock';
+import {subscribePageState} from './patch/subscribePageState';
 import {getApiModel} from './components/SectionAi/utils';
 import {
 	AI_PROVIDER_STORAGE_KEY,
@@ -36,7 +36,7 @@ function waitForBody(): Promise<void> {
 	});
 }
 
-unlockPageInteractions();
+subscribePageState();
 
 (async function () {
 	'use strict';

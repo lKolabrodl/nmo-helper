@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { usePanelStatus } from '../../contexts/PanelStatusContext';
+import { useQuestionFinder } from '../../contexts/QuestionFinderContext';
 import { answerCache } from '../../utils/answer-cache';
-import { getVariantElements, getQuestionText, getTopicElement, cleanTopic } from '../../utils';
+import { findVariantElements } from '../../utils';
 import { HIGHLIGHT_COLOR } from '../../utils/constants';
 import { Status } from '../../types';
 
@@ -10,9 +11,9 @@ import { Status } from '../../types';
  * индексы которых входят в `correctIndexes`. Idempotent: уже
  * подсвеченные не трогает, чтобы не перетирать inline-стиль на ровном месте.
  */
-export function highlightByIndexes(elements: HTMLElement[], correctIndexes: number[]): void {
+export function highlightByIndexes(elements: (HTMLElement | null)[], correctIndexes: number[]): void {
 	elements.forEach((el, i) => {
-		if (correctIndexes.includes(i) && el.style.color !== HIGHLIGHT_COLOR) {
+		if (el && correctIndexes.includes(i) && el.style.color !== HIGHLIGHT_COLOR) {
 			el.style.color = HIGHLIGHT_COLOR;
 		}
 	});
@@ -23,36 +24,37 @@ export function highlightByIndexes(elements: HTMLElement[], correctIndexes: numb
  * Статус «кеш» выводится только при смене вопроса на ранее закешированный.
  * Если ответ только что записали — молчит (статус уже поставил тот, кто нашёл).
  *
- * Индексы берутся напрямую из `cached.idx` — QuestionFinder читает variants
- * из DOM в стабильном порядке, `set` и `get` видят одинаковый массив,
- * поэтому сохранённые позиции остаются валидными.
+ * Тема, вопрос и варианты берутся из QuestionFinderContext. DOM-элементы
+ * ищутся по текстам вариантов, затем по известным селекторам. Правильные
+ * индексы вычисляются по сохранённым ответам в текущем порядке контекста,
+ * поскольку порядок вариантов в кеше или DOM может отличаться.
  */
 const AnswerHighlighter = () => {
 	const { setStatus } = usePanelStatus();
+	const { topic, question, variants } = useQuestionFinder();
 	const lastKeyRef = useRef('');
 
 	useEffect(() => {
 		const timer = setInterval(() => {
-			const question = getQuestionText();
-			if (!question) return;
+			if (!question || !variants.length) return;
 
-			const elements = getVariantElements();
-			const variants = elements.map(el => el.innerText.trim());
-			if (!variants.length) return;
+			const cached = answerCache.get(topic ?? '', question, variants);
+			if (!cached) return;
 
-			const topicEl = getTopicElement();
-			const topic = cleanTopic(topicEl?.innerText?.trim() ?? null) ?? '';
+			const answers = new Set(cached.answers.map(answer => answer.trim().toLowerCase()));
+			const correctIndexes = variants.flatMap((variant, index) =>
+				answers.has(variant.trim().toLowerCase()) ? [index] : []);
+			if (!correctIndexes.length) return;
 
-			const cached = answerCache.get(topic, question, variants);
-			if (!cached || !cached.idx.length) return;
-
-			highlightByIndexes(elements, cached.idx);
+			const elements = findVariantElements(variants);
+			if (!correctIndexes.some(index => elements[index])) return;
+			highlightByIndexes(elements, correctIndexes);
 
 			if (lastKeyRef.current === cached.id) return;
 			lastKeyRef.current = cached.id;
 
 			// Только что записали — молчим, статус уже есть
-			if (answerCache.fresh(topic, question, variants)) return;
+			if (answerCache.fresh(topic ?? '', question, variants)) return;
 
 			// Вернулись к ранее закешированному вопросу
 			setStatus({ title: 'найдено в памяти', status: Status.OK });
@@ -60,7 +62,7 @@ const AnswerHighlighter = () => {
 		}, 200);
 
 		return () => clearInterval(timer);
-	}, [setStatus]);
+	}, [setStatus, topic, question, variants]);
 
 	return null;
 };

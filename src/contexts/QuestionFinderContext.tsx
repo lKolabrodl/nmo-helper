@@ -1,6 +1,13 @@
 import React, {createContext, useContext, useState, useEffect, useRef} from 'react';
 import {debounce} from '../libs';
-import {cleanTopic, getTopicElement, getQuestionText, getVariantTexts, isSingleAnswer} from '../utils';
+import {
+	cleanTopic,
+	getTopicState, getTopicText,
+	getQuestionState, getQuestionText,
+	getVariantsState, getVariantTexts,
+	isSingleAnswerState, isSingleAnswer,
+} from '../utils';
+import {PAGE_STATE_UPDATED} from '../patch/subscribePageState';
 
 interface IQuestionState {
     readonly topic: string | null;
@@ -24,7 +31,7 @@ interface IPrevQuestion {
 /**
  * Провайдер контекста текущего вопроса на странице НМО.
  *
- * Использует MutationObserver для отслеживания изменений DOM на странице теста.
+ * Читает вопрос из глобальной переменной; если данных нет, сканирует DOM.
  * Автоматически определяет тему теста, текст вопроса, варианты ответов и тип вопроса.
  * Обновляет состояние только при реальном изменении данных (debounce 200ms).
  *
@@ -44,20 +51,11 @@ export const QuestionFinderProvider: React.FC<React.PropsWithChildren> = ({child
 
 	useEffect(() => {
 		const _scan = () => {
-
-			// Тема теста (заголовок карточки на странице НМО)
-			const topicEl = getTopicElement();
-			const rawTopic = topicEl ? topicEl.innerText.trim() : null;
+			const rawTopic = getTopicState() ?? getTopicText() ?? null;
 			const topic = cleanTopic(rawTopic);
-
-			// Текст вопроса
-			const question = getQuestionText();
-
-			// Тексты вариантов ответов
-			const variants = getVariantTexts();
-
-			// Тип вопроса: radio = один ответ, checkbox = несколько
-			const isSingle = isSingleAnswer();
+			const question = getQuestionState() ?? getQuestionText() ?? null;
+			const variants = getVariantsState() ?? getVariantTexts();
+			const isSingle = isSingleAnswerState() ?? isSingleAnswer();
 			const variantsKey = variants.join('\n');
 
 			// Не обновляем если ничего не изменилось
@@ -75,11 +73,13 @@ export const QuestionFinderProvider: React.FC<React.PropsWithChildren> = ({child
 		const debouncedScan = debounce(_scan, 200);
 
 		_scan();
+		window.addEventListener(PAGE_STATE_UPDATED, _scan);
 
 		const observer = new MutationObserver(debouncedScan);
 		observer.observe(document.body, {childList: true, subtree: true, characterData: true});
 
 		return () => {
+			window.removeEventListener(PAGE_STATE_UPDATED, _scan);
 			observer.disconnect();
 			debouncedScan.cancel();
 		};
