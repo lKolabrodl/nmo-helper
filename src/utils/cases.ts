@@ -1,4 +1,5 @@
 import { matchQuestion, variantScore } from './matching';
+import { normalizeDashes, stripQuotes } from './text';
 
 export interface QaCaseModel {
 	readonly question: string;
@@ -25,10 +26,15 @@ export interface IParse2Result {
 	readonly score: number;
 }
 
+type PreparedCase = QaCaseModel & {sortedVariants: string[]};
+type AnswerMatch = {indexes: number[]; score: number};
+
 /**
  * Ищет case в модели по (question, variants).
  *
- * 1. Фильтрует кандидатов по вопросу (`matchQuestion` — exact / includes≥10 / similarity).
+ * 1. Ищет точный вопрос и набор вариантов после нормализации оформления.
+ *    Если такого набора нет, сопоставляет варианты точных вопросов; если нет
+ *    и точного вопроса — использует `matchQuestion` (includes / similarity).
  * 2. Для каждого считает overlap через top-1 assignment:
  *    каждый source-вариант выбирает ЛУЧШИЙ ещё не занятый входной вариант
  *    по `variantScore`. Один входной вариант не может быть «подхвачен» дважды.
@@ -48,7 +54,45 @@ export interface IParse2Result {
  *  - `{ answers: [...], score }` — нормальный матч
  */
 export function findAnswers(model: QaCaseModel[], question: string, variants: string[]): IParse2Result | null {
-	const candidates = model
+	const normalize = (text: string) => stripQuotes(normalizeDashes(text));
+
+	const normalizedQuestion = normalize(question);
+	const normalizedVariants = variants.map(normalize);
+	const sortedVariants = [...normalizedVariants].sort();
+
+	const normalizedModel = model.map(c => {
+		const answers = c.answers.map(normalize);
+		const variants = c.variants.map(normalize);
+		const sortedVariants = variants.slice(0).sort();
+		const question = normalize(c.question);
+		return {...c, question, variants: c.variants, answers, sortedVariants};
+	});
+
+	const findExact = findExactAnswers(normalizedModel, normalizedQuestion, normalizedVariants, sortedVariants);
+	const findFuzzy = findExact ? null : findFuzzyAnswers(normalizedModel, normalizedQuestion, normalizedVariants);
+	const found = findExact ?? findFuzzy;
+	if (!found) return null;
+
+	return {answers: found.indexes.map(index => variants[index]), score: found.score};
+}
+
+/** Точный поиск по подготовленным текстам и отсортированным копиям вариантов. */
+function findExactAnswers(model: PreparedCase[], question: string, variants: string[], sortedVariants: string[]): AnswerMatch | null {
+	const exact = model.find(c => c.question === question && c.sortedVariants.length === sortedVariants.length
+		&& c.sortedVariants.every((variant, index) => variant === sortedVariants[index]));
+
+	if (!exact) return null;
+
+	const answers = new Set(exact.answers);
+
+	return {indexes: variants.flatMap((variant, index) => answers.has(variant) ? [index] : []), score: 1};
+}
+
+/** Нечёткий поиск с приоритетом точного текста вопроса. */
+function findFuzzyAnswers(model: QaCaseModel[], question: string, variants: string[]): AnswerMatch | null {
+	const exactQuestions = model.filter(c => c.question === question);
+
+	const candidates = (exactQuestions.length ? exactQuestions : model)
 		.map(c => ({ c, qScore: matchQuestion(c.question, question) }))
 		.filter(x => x.qScore > 0);
 
@@ -71,12 +115,8 @@ export function findAnswers(model: QaCaseModel[], question: string, variants: st
 	// Top-1 assignment source-answers → input variants.
 	// Возвращаем подмножество ВХОДНЫХ variants в порядке их появления.
 	const assignedIdx = assignTopOne(winner.c.answers, variants).sort((a, b) => a - b);
-	const answers = assignedIdx.map(i => variants[i]);
 
-	return {
-		answers,
-		score: winner.qScore * confidence,
-	};
+	return {indexes: assignedIdx, score: winner.qScore * confidence};
 }
 
 /**
