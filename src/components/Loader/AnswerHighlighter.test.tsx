@@ -30,7 +30,9 @@ beforeEach(() => {
 	vi.resetAllMocks();
 	document.body.innerHTML = '';
 	window.__NMO_HELPER_STATE__ = {
-		topic: 'Тема из контекста', question: 'Вопрос из контекста', variants: ['A', 'B'], isSingle: true,
+		topic: 'Тема из контекста',
+		question: {question: 'Вопрос из контекста', variants: ['A', 'B'], isSingle: true},
+		questions: [],
 	};
 	mocks.get.mockReturnValue({id: 'cached-answer', answers: ['B'], idx: [1]});
 	mocks.fresh.mockReturnValue(true);
@@ -128,7 +130,9 @@ describe('AnswerHighlighter', () => {
 
 		act(() => {
 			window.__NMO_HELPER_STATE__ = {
-				topic: null, question: 'Следующий вопрос', variants: ['C', 'D'], isSingle: true,
+				topic: null,
+				question: {question: 'Следующий вопрос', variants: ['C', 'D'], isSingle: true},
+				questions: [],
 			};
 			window.dispatchEvent(new Event(PAGE_STATE_UPDATED));
 		});

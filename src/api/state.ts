@@ -1,13 +1,13 @@
-import type {IPageQuestionState} from '../patch/subscribePageState';
+import type {IPageQuestion} from '../patch/subscribePageState';
 
 /** Используем State только при наличии текущего вопроса и вариантов. */
-function getPageQuestionState(): IPageQuestionState | null {
-	const state = window.__NMO_HELPER_STATE__;
-	return state?.question && state.variants.length ? state : null;
+function getPageQuestionState(): IPageQuestion | null {
+	const question = window.__NMO_HELPER_STATE__?.question;
+	return question?.question && question.variants.length ? question : null;
 }
 
 export function getTopicState(): string | null {
-	return getPageQuestionState()?.topic ?? null;
+	return window.__NMO_HELPER_STATE__?.topic ?? null;
 }
 
 export function getQuestionState(): string | null {
