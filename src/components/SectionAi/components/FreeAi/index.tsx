@@ -51,13 +51,16 @@ const FreeAi: React.FC<IFreeAiProps> = ({onBusyChange}) => {
 					<div className="nmo-ai-free-body">
 						<div className="nmo-ai-free-title">Бесплатный AI · автоматически</div>
 						<div className="nmo-ai-free-description">
-							Без ключей и настроек: используются открытые бесплатные модели.
+							Без ключей и настроек: ответ автоматически ищется через OVH, Kilo и AI Horde.
 						</div>
 					</div>
 				</div>
 
 				<div className="nmo-ai-free-note">
 					Бесплатные модели менее точны. При нагрузке ответ может занять несколько минут.
+				</div>
+				<div className="nmo-ai-free-note">
+					Тема, вопрос и варианты передаются AI-сервисам. Провайдеры Kilo могут использовать их для обучения.
 				</div>
 			</div>
 

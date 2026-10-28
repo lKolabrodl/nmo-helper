@@ -18,7 +18,7 @@ interface IAIProxyFreeLoaderProps {
 }
 
 /**
- * Headless-загрузчик бесплатного AI. Сам запускает маршрут GPT-OSS → Qwen → Llama → AI Horde,
+ * Headless-загрузчик бесплатного AI. Сам запускает маршрут GPT-OSS → Qwen → Llama → Kilo → AI Horde,
  * сохраняет найденный ответ в кеш и показывает фактически ответившую модель или сервис.
  */
 const AIProxyFreeLoader = ({active, onChange, onComplete}: IAIProxyFreeLoaderProps) => {

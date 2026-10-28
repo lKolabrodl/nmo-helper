@@ -10,8 +10,9 @@ describe('SectionAi', () => {
 
 		expect(screen.getByRole('tab', {name: 'Бесплатно'})).toHaveAttribute('aria-selected', 'true');
 		expect(screen.getByText('Бесплатный AI · автоматически')).toBeInTheDocument();
-		expect(screen.getByText('Без ключей и настроек: используются открытые бесплатные модели.')).toBeInTheDocument();
+		expect(screen.getByText('Без ключей и настроек: ответ автоматически ищется через OVH, Kilo и AI Horde.')).toBeInTheDocument();
 		expect(screen.getByText('Бесплатные модели менее точны. При нагрузке ответ может занять несколько минут.')).toBeInTheDocument();
+		expect(screen.getByText('Тема, вопрос и варианты передаются AI-сервисам. Провайдеры Kilo могут использовать их для обучения.')).toBeInTheDocument();
 		expect(screen.queryByLabelText('Автоматический маршрут бесплатного AI')).not.toBeInTheDocument();
 		expect(screen.queryByRole('radio')).not.toBeInTheDocument();
 		expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
