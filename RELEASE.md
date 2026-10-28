@@ -3,6 +3,45 @@
 This file records the project release flow so the next release does not depend
 on memory.
 
+## Version 5.1.0
+
+Prepared on `main` after merging `dev`. Firefox publication and signing were
+completed by the owner on October 28, 2026.
+
+- Preview portal-loaded questions and answer variants before starting a quiz,
+  with TXT download when the complete question list is available.
+- Fall back to free AI in automatic mode when found answer sources return
+  an empty result.
+- Add Kilo to the free AI fallback chain.
+- Prioritize exact question and variant matches over similar matches.
+- Improve quiz state handling and close previews when leaving the start screen
+  or switching topics.
+
+Local validation:
+
+- `npm test`: 848/848 tests, 56/56 files.
+- `npx tsc --noEmit --pretty false`: clean.
+- `npm run build`: all four browser targets built successfully.
+- Package metadata, all four source and built manifests, and every popup use
+  `5.1.0`.
+- A clean build from the AMO source archive matches all four prepared browser
+  targets byte-for-byte.
+
+Prepared archives:
+
+- `nmo-helper-chrome-5.1.0.zip`
+- `nmo-helper-firefox-5.1.0.zip`
+- `nmo-helper-firefox-store-5.1.0.zip`
+- `nmo-helper-source-5.1.0.zip`, including updated `BUILD.md`.
+
+The signed `firefox_nmo_helper.xpi` contains version `5.1.0` and uses the private
+Firefox ID `nmo-helper@extension`. Its code and resources match `dist/firefox/`;
+the manifest has identical settings and differs only in formatting. Public
+manual assets remain only the signed XPI and Chrome ZIP.
+
+Release title: `NMO Helper v5.1.0 — просмотр вопросов и улучшения бесплатного AI`.
+The annotated tag is `v5.1.0`. README installation links point to this release.
+
 ## Version 5.0.2
 
 This maintenance release fixes quiz topic detection that could prevent
