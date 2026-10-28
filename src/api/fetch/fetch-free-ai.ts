@@ -1,7 +1,7 @@
 import {fetchViaBackground} from './fetch';
 import {AiRequestError, askAI, type IAiRequestOptions} from './fetch-ai';
 
-export type FreeAiService = 'gpt-oss' | 'qwen' | 'ovh' | 'horde';
+export type FreeAiService = 'gpt-oss' | 'qwen' | 'ovh' | 'kilo' | 'horde';
 
 export interface IFreeAiRequestConfig {
 	readonly apiKey: string;
@@ -12,7 +12,7 @@ export interface IFreeAiRequestConfig {
 
 export interface IFreeAiAnswer {
 	readonly correctIndexes: number[];
-	readonly source: 'GPT-OSS 120B' | 'Qwen 3.8 27B' | 'OVH' | 'AI Horde';
+	readonly source: 'GPT-OSS 120B' | 'Qwen 3.8 27B' | 'OVH' | 'Kilo' | 'AI Horde';
 }
 
 export interface IFreeAiRetryInfo {
@@ -42,24 +42,28 @@ export const OVH_AI_MODEL = 'Meta-Llama-3_3-70B-Instruct';
 export const OVH_OPENAI_URL = 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions';
 export const OVH_GPT_OSS_MODEL = 'gpt-oss-120b';
 export const OVH_QWEN_MODEL = 'Qwen3.8-27B';
+export const KILO_AI_URL = 'https://ai-gateway.kilo.ai/api/v1/chat/completions';
+export const KILO_AI_MODEL = 'kilo-auto/free';
 export const HORDE_AI_URL = 'https://oai.aihorde.net/v1/chat/completions';
 export const HORDE_MODELS_URL = 'https://oai.aihorde.net/v1/models';
 export const HORDE_ANONYMOUS_KEY = '0000000000';
 
 const OVH_TIMEOUT_MS = 30_000;
+const KILO_TIMEOUT_MS = 30_000;
 const HORDE_QUEUE_TIMEOUT_SECONDS = 120;
 const HORDE_CLIENT_TIMEOUT_MS = 125_000;
 const HORDE_MODELS_TIMEOUT_MS = 10_000;
 const HORDE_MAX_ATTEMPTS = 3;
 const HORDE_RETRY_DELAY_MS = 3000;
-const OVH_ROUTES = [
+const FREE_AI_ROUTES = [
 	{service: 'gpt-oss', source: 'GPT-OSS 120B'},
 	{service: 'qwen', source: 'Qwen 3.8 27B'},
 	{service: 'ovh', source: 'OVH'},
+	{service: 'kilo', source: 'Kilo'},
 ] as const;
 
 /**
- * Бесплатный автоматический маршрут: GPT-OSS → Qwen → Llama → AI Horde.
+ * Бесплатный автоматический маршрут: GPT-OSS → Qwen → Llama → Kilo → AI Horde.
  * При ошибке или пустом ответе пробует следующую модель без регистрации.
  * Временные ошибки Horde повторяются с паузой,
  * каждый раз со свежим выбором доступной модели.
@@ -67,9 +71,9 @@ const OVH_ROUTES = [
 export async function askFreeAI(question: string, options: string[], isSingle: boolean, topic: string, controls: IFreeAiRequestControls = {}): Promise<IFreeAiAnswer> {
 	const {signal, onRetry} = controls;
 	throwIfAborted(signal);
-	const ovhFailures: string[] = [];
+	const routeFailures: string[] = [];
 
-	for (const {service, source} of OVH_ROUTES) {
+	for (const {service, source} of FREE_AI_ROUTES) {
 		throwIfAborted(signal);
 		try {
 			const config = await resolveFreeAiRequest(service);
@@ -77,10 +81,10 @@ export async function askFreeAI(question: string, options: string[], isSingle: b
 			const correctIndexes = await askWithConfig(config, question, options, isSingle, topic);
 			throwIfAborted(signal);
 			if (correctIndexes.length) return {correctIndexes, source};
-			ovhFailures.push(`${source} — не определил ответ`);
+			routeFailures.push(`${source} — не определил ответ`);
 		} catch (error) {
 			throwIfAborted(signal);
-			ovhFailures.push(`${source} — ${getErrorMessage(error)}`);
+			routeFailures.push(`${source} — ${getErrorMessage(error)}`);
 		}
 	}
 
@@ -95,7 +99,7 @@ export async function askFreeAI(question: string, options: string[], isSingle: b
 		} catch (error) {
 			throwIfAborted(signal);
 			if (!(error instanceof AiRequestError && error.retryable) || attempt >= HORDE_MAX_ATTEMPTS) {
-				throw createErrorWithCause(`бесплатный AI недоступен: ${ovhFailures.join('; ')}; Horde — ${getErrorMessage(error)}`, error);
+				throw createErrorWithCause(`бесплатный AI недоступен: ${routeFailures.join('; ')}; Horde — ${getErrorMessage(error)}`, error);
 			}
 			const delayMs = HORDE_RETRY_DELAY_MS * attempt;
 			onRetry?.({attempt: attempt + 1, maxAttempts: HORDE_MAX_ATTEMPTS, delayMs, reason: getErrorMessage(error)});
@@ -129,6 +133,20 @@ export async function resolveFreeAiRequest(service: FreeAiService): Promise<IFre
 			requestOptions: {
 				timeoutMs: OVH_TIMEOUT_MS,
 				maxTokens: 32,
+				extraBody: {temperature: 0},
+			},
+		};
+	}
+
+	if (service === 'kilo') {
+		return {
+			apiKey: '',
+			endpoint: KILO_AI_URL,
+			model: KILO_AI_MODEL,
+			requestOptions: {
+				timeoutMs: KILO_TIMEOUT_MS,
+				// Бесплатный пул меняется и может включать reasoning-модели.
+				maxTokens: 2048,
 				extraBody: {temperature: 0},
 			},
 		};

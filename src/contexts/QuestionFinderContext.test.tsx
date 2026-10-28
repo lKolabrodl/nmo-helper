@@ -65,11 +65,32 @@ describe('QuestionFinderProvider — тема и год', () => {
 });
 
 describe('QuestionFinderProvider — глобальная переменная', () => {
+	it('читает тему до старта теста и ждёт текущий вопрос, не подставляя первый из списка', () => {
+		const topic = `${TOPIC} - 2024 - Контрольное тестирование`;
+		const questions = [{question: 'Первый вопрос', variants: ['A', 'B'], isSingle: true}];
+		window.__NMO_HELPER_STATE__ = {topic, question: null, questions};
+		render(<QuestionFinderProvider><QuestionState/></QuestionFinderProvider>);
+
+		expect(screen.getByTestId('topic')).toHaveTextContent(`${TOPIC} - 2024`);
+		expect(screen.getByTestId('raw-topic')).toHaveTextContent(topic);
+		expect(screen.getByTestId('question')).toBeEmptyDOMElement();
+		expect(screen.getByTestId('variants')).toHaveTextContent('[]');
+
+		act(() => {
+			window.__NMO_HELPER_STATE__ = {topic, question: questions[0], questions};
+			window.dispatchEvent(new Event(PAGE_STATE_UPDATED));
+		});
+		expect(screen.getByTestId('question')).toHaveTextContent('Первый вопрос');
+		expect(screen.getByTestId('variants')).toHaveTextContent('["A","B"]');
+		expect(screen.getByTestId('single')).toHaveTextContent('true');
+	});
+
 	it('берёт тему, вопрос и варианты из переменной вместо HTML', () => {
 		document.body.innerHTML = '<div id="questionAnchor"><div class="question-title-text">Вопрос из HTML</div></div>';
 		window.__NMO_HELPER_STATE__ = {
 			topic: `${TOPIC} - 2024 - Контрольное тестирование`,
-			question: 'Вопрос из State', variants: ['B', 'A'], isSingle: true,
+			question: {question: 'Вопрос из State', variants: ['B', 'A'], isSingle: true},
+			questions: [],
 		};
 		render(<QuestionFinderProvider><QuestionState/></QuestionFinderProvider>);
 		expect(screen.getByTestId('topic')).toHaveTextContent(`${TOPIC} - 2024`);
@@ -86,7 +107,9 @@ describe('QuestionFinderProvider — глобальная переменная',
 		render(<QuestionFinderProvider><QuestionState/></QuestionFinderProvider>);
 		act(() => {
 			window.__NMO_HELPER_STATE__ = {
-				topic: null, question: 'Новый вопрос', variants: ['C', 'D'], isSingle: false,
+				topic: null,
+				question: {question: 'Новый вопрос', variants: ['C', 'D'], isSingle: false},
+				questions: [],
 			};
 			window.dispatchEvent(new Event(PAGE_STATE_UPDATED));
 		});
@@ -98,7 +121,11 @@ describe('QuestionFinderProvider — глобальная переменная',
 
 	it('использует HTML, если в переменной нет вариантов', () => {
 		document.body.innerHTML = '<div id="questionAnchor"><div class="question-title-text">Вопрос из HTML</div></div>';
-		window.__NMO_HELPER_STATE__ = {topic: 'Тема', question: 'Неполный вопрос', variants: [], isSingle: true};
+		window.__NMO_HELPER_STATE__ = {
+			topic: 'Тема',
+			question: {question: 'Неполный вопрос', variants: [], isSingle: true},
+			questions: [],
+		};
 		render(<QuestionFinderProvider><QuestionState/></QuestionFinderProvider>);
 		expect(screen.getByTestId('question')).toHaveTextContent('Вопрос из HTML');
 		act(() => {

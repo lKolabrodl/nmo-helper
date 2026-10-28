@@ -103,6 +103,41 @@ const mkModel = (items: Array<Omit<QaCaseModel, 'idx'>>): QaCaseModel[] =>
 	items.map((c, idx) => ({ ...c, idx }));
 
 describe('findAnswers — базовый матчинг по вопросу', () => {
+	it.each(['Морфологический субстрат ЛГ', 'Морфологичесий субстрат ЛГ'])(
+		'сохраняет исходные тексты, порядок вариантов и модель при поиске: %s', question => {
+			const variants = ['Ответ — Бета', '«Ответ Альфа»'];
+			const model = mkModel([
+				{question: 'МОРФОЛОГИЧЕСКИЙ  СУБСТРАТ ЛГ', variants: ['ответ альфа', 'ответ - бета'], answers: ['ответ альфа', 'ответ - бета']},
+			]);
+			const originalModel = JSON.stringify(model);
+
+			expect(findAnswers(model, question, variants)?.answers).toEqual(['Ответ — Бета', '«Ответ Альфа»']);
+			expect(variants).toEqual(['Ответ — Бета', '«Ответ Альфа»']);
+			expect(JSON.stringify(model)).toBe(originalModel);
+		},
+	);
+
+	it('сначала выбирает точный набор вариантов вместо более раннего похожего', () => {
+		const question = 'Какой метод лечения применяется';
+		const variants = ['метод лечения альфа у взрослых', 'метод лечения бета у взрослых'];
+		const model = mkModel([
+			{question, variants: ['метод лечения альфа', 'метод лечения бета'], answers: ['метод лечения альфа']},
+			{question: 'КАКОЙ  МЕТОД ЛЕЧЕНИЯ ПРИМЕНЯЕТСЯ', variants: [...variants].reverse(), answers: [variants[1]]},
+		]);
+
+		expect(findAnswers(model, question, variants)).toEqual({answers: [variants[1]], score: 1});
+	});
+
+	it('точный вопрос имеет приоритет над похожим с большим покрытием вариантов', () => {
+		const question = 'Какой метод лечения применяется';
+		const variants = ['метод альфа', 'метод бета', 'метод гамма'];
+		const model = mkModel([
+			{question: `${question} у взрослых`, variants, answers: [variants[1]]},
+			{question, variants: [variants[0], 'другой способ'], answers: [variants[0]]},
+		]);
+
+		expect(findAnswers(model, question, variants)?.answers).toEqual([variants[0]]);
+	});
 
 	it('точное совпадение вопроса — возвращает variants + answers case\'а', () => {
 		const model = mkModel([

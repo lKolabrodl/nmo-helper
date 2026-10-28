@@ -51,6 +51,13 @@ export const SELECTORS = {
 	nextQuestionButton: ['.question-buttons-primary', '.question-buttons button', 'button'],
 	/** Блок действий теста: список вопросов + завершение тестирования */
 	quizActions: ['mat-card-actions.mat-mdc-card-actions', '.mat-mdc-card-actions.mdc-card__actions', '.mat-mdc-card-actions'],
+	/** Стартовый экран теста и его кнопки. */
+	quizInfo: ['.quiz-info-row'],
+	quizStartActions: ['.quiz-buttons mat-card-actions', '.quiz-buttons .mat-mdc-card-actions'],
+	/** Индикаторы количества вопросов, времени и статуса теста. */
+	quizInfoIndicator: ['.quiz-info-col-indicators-item'],
+	indicatorLabel: ['.text_label'],
+	indicatorValue: ['.text_value'],
 	/** Кнопка завершения тестирования */
 	finishQuizButton: ['.quiz-buttons-primary', 'button'],
 	/** Кнопки в модалке подтверждения завершения тестирования */

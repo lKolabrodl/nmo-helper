@@ -1,8 +1,14 @@
-export interface IPageQuestionState {
-	readonly topic: string | null;
+export interface IPageQuestion {
 	readonly question: string;
 	readonly variants: string[];
 	readonly isSingle: boolean;
+}
+
+/** До старта теста question равен null, но questions уже может быть заполнен. */
+export interface IPageQuestionState {
+	readonly topic: string | null;
+	readonly question: IPageQuestion | null;
+	readonly questions: IPageQuestion[];
 }
 
 declare global {
@@ -18,7 +24,31 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/** Оставляет из State только тему, текущий вопрос, варианты и тип ответа. */
+function getQuestion(value: unknown): IPageQuestion | null {
+	if (!isRecord(value) || typeof value.stringContent !== 'string'
+		|| !Array.isArray(value.answers) || !value.answers.length
+		|| (value.type !== 'single' && value.type !== 'multi')) return null;
+	const variants: string[] = [];
+	for (const answer of value.answers as unknown[]) {
+		if (!isRecord(answer) || typeof answer.stringContent !== 'string' || !answer.stringContent.trim()) return null;
+		variants.push(answer.stringContent.trim());
+	}
+	return {question: value.stringContent.trim(), variants, isSingle: value.type === 'single'};
+}
+
+function isPageQuestion(value: unknown): value is IPageQuestion {
+	return isRecord(value) && typeof value.question === 'string'
+		&& Array.isArray(value.variants) && value.variants.every(item => typeof item === 'string')
+		&& typeof value.isSingle === 'boolean';
+}
+
+function isPageQuestionState(value: unknown): value is IPageQuestionState {
+	if (!isRecord(value) || (value.topic !== null && typeof value.topic !== 'string')
+		|| !Array.isArray(value.questions) || !value.questions.every(isPageQuestion)) return false;
+	return value.question === null || isPageQuestion(value.question);
+}
+
+/** Оставляет из State тему, текущий вопрос и все загруженные вопросы теста с вариантами. */
 function getQuestionState(value: unknown): IPageQuestionState | null | undefined {
 	if (typeof value === 'string') {
 		try { value = JSON.parse(value); } catch { return undefined; }
@@ -33,20 +63,14 @@ function getQuestionState(value: unknown): IPageQuestionState | null | undefined
 	}
 	if (!isRecord(value) || !isRecord(value.variantState)) return undefined;
 	const {variant, currentQuestion} = value.variantState;
-	if (!isRecord(variant) || variant.finishTime || typeof currentQuestion !== 'number'
-		|| !Number.isInteger(currentQuestion) || !Array.isArray(variant.questions)) return null;
-	const question: unknown = variant.questions[currentQuestion];
-	if (!isRecord(question) || typeof question.stringContent !== 'string'
-		|| !Array.isArray(question.answers) || !question.answers.length
-		|| (question.type !== 'single' && question.type !== 'multi')) return null;
-	const variants: string[] = [];
-	for (const answer of question.answers as unknown[]) {
-		if (!isRecord(answer) || typeof answer.stringContent !== 'string' || !answer.stringContent.trim()) return null;
-		variants.push(answer.stringContent.trim());
-	}
+	if (!isRecord(variant) || variant.finishTime || !Array.isArray(variant.questions)) return null;
+	const questions = (variant.questions as unknown[]).map(getQuestion);
+	const question = typeof currentQuestion === 'number' && Number.isInteger(currentQuestion)
+		? questions[currentQuestion] : null;
 	return {
 		topic: typeof variant.title === 'string' ? variant.title.trim() : null,
-		question: question.stringContent.trim(), variants, isSingle: question.type === 'single',
+		question: question ?? null,
+		questions: questions.filter((item): item is IPageQuestion => item !== null),
 	};
 }
 
@@ -58,11 +82,8 @@ export function subscribePageState(): () => void {
 		let question: IPageQuestionState | null | undefined;
 		if (message.source === MESSAGE_SOURCE) {
 			const payload = message.payload;
-			if (payload !== null && (!isRecord(payload) || typeof payload.question !== 'string'
-				|| !Array.isArray(payload.variants) || !payload.variants.every(item => typeof item === 'string')
-				|| typeof payload.isSingle !== 'boolean'
-				|| (payload.topic !== null && typeof payload.topic !== 'string'))) return;
-			question = payload as IPageQuestionState | null;
+			if (payload !== null && !isPageQuestionState(payload)) return;
+			question = payload;
 		} else if (message.source === '@devtools-page'
 			&& ['INIT', 'ACTION', 'STATE', 'PARTIAL_STATE'].includes(String(message.type))) {
 			question = getQuestionState(message.payload);

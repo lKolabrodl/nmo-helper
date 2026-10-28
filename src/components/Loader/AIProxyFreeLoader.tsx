@@ -14,22 +14,28 @@ export interface IFreeAiSolverState {
 interface IAIProxyFreeLoaderProps {
 	readonly active: boolean;
 	readonly onChange: (state: IFreeAiSolverState) => void;
+	readonly onComplete?: () => void;
 }
 
 /**
- * Headless-загрузчик бесплатного AI. Сам запускает маршрут GPT-OSS → Qwen → Llama → AI Horde,
+ * Headless-загрузчик бесплатного AI. Сам запускает маршрут GPT-OSS → Qwen → Llama → Kilo → AI Horde,
  * сохраняет найденный ответ в кеш и показывает фактически ответившую модель или сервис.
  */
-const AIProxyFreeLoader = ({active, onChange}: IAIProxyFreeLoaderProps) => {
+const AIProxyFreeLoader = ({active, onChange, onComplete}: IAIProxyFreeLoaderProps) => {
 	const {question, variants, isSingle, topic} = useQuestionFinder();
 	const {setStatus} = usePanelStatus();
 	const pendingRef = useRef(false);
 	const onChangeRef = useRef(onChange);
+	const onCompleteRef = useRef(onComplete);
 	onChangeRef.current = onChange;
+	onCompleteRef.current = onComplete;
 
 	useEffect(() => {
 		if (!active || !question || !variants.length) return;
-		if (answerCache.has(topic, question, variants)) return;
+		if (answerCache.has(topic, question, variants)) {
+			onCompleteRef.current?.();
+			return;
+		}
 		if (pendingRef.current) return;
 
 		const currentQuestion = question;
@@ -70,7 +76,10 @@ const AIProxyFreeLoader = ({active, onChange}: IAIProxyFreeLoaderProps) => {
 				if (cancelled) return;
 				setStatus({title: (error as Error).message, status: Status.ERR});
 			} finally {
-				if (!cancelled) pendingRef.current = false;
+				if (!cancelled) {
+					pendingRef.current = false;
+					onCompleteRef.current?.();
+				}
 			}
 		}
 

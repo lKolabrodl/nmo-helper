@@ -1,4 +1,5 @@
-import {act, render, waitFor} from '@testing-library/react';
+import {useState} from 'react';
+import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {Status} from '../../types';
 import {StatusTitle} from '../../utils/constants';
@@ -43,7 +44,7 @@ beforeEach(() => {
 });
 
 describe('AIProxyFreeLoader', () => {
-	it.each(['GPT-OSS 120B', 'Qwen 3.8 27B', 'OVH', 'AI Horde'])('сохраняет ответ и показывает источник %s', async source => {
+	it.each(['GPT-OSS 120B', 'Qwen 3.8 27B', 'OVH', 'Kilo', 'AI Horde'])('сохраняет ответ и показывает источник %s', async source => {
 		mocks.askFreeAI.mockResolvedValue({correctIndexes: [1], source});
 		const onChange = vi.fn();
 
@@ -153,8 +154,100 @@ describe('AIProxyFreeLoader', () => {
 	});
 
 	it('не запускает запрос, пока бесплатный режим выключен', () => {
-		render(<AIProxyFreeLoader active={false} onChange={vi.fn()}/>);
+		const onComplete = vi.fn();
+		render(<AIProxyFreeLoader active={false} onChange={vi.fn()} onComplete={onComplete}/>);
 
 		expect(mocks.askFreeAI).not.toHaveBeenCalled();
+		expect(onComplete).not.toHaveBeenCalled();
+	});
+
+	it.each(['ответ', 'пустой ответ', 'ошибка'])('вызывает onComplete один раз после завершения: %s', async result => {
+		if (result === 'ошибка') mocks.askFreeAI.mockRejectedValue(new Error('сервис недоступен'));
+		else mocks.askFreeAI.mockResolvedValue({correctIndexes: result === 'ответ' ? [1] : [], source: 'AI Horde'});
+		const onComplete = vi.fn();
+		const onChange = vi.fn();
+		const {rerender} = render(<AIProxyFreeLoader active onChange={onChange} onComplete={onComplete}/>);
+
+		await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
+		rerender(<AIProxyFreeLoader active onChange={onChange} onComplete={onComplete}/>);
+		expect(onComplete).toHaveBeenCalledOnce();
+		expect(mocks.askFreeAI).toHaveBeenCalledOnce();
+	});
+
+	it('завершает активацию без запроса, если ответ уже есть в кеше', () => {
+		mocks.answerCacheHas.mockReturnValue(true);
+		const onComplete = vi.fn();
+
+		render(<AIProxyFreeLoader active onChange={vi.fn()} onComplete={onComplete}/>);
+
+		expect(onComplete).toHaveBeenCalledOnce();
+		expect(mocks.askFreeAI).not.toHaveBeenCalled();
+	});
+
+	it.each(['остановка', 'размонтирование'])('не вызывает onComplete для отменённого запроса: %s', async reason => {
+		let finishRequest!: (answer: {correctIndexes: number[]; source: string}) => void;
+		mocks.askFreeAI.mockReturnValue(new Promise(resolve => { finishRequest = resolve; }));
+		const onComplete = vi.fn();
+		const {rerender, unmount} = render(<AIProxyFreeLoader active onChange={vi.fn()} onComplete={onComplete}/>);
+		const {signal} = mocks.askFreeAI.mock.calls[0][4];
+		expect(onComplete).not.toHaveBeenCalled();
+
+		if (reason === 'остановка') rerender(<AIProxyFreeLoader active={false} onChange={vi.fn()} onComplete={onComplete}/>);
+		else unmount();
+		expect(signal.aborted).toBe(true);
+
+		await act(async () => finishRequest({correctIndexes: [1], source: 'AI Horde'}));
+		expect(onComplete).not.toHaveBeenCalled();
+		expect(mocks.answerCacheSet).not.toHaveBeenCalled();
+	});
+
+	it('использует актуальный onComplete, не перезапуская текущий запрос', async () => {
+		let finishRequest!: (answer: {correctIndexes: number[]; source: string}) => void;
+		mocks.askFreeAI.mockReturnValue(new Promise(resolve => { finishRequest = resolve; }));
+		const originalOnComplete = vi.fn();
+		const latestOnComplete = vi.fn();
+		const {rerender} = render(<AIProxyFreeLoader active onChange={vi.fn()} onComplete={originalOnComplete}/>);
+		const {signal} = mocks.askFreeAI.mock.calls[0][4];
+
+		rerender(<AIProxyFreeLoader active onChange={vi.fn()} onComplete={latestOnComplete}/>);
+		expect(mocks.askFreeAI).toHaveBeenCalledOnce();
+		expect(signal.aborted).toBe(false);
+		expect(latestOnComplete).not.toHaveBeenCalled();
+
+		await act(async () => finishRequest({correctIndexes: [1], source: 'AI Horde'}));
+		expect(originalOnComplete).not.toHaveBeenCalled();
+		expect(latestOnComplete).toHaveBeenCalledOnce();
+	});
+
+	it('через onComplete ставит следующий вопрос на паузу до новой активации', async () => {
+		mocks.askFreeAI.mockResolvedValue({correctIndexes: [1], source: 'AI Horde'});
+		function PausingLoader() {
+			const [active, setActive] = useState(true);
+			return (
+				<>
+					<AIProxyFreeLoader active={active} onChange={vi.fn()} onComplete={() => setActive(false)}/>
+					<button disabled={active} onClick={() => setActive(true)}>Продолжить</button>
+				</>
+			);
+		}
+		const {rerender} = render(<PausingLoader/>);
+		await waitFor(() => expect(screen.getByRole('button', {name: 'Продолжить'})).toBeEnabled());
+		expect(mocks.askFreeAI).toHaveBeenCalledOnce();
+
+		mocks.useQuestionFinder.mockReturnValue({
+			question: 'Следующий вопрос?',
+			variants: ['Да', 'Нет'],
+			isSingle: true,
+			topic: 'Тема',
+		});
+		rerender(<PausingLoader/>);
+		expect(mocks.askFreeAI).toHaveBeenCalledOnce();
+
+		fireEvent.click(screen.getByRole('button', {name: 'Продолжить'}));
+		await waitFor(() => {
+			expect(mocks.answerCacheSet).toHaveBeenLastCalledWith('Тема', 'Следующий вопрос?', ['Да', 'Нет'], ['Нет']);
+			expect(screen.getByRole('button', {name: 'Продолжить'})).toBeEnabled();
+		});
+		expect(mocks.askFreeAI).toHaveBeenCalledTimes(2);
 	});
 });
