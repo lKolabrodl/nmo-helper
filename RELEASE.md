@@ -3,6 +3,46 @@
 This file records the project release flow so the next release does not depend
 on memory.
 
+## Version 5.0.2
+
+This maintenance release fixes quiz topic detection that could prevent
+automatic answer search from finding results on the NMO portal.
+
+Other changes included from `dev`:
+
+- Match answer highlights against the current variant texts and restore them
+  after the page replaces DOM elements or reorders variants.
+- Restore standard selection and clipboard commands on the quiz page.
+- Add the Support link to the extension popup.
+
+Local validation:
+
+- `npm test`: 772/772 tests, 54/54 files.
+- `npx tsc --noEmit --pretty false`: clean.
+- `npm run build`: all four browser targets built successfully.
+- Package metadata, all four source and built manifests, and every popup use
+  `5.0.2`.
+- A clean build from the AMO source archive matches all four prepared browser
+  targets byte-for-byte.
+- The signed Firefox package contains version `5.0.2`. Its code and resources
+  match `dist/firefox/`; the manifest has identical settings and differs only
+  in formatting.
+
+Local archives:
+
+- `nmo-helper-chrome-5.0.2.zip`
+- `nmo-helper-firefox-5.0.2.zip`
+- `nmo-helper-firefox-store-5.0.2.zip`
+- `nmo-helper-source-5.0.2.zip`, including updated `BUILD.md`.
+
+Public GitHub Release assets:
+
+- `firefox_nmo_helper.xpi` — signed Firefox package, version `5.0.2`.
+- `nmo-helper-chrome-5.0.2.zip` — Chromium build, version `5.0.2`.
+
+Release title: `NMO Helper v5.0.2 — исправление поиска темы`.
+The annotated tag is `v5.0.2`. README installation links point to this release.
+
 ## Branch flow
 
 1. Finish and test changes on `dev`.
@@ -30,6 +70,7 @@ Then make sure the same version is present in:
 - `package.json`
 - `package-lock.json`
 - `src/manifest.chrome.json`
+- `src/manifest.chrome-store.json`
 - `src/manifest.firefox.json`
 - `src/manifest.firefox-store.json`
 - `src/popup.html`

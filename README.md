@@ -1,4 +1,4 @@
-# NMO Helper v5.0.1
+# NMO Helper v5.0.2
 
 > Умный помощник в прохождении тестов НМО — бесплатное расширение для браузера с открытым исходным кодом.
 
@@ -10,14 +10,12 @@
 [![Downloads](https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper/releases)
 [![Stars](https://img.shields.io/github/stars/lKolabrodl/nmo-helper?style=flat-square&color=fbbf24&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/lKolabrodl/nmo-helper/blob/main/LICENSE)
-[![VirusTotal](https://img.shields.io/badge/VirusTotal-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/2c6ac190cde11dc59832e5e28db07e508fa0d5381167cc2b4e406026686c9b02?nocache=1)
+[![VirusTotal v5.0.1](https://img.shields.io/badge/VirusTotal%20v5.0.1-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/2c6ac190cde11dc59832e5e28db07e508fa0d5381167cc2b4e406026686c9b02?nocache=1)
 
 🌐 **Сайт:** [nmo-helper.ru](https://nmo-helper.ru)<br>
 📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)<br>
 💬 **Обратная связь:** [nmo-helper.ru/feedback](https://nmo-helper.ru/feedback)<br>
 🐞 **Баги и предложения:** [GitHub Issues](https://github.com/lKolabrodl/nmo-helper/issues)
-
----
 
 ## Возможности
 
@@ -46,12 +44,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-chrome-5.0.1.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.1/nmo-helper-chrome-5.0.1.zip)
+1. Скачайте [`nmo-helper-chrome-5.0.2.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.2/nmo-helper-chrome-5.0.2.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-chrome-5.0.1`
+6. Выберите папку `nmo-helper-chrome-5.0.2`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
@@ -67,7 +65,7 @@
 
 **Способ 2 — прямая установка `.xpi`:**
 
-1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.1/firefox_nmo_helper.xpi)
+1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.0.2/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
 3. Подтвердите установку
 
@@ -196,7 +194,7 @@ npm test            # Запустить тесты
 Расширение **не требует пользовательской регистрации**, **не отправляет аналитику** и **не подсовывает реферальные ссылки**. Для собственной базы NMO Helper создаётся анонимный ID установки и локальная пара ключей: закрытый ключ не покидает браузер, сервер получает только открытый ключ и подписанные запросы. Но не верьте на слово — проверьте сами:
 
 - Исходный код открыт на GitHub
-- Проверено через [VirusTotal](https://www.virustotal.com/gui/file/dd746259d7a4eefdaadd88e33c2fec39eca2ee848b05cee036a6713b29459c7d?nocache=1)
+- [Отчёт VirusTotal для версии 5.0.1](https://www.virustotal.com/gui/file/2c6ac190cde11dc59832e5e28db07e508fa0d5381167cc2b4e406026686c9b02?nocache=1)
 - Подписано и опубликовано в [Firefox Add-ons](https://addons.mozilla.org/ru/firefox/addon/nmo-helper/)
 - PDF-файлы обрабатываются локально в браузере и не отправляются на сервер
 - Вопросы и правильные ответы из завершённого теста отправляются в общую базу только после согласия пользователя
