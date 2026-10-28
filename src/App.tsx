@@ -16,6 +16,7 @@ import SectionAi from './components/SectionAi';
 import SectionPdf from './components/SectionPdf';
 import CollapsedPill from './components/CollapsedPill';
 import AnswerHighlighter from './components/Loader/AnswerHighlighter';
+import QuizQuestionsLoader from './components/Loader/QuizQuestionsLoader';
 import QuestionCacheCollector from './components/Loader/QuestionCacheCollector';
 import AnswerSharingLoader from './components/Loader/AnswerSharingLoader';
 import AnswerScoreHighlighter from './components/Loader/AnswerScoreHighlighter';
@@ -64,6 +65,7 @@ const App: React.FC<{initialState: IExtensionState}> = ({initialState}) => (
 						<PdfScoreProvider>
 							<ErrorBoundary>
 								<AnswerHighlighter/>
+								<QuizQuestionsLoader/>
 								<QuestionCacheCollector/>
 								<AnswerSharingLoader/>
 								<AnswerScoreHighlighter/>
