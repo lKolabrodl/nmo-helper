@@ -10,7 +10,7 @@
 [![Downloads](https://img.shields.io/github/downloads/lKolabrodl/nmo-helper/total?style=flat-square&label=скачиваний&color=667eea&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper/releases)
 [![Stars](https://img.shields.io/github/stars/lKolabrodl/nmo-helper?style=flat-square&color=fbbf24&cacheSeconds=3600)](https://github.com/lKolabrodl/nmo-helper)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](https://github.com/lKolabrodl/nmo-helper/blob/main/LICENSE)
-[![VirusTotal v5.0.1](https://img.shields.io/badge/VirusTotal%20v5.0.1-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/2c6ac190cde11dc59832e5e28db07e508fa0d5381167cc2b4e406026686c9b02?nocache=1)
+[![VirusTotal v5.1.0](https://img.shields.io/badge/VirusTotal%20v5.1.0-Clean-brightgreen?style=flat-square&logo=virustotal)](https://www.virustotal.com/gui/file/731e7b2e8170f23bbee990ab8563014f7ce31682b5feeeb22086bdc78ad96865?nocache=1)
 
 🌐 **Сайт:** [nmo-helper.ru](https://nmo-helper.ru)<br>
 📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)<br>
