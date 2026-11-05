@@ -6,6 +6,9 @@
 /** Цвет подсветки правильных ответов */
 export const HIGHLIGHT_COLOR = '#4ecca3';
 
+/** Собственный класс подсветки: снимается без изменения стилей портала. */
+export const HIGHLIGHT_CLASS = 'nmo-helper-answer-correct';
+
 /** Порог нечёткого совпадения (Dice coefficient) для поиска вопросов на сайтах-источниках */
 export const SIMILARITY_THRESHOLD = 0.85;
 
