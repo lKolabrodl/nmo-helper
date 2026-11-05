@@ -139,8 +139,7 @@ export function getQuestionHtml(): string | null {
 /**
  * DOM-элементы всех вариантов ответа для текущего вопроса.
  *
- * Возвращает `HTMLElement[]` — на них потом навешивается подсветка правильных
- * ответов (`style.backgroundColor`).
+ * Возвращает `HTMLElement[]` для выбора и подсветки правильных ответов.
  *
  * @returns Массив элементов вариантов. Пустой — если нет активного вопроса.
  */
@@ -157,8 +156,8 @@ export function getVariantElements(): HTMLElement[] {
  * в body. TreeWalker исключает панель расширения и скрытые служебные элементы
  * вместе с их дочерними узлами ещё до чтения текста. Для
  * вложенной разметки выбираем самый глубокий элемент с полным текстом варианта.
- * Если текст не найден, используем элемент по известным селекторам и позиции,
- * только когда число элементов совпадает с числом вариантов.
+ * Если точный текст не найден, у элементов по известным селекторам убираем
+ * служебную нумерацию (`1. ` / `2) `) и снова сопоставляем по тексту.
  *
  * @returns По одному элементу или `null` на каждый вариант из контекста.
  */
@@ -204,11 +203,22 @@ export function findVariantElements(variants: readonly string[]): (HTMLElement |
 	});
 	if (elements.every(Boolean)) return elements;
 
-	const fallback = getVariantElements();
-	if (fallback.length !== variants.length) return elements;
+	const numberedCandidates = new Map<string, HTMLElement[]>();
+	for (const element of getVariantElements()) {
+		if (element.closest(excludedSelector)) continue;
+		const text = normalizeVariantText(element.innerText ?? element.textContent ?? '');
+		const key = text.replace(/^\d+[.)]\s+/, '');
+		if (key === text || !wanted.has(key)) continue;
+		const matches = numberedCandidates.get(key) ?? [];
+		if (matches[matches.length - 1]?.contains(element)) matches.pop();
+		matches.push(element);
+		numberedCandidates.set(key, matches);
+	}
+
 	return elements.map((element, index) => {
-		const fallbackElement = fallback[index];
-		if (element || !keys[index] || fallbackElement.closest(excludedSelector) || !available(fallbackElement)) return element;
+		if (element) return element;
+		const fallbackElement = numberedCandidates.get(keys[index])?.find(available);
+		if (!fallbackElement) return null;
 		used.add(fallbackElement);
 		return fallbackElement;
 	});

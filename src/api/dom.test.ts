@@ -317,7 +317,7 @@ describe('fn findVariantElements', () => {
 		expect(findVariantElements(['A'])).toEqual([document.getElementById('a')]);
 	});
 
-	it('использует селекторы для ненайденного текста и сохраняет найденный элемент', () => {
+	it('сопоставляет нумерованный вариант по тексту и сохраняет точное совпадение', () => {
 		document.body.innerHTML = `
 			<div id="questionAnchor">
 				<div class="mdc-form-field"><span id="a">1. A</span></div>
@@ -328,6 +328,81 @@ describe('fn findVariantElements', () => {
 		expect(findVariantElements(['A', 'B'])).toEqual([
 			document.getElementById('a'), document.getElementById('b'),
 		]);
+	});
+
+	it('не сопоставляет варианты по позиции, когда DOM ещё содержит другой вопрос', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<div class="mdc-form-field"><span>Старый A</span></div>
+				<div class="mdc-form-field"><span>Старый B</span></div>
+			</div>
+		`;
+
+		expect(findVariantElements(['Новый A', 'Новый B'])).toEqual([null, null]);
+	});
+
+	it('сопоставляет переставленные нумерованные варианты по тексту', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<div class="mdc-form-field"><span id="b">1. B</span></div>
+				<div class="mdc-form-field"><span id="a">2) A</span></div>
+			</div>
+		`;
+
+		expect(findVariantElements(['A', 'B'])).toEqual([
+			document.getElementById('a'), document.getElementById('b'),
+		]);
+	});
+
+	it('сопоставляет нумерованные варианты при неполном DOM без сдвига индексов', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<div class="mdc-form-field"><span id="b">2. B</span></div>
+				<div class="mdc-form-field"><span id="a">1) A</span></div>
+			</div>
+		`;
+
+		expect(findVariantElements(['A', 'B', 'C'])).toEqual([
+			document.getElementById('a'), document.getElementById('b'), null,
+		]);
+	});
+
+	it('предпочитает точные числовые варианты нормализации нумерации', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<div class="mdc-form-field"><span id="numbered">1. 5 мг</span></div>
+				<div class="mdc-form-field"><span id="exact">5 мг</span></div>
+			</div>
+		`;
+
+		expect(findVariantElements(['5 мг', '1. 5 мг'])).toEqual([
+			document.getElementById('exact'), document.getElementById('numbered'),
+		]);
+	});
+
+	it('не удаляет дозировки и десятичные числа в начале вариантов', () => {
+		document.body.innerHTML = `
+			<div id="questionAnchor">
+				<div class="mdc-form-field"><span>10 мг</span></div>
+				<div class="mdc-form-field"><span>1.5 мг</span></div>
+			</div>
+		`;
+
+		expect(findVariantElements(['мг', '5 мг'])).toEqual([null, null]);
+	});
+
+	it('не читает скрытые нумерованные варианты при запасном поиске', () => {
+		document.body.innerHTML = '<div id="questionAnchor"><section hidden><div class="mdc-form-field"><span>1. A</span></div></section></div>';
+		let hiddenTextReads = 0;
+		Object.defineProperty(document.querySelector('span'), 'innerText', {
+			get() {
+				hiddenTextReads += 1;
+				return '1. A';
+			},
+		});
+
+		expect(findVariantElements(['A'])).toEqual([null]);
+		expect(hiddenTextReads).toBe(0);
 	});
 
 	it('оставляет пропуски, чтобы индексы найденных вариантов не сдвигались', () => {

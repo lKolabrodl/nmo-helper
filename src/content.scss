@@ -1,6 +1,11 @@
 @use 'vars' as *;
 @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
+// Подсветка ответов на странице портала, вне панели расширения.
+.nmo-helper-answer-correct {
+  color: #4ecca3 !important;
+}
+
 // ─── Panel container ─────────────────────────────
 #nmo-panel {
   position: fixed;

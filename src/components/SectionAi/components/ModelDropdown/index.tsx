@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import cn from 'classnames';
 import './styles.scss';
@@ -50,6 +50,14 @@ const ModelDropdown: React.FC<IModelDropdownProps> = ({models, model, setModel, 
 		}
 		setOpen(o => !o);
 	};
+
+	useLayoutEffect(() => {
+		if (!open) return;
+		const selected = listRef.current?.querySelector<HTMLElement>('[role="option"][aria-selected="true"]');
+		const options = selected?.parentElement;
+		if (!selected || !options) return;
+		options.scrollTop += selected.getBoundingClientRect().top - options.getBoundingClientRect().top - (options.clientHeight - selected.offsetHeight) / 2;
+	}, [open]);
 
 	// клик вне закрывает; resize пересчитывает позицию
 	useEffect(() => {

@@ -27,9 +27,8 @@ interface IAnswerSourceState {
 }
 
 const SectionAuto: React.FC = (): React.JSX.Element => {
-	// контекст всяктй
 	const {status, setStatus} = usePanelStatus();
-	const {topic, question, variants} = useQuestionFinder();
+	const {topic, question, variants, isSingle} = useQuestionFinder();
 	const {setBugReportContext} = useBugReportContext();
 
 	// models
@@ -37,10 +36,12 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 	const [firstSource, setFirstSource] = useState<IAnswerSourceState>(EMPTY_ANSWER_SOURCE_STATE);
 	const [secondarySource, setSecondarySource] = useState<IAnswerSourceState>(EMPTY_ANSWER_SOURCE_STATE);
 	const [thirdSource, setThirdSource] = useState<IAnswerSourceState>(EMPTY_ANSWER_SOURCE_STATE);
-	const [isActive, setIsActive] = useState(false);
-	const sourceTopicRef = useRef<string | null>(null);
+	const [activeAiQuestionKey, setActiveAiQuestionKey] = useState<string | null>(null);
 
+	const sourceTopicRef = useRef<string | null | undefined>(undefined);
+	const aiAttemptRef = useRef({questionKey: '', attempted: false});
 
+	const questionKey = JSON.stringify([topic, question, variants, isSingle]);
 
 	// Инициализация контекста при каждом входе в режим «Авто».
 	useEffect(() => setBugReportContext({mode: 'auto', url: ''}), [setBugReportContext]);
@@ -49,8 +50,8 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		if (!question) return;
 
 		if (state.loading) {
-			setIsActive(false);
-			sourceTopicRef.current = null;
+			setActiveAiQuestionKey(null);
+			sourceTopicRef.current = undefined;
 			setFirstSource(EMPTY_ANSWER_SOURCE_STATE);
 			setSecondarySource(EMPTY_ANSWER_SOURCE_STATE);
 			setNmoHelperSource(EMPTY_ANSWER_SOURCE_STATE);
@@ -60,14 +61,13 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			return setStatus({title: StatusTitle.SEARCHING_ANSWERS, status: Status.LOADING});
 		}
 
-		if (state.error) return setStatus({title: state.error, status: Status.WARN});
-		if (!state.data.length) return;
 		sourceTopicRef.current = topic;
+		const results = state.error ? [] : state.data;
 
-		const nmoHelperResult = pickResult(state.data, 'nmo-helper', topic);
-		const primaryResult = pickResult(state.data, 'first', topic);
-		const secondaryResult = pickResult(state.data, 'second', topic);
-		const fooResult = pickResult(state.data, 'third', topic);
+		const nmoHelperResult = pickResult(results, 'nmo-helper', topic);
+		const primaryResult = pickResult(results, 'first', topic);
+		const secondaryResult = pickResult(results, 'second', topic);
+		const fooResult = pickResult(results, 'third', topic);
 
 		const nextPrimarySourceUrl = primaryResult?.url ?? '';
 		const nextSecondarySourceUrl = secondaryResult?.url ?? '';
@@ -84,15 +84,19 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			mode: 'auto',
 			url: nextNmoHelperUrl || nextPrimarySourceUrl || nextSecondarySourceUrl || nextFooUrl,
 		});
-
-		// ничего не нашли =`(
-		if (!primaryResult && !secondaryResult && !nmoHelperResult && !fooResult) {
-			setStatus({title: StatusTitle.NOT_FOUND, status: Status.WARN});
-		}
 	};
 
 	useEffect(() => {
+		const questionKey = JSON.stringify([topic, question, variants, isSingle]);
+		if (aiAttemptRef.current.questionKey !== questionKey) {
+			aiAttemptRef.current = {questionKey, attempted: false};
+		}
 		if (!question || !variants.length || sourceTopicRef.current !== topic) return;
+		if (answerCache.has(topic, question, variants)) {
+			setActiveAiQuestionKey(null);
+			setStatus({title: 'найдено в памяти', status: Status.OK});
+			return;
+		}
 
 		const sources = [
 			{label: 'nmo-helper', ...nmoHelperSource},
@@ -103,25 +107,15 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			] : []),
 		].filter(source => source.url);
 
-		// пока пусто
-		if (!sources.length) return;
-
-		let hasAnswerMismatch = false;
-
 		for (const source of sources) {
 			if (!source.model.data?.length) continue;
 
 			const found = findAnswers(source.model.data, question, variants);
 
-			if (!found) continue;
-
-			if (!found.answers.length) {
-				hasAnswerMismatch = true;
-				continue;
-			}
+			if (!found?.answers.length) continue;
 
 			answerCache.set(topic ?? '', question, variants, found.answers);
-			setIsActive(false);
+			setActiveAiQuestionKey(null);
 			setBugReportContext({mode: 'auto', url: source.url});
 
 			if (found.score < LOW_CONFIDENCE_THRESHOLD) {
@@ -135,26 +129,21 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		const isLoading = sources.some(source => source.model.loading);
 		if (isLoading) return setStatus({title: StatusTitle.LOADING_ANSWERS, status: Status.LOADING});
 
-		const isAllError = sources.every(source => source.model.error);
-		if (isAllError) return setStatus({title: StatusTitle.LOADING_FAILED, status: Status.ERR});
+		// Поиск завершён, но ответа на текущий вопрос нет: запускаем AI
+		// один раз за посещение вопроса, включая пустую выдачу и ошибки источников.
+		if (aiAttemptRef.current.attempted) return;
+		aiAttemptRef.current.attempted = true;
+		setBugReportContext({mode: 'auto', url: ''});
+		setActiveAiQuestionKey(questionKey);
 
-		const isAllNullData = sources.every(source => !source.model.data?.length);
-		if (isAllNullData) {
-			setBugReportContext({mode: 'auto', url: ''});
-			return setIsActive(true);
-		}
-
-		if (hasAnswerMismatch) return setStatus({title: StatusTitle.ANSWER_MISMATCH, status: Status.WARN});
-		setStatus({title: StatusTitle.ANSWER_NOT_FOUND, status: Status.WARN});
-
-	}, [question, variants, topic, firstSource, secondarySource, nmoHelperSource, thirdSource, setBugReportContext, setStatus]);
+	}, [topic, question, variants, isSingle, firstSource, secondarySource, nmoHelperSource, thirdSource, setBugReportContext, setStatus]);
 
 	const isWarning = status.status === Status.WARN;
 	const isError = status.status === Status.ERR;
 	const isLoading = status.status === Status.LOADING;
 	const isOk = status.status === Status.OK;
 
-	const _topc = question ? topic ?? null : null;
+	const searchTopic = question ? topic ?? null : null;
 
 	// Остальные источники загружаем только при ошибке загрузки по найденному URL nmo-helper.
 	// Пустые данные и отсутствие URL не включают остальные источники.
@@ -162,7 +151,7 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 
 	return (
 		<div className="nmo-section">
-			<VariantLoader text={_topc} onChange={_updateSearchUrl}/>
+			<VariantLoader text={searchTopic} onChange={_updateSearchUrl}/>
 			<AnswerLoader url={nmoHelperSource.url}	onChange={model => setNmoHelperSource(source => ({...source, model}))}/>
 
 			{loadOtherSources &&
@@ -174,9 +163,9 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			}
 
 			<AIProxyFreeLoader
-				active={isActive && sourceTopicRef.current === topic}
-				onChange={({running}) => setIsActive(running)}
-				onComplete={() => setIsActive(false)}/>
+				active={activeAiQuestionKey === questionKey && sourceTopicRef.current === topic}
+				onChange={({running}) => setActiveAiQuestionKey(running ? questionKey : null)}
+				onComplete={() => setActiveAiQuestionKey(null)}/>
 
 			<div className="nmo-section-inner">
 				<div className="nmo-auto-hero nmo-fade-up">

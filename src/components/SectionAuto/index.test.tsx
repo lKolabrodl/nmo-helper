@@ -33,6 +33,14 @@ interface ITestFoundAnswer {
 	readonly score: number;
 }
 
+interface ITestQuestionState {
+	readonly topic: string | null;
+	readonly rawTopic: string | null;
+	readonly question: string | null;
+	readonly variants: string[];
+	readonly isSingle: boolean;
+}
+
 type AnswerChange = (state: ITestAnswerModel) => void;
 type VariantChange = (state: ITestVariantModel) => void;
 
@@ -46,7 +54,7 @@ const testState = vi.hoisted(() => ({
 		question: 'Вопрос',
 		variants: ['Ответ A', 'Ответ B'],
 		isSingle: true,
-	},
+	} as ITestQuestionState,
 	setStatus: vi.fn(),
 	setBugReportContext: vi.fn(),
 	cacheSet: vi.fn(),
@@ -192,12 +200,72 @@ describe('SectionAuto', () => {
 		});
 	});
 
-	it('не загружает остальные источники, если URL nmo-helper не найден', () => {
+	it('запускает AI без загрузки остальных источников, если URL nmo-helper не найден', async () => {
 		render(<SectionAuto/>);
 		startSourceLoading({source: 'third', title: 'Тема', url: FOO_URL});
 
 		expect(testState.answerChanges.size).toBe(0);
+		await waitFor(() => expect(testState.askFreeAI).toHaveBeenCalledOnce());
+	});
+
+	it.each([
+		{label: 'пустого результата', error: null},
+		{label: 'ошибки поиска', error: 'ничего не найдено'},
+		{label: 'ошибки регистрации 401', error: 'NMO installation registration failed: 401'},
+	])('запускает AI после завершения поиска без URL NMO: $label', async ({error}) => {
+		render(<SectionAuto/>);
+		act(() => testState.variantChange?.({loading: true, error: null, data: []}));
 		expect(testState.askFreeAI).not.toHaveBeenCalled();
+
+		act(() => testState.variantChange?.({loading: false, error, data: []}));
+		await waitFor(() => expect(testState.askFreeAI).toHaveBeenCalledOnce());
+		expect(testState.answerChanges.size).toBe(0);
+		expect(testState.setBugReportContext).toHaveBeenLastCalledWith({mode: 'auto', url: ''});
+	});
+
+	it('без распознанной темы дожидается завершения поиска перед запуском AI', async () => {
+		testState.questionState = {...testState.questionState, topic: null, rawTopic: null};
+		render(<SectionAuto/>);
+		expect(testState.askFreeAI).not.toHaveBeenCalled();
+
+		act(() => testState.variantChange?.({loading: true, error: null, data: []}));
+		expect(testState.askFreeAI).not.toHaveBeenCalled();
+
+		act(() => testState.variantChange?.({loading: false, error: null, data: []}));
+		await waitFor(() => expect(testState.askFreeAI).toHaveBeenCalledExactlyOnceWith(
+			'Вопрос', ['Ответ A', 'Ответ B'], true, '', expect.objectContaining({signal: expect.any(AbortSignal)}),
+		));
+	});
+
+	it.each([
+		{label: 'текущий вопрос отсутствует', found: null},
+		{label: 'ответы не совпали с вариантами', found: {answers: [], score: 1}},
+	])('запускает AI для непустой темы, если $label', async ({found}) => {
+		testState.foundBySource.set('nmo-helper', found);
+		render(<SectionAuto/>);
+		startSourceLoading({source: 'nmo-helper', title: 'Тема', url: NMO_API_RESULT_URL});
+		expect(testState.askFreeAI).not.toHaveBeenCalled();
+
+		act(() => {
+			testState.answerChanges.get(NMO_API_RESULT_URL)?.({
+				loading: false,
+				error: null,
+				data: makeModel('nmo-helper'),
+			});
+		});
+		await waitFor(() => expect(testState.askFreeAI).toHaveBeenCalledOnce());
+		expect(testState.cacheSet).toHaveBeenCalledWith('Тема', 'Вопрос', ['Ответ A', 'Ответ B'], ['Ответ B']);
+	});
+
+	it('использует кеш текущего вопроса без запроса к AI после ошибки поиска', () => {
+		testState.cacheHas.mockReturnValue(true);
+		render(<SectionAuto/>);
+		act(() => testState.variantChange?.({loading: true, error: null, data: []}));
+		act(() => testState.variantChange?.({loading: false, error: 'NMO installation registration failed: 401', data: []}));
+
+		expect(testState.askFreeAI).not.toHaveBeenCalled();
+		expect(testState.cacheSet).not.toHaveBeenCalled();
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено в памяти', status: 'ok'});
 	});
 
 	it.each([
@@ -312,6 +380,11 @@ describe('SectionAuto', () => {
 		});
 
 		await waitFor(() => expect(testState.askFreeAI.mock.calls[0][4].signal.aborted).toBe(true));
+		act(() => {
+			for (const url of OTHER_SOURCE_URLS) {
+				testState.answerChanges.get(url)?.({loading: false, error: null, data: []});
+			}
+		});
 		rerender(<SectionAuto/>);
 		expect(testState.askFreeAI).toHaveBeenCalledOnce();
 		expect(testState.cacheSet).not.toHaveBeenCalled();
@@ -320,7 +393,7 @@ describe('SectionAuto', () => {
 			: {title: StatusTitle.AI_NO_ANSWER, status: 'warn'});
 	});
 
-	it('сохраняет ошибку загрузки, если все источники недоступны', async () => {
+	it('запускает AI, если все источники недоступны', async () => {
 		render(<SectionAuto/>);
 		startSourceLoading();
 		await waitFor(() => expect(testState.answerChanges.size).toBe(4));
@@ -331,8 +404,67 @@ describe('SectionAuto', () => {
 			}
 		});
 
-		expect(testState.setStatus).toHaveBeenLastCalledWith({title: StatusTitle.LOADING_FAILED, status: 'err'});
-		expect(testState.askFreeAI).not.toHaveBeenCalled();
+		await waitFor(() => expect(testState.askFreeAI).toHaveBeenCalledOnce());
+		expect(testState.cacheSet).toHaveBeenCalledWith('Тема', 'Вопрос', ['Ответ A', 'Ответ B'], ['Ответ B']);
+	});
+
+	it.each([
+		{label: 'вопроса', nextState: {question: 'Следующий вопрос'}},
+		{label: 'вариантов', nextState: {variants: ['Ответ C', 'Ответ D']}},
+		{label: 'типа выбора', nextState: {isSingle: false}},
+	])('при смене $label отменяет старый AI и сохраняет только новый ответ', async ({nextState}) => {
+		let finishOldRequest!: (answer: {correctIndexes: number[]; source: string}) => void;
+		testState.askFreeAI.mockReturnValueOnce(new Promise(resolve => { finishOldRequest = resolve; }))
+			.mockResolvedValue({correctIndexes: [1], source: 'Free AI'});
+		const {rerender} = render(<SectionAuto/>);
+		startSourceLoading({source: 'nmo-helper', title: 'Тема', url: NMO_API_RESULT_URL});
+		act(() => {
+			testState.answerChanges.get(NMO_API_RESULT_URL)?.({loading: false, error: null, data: makeModel('nmo-helper')});
+		});
+		await waitFor(() => expect(testState.askFreeAI).toHaveBeenCalledOnce());
+		const {signal} = testState.askFreeAI.mock.calls[0][4];
+
+		testState.questionState = {...testState.questionState, ...nextState};
+		rerender(<SectionAuto/>);
+		expect(signal.aborted).toBe(true);
+		await waitFor(() => expect(testState.askFreeAI).toHaveBeenCalledTimes(2));
+		expect(testState.askFreeAI).toHaveBeenLastCalledWith(
+			testState.questionState.question,
+			testState.questionState.variants,
+			testState.questionState.isSingle,
+			'Тема',
+			expect.objectContaining({signal: expect.any(AbortSignal)}),
+		);
+		await waitFor(() => expect(testState.cacheSet).toHaveBeenCalledOnce());
+		expect(testState.cacheSet).toHaveBeenLastCalledWith(
+			'Тема', testState.questionState.question, testState.questionState.variants, [testState.questionState.variants[1]],
+		);
+
+		await act(async () => finishOldRequest({correctIndexes: [0], source: 'Free AI'}));
+		expect(testState.cacheSet).toHaveBeenCalledOnce();
+	});
+
+	it('при переходе к вопросу с ответом в базе отменяет AI без лишнего запроса', async () => {
+		let finishOldRequest!: (answer: {correctIndexes: number[]; source: string}) => void;
+		testState.askFreeAI.mockReturnValue(new Promise(resolve => { finishOldRequest = resolve; }));
+		const {rerender} = render(<SectionAuto/>);
+		startSourceLoading({source: 'nmo-helper', title: 'Тема', url: NMO_API_RESULT_URL});
+		act(() => {
+			testState.answerChanges.get(NMO_API_RESULT_URL)?.({loading: false, error: null, data: makeModel('nmo-helper')});
+		});
+		await waitFor(() => expect(testState.askFreeAI).toHaveBeenCalledOnce());
+		const {signal} = testState.askFreeAI.mock.calls[0][4];
+
+		testState.foundBySource.set('nmo-helper', {answers: ['Ответ A'], score: 1});
+		testState.questionState = {...testState.questionState, question: 'Следующий вопрос'};
+		rerender(<SectionAuto/>);
+		expect(signal.aborted).toBe(true);
+		expect(testState.askFreeAI).toHaveBeenCalledOnce();
+		expect(testState.cacheSet).toHaveBeenCalledExactlyOnceWith('Тема', 'Следующий вопрос', ['Ответ A', 'Ответ B'], ['Ответ A']);
+
+		await act(async () => finishOldRequest({correctIndexes: [1], source: 'Free AI'}));
+		expect(testState.cacheSet).toHaveBeenCalledOnce();
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • nmo-helper', status: 'ok'});
 	});
 
 	it('использует бесплатный AI для следующего вопроса той же темы с пустыми источниками', async () => {
