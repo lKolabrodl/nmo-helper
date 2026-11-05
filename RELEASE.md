@@ -3,6 +3,56 @@
 This file records the project release flow so the next release does not depend
 on memory.
 
+## Version 5.1.1
+
+Prepared on `main` on November 5, 2026, after merging `dev`
+in commit `c81efba`. Firefox signing was completed by the owner on the same day.
+
+- Run free AI in automatic mode when answer lookup fails, returns no sources,
+  or finds no matching answer. Attempt it once per visit to a question.
+- Clear stale answer highlights when questions change, refresh highlights when
+  variants are reordered, and match numbered variants by text.
+- Scroll the AI model dropdown to the selected model when it opens.
+
+Local validation:
+
+- `npm test`: 879/879 tests, 56/56 files.
+- `npx tsc --noEmit --pretty false`: clean.
+- `npm run build`: all four browser targets built successfully.
+- `npm run lint`: no errors, 6 existing warnings.
+- Package metadata, all four source and built manifests, and every popup use
+  `5.1.1`.
+- The signed Firefox package uses `5.1.1` and `nmo-helper@extension`. Its
+  cryptographic signature and all signed file digests were verified. Code and
+  resources match `dist/firefox/`; the manifest differs only in formatting.
+- Source rebuild details and archive checksums are recorded locally in
+  `output/release-5.1.1/source-validation-report.json` and
+  `output/release-5.1.1/SHA256SUMS.txt`.
+
+Prepared archives in the repository root:
+
+- `nmo-helper-chrome-5.1.1.zip`
+- `nmo-helper-firefox-5.1.1.zip`
+- `nmo-helper-firefox-store-5.1.1.zip`
+- `nmo-helper-source-5.1.1.zip`, including updated `BUILD.md`.
+
+Release title: `NMO Helper v5.1.1 — исправления AI и подсветки ответов`.
+Russian release notes are saved locally in
+`output/release-5.1.1/release-notes.txt`; AMO reviewer notes are in
+`output/release-5.1.1/notes-to-reviewer.txt`.
+
+Release tag: `v5.1.1`. Public manual assets:
+
+- `firefox_nmo_helper.xpi` — signed Firefox package, version `5.1.1`.
+- `nmo-helper-chrome-5.1.1.zip` — Chromium build, version `5.1.1`.
+
+README installation links point to `v5.1.1`; the previous versions section
+includes `v5.1.0`. The VirusTotal badge still explicitly refers to `5.1.0`;
+refresh it once a confirmed scan of the `5.1.1` Chrome archive is available.
+
+The AMO source archive is retained as submitted, before signing. Its original
+checksum and successful clean rebuild report remain in `output/release-5.1.1/`.
+
 ## Version 5.1.0
 
 Prepared on `main` after merging `dev`. Firefox publication and signing were

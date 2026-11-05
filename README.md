@@ -1,4 +1,4 @@
-# NMO Helper v5.1.0
+# NMO Helper v5.1.1
 
 > Умный помощник в прохождении тестов НМО — бесплатное расширение для браузера с открытым исходным кодом.
 
@@ -16,6 +16,12 @@
 📖 **Инструкция:** [nmo-helper.ru/instruction](https://nmo-helper.ru/instruction)<br>
 💬 **Обратная связь:** [nmo-helper.ru/feedback](https://nmo-helper.ru/feedback)<br>
 🐞 **Баги и предложения:** [GitHub Issues](https://github.com/lKolabrodl/nmo-helper/issues)
+
+## Что нового в 5.1.1
+
+- Бесплатный AI запускается в автоматическом режиме, если поиск не нашёл ответ или завершился ошибкой.
+- Подсветка ответов очищается при смене вопроса и обновляется при перестановке вариантов.
+- При открытии списка AI-моделей выбранная модель сразу видна.
 
 ## Возможности
 
@@ -45,12 +51,12 @@
 
 ### Chrome / Yandex / Edge / Brave / Opera
 
-1. Скачайте [`nmo-helper-chrome-5.1.0.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.1.0/nmo-helper-chrome-5.1.0.zip)
+1. Скачайте [`nmo-helper-chrome-5.1.1.zip`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.1.1/nmo-helper-chrome-5.1.1.zip)
 2. Разархивируйте в удобную папку
 3. Откройте `chrome://extensions/` в адресной строке
 4. Включите **«Режим разработчика»** (правый верхний угол)
 5. Нажмите **«Загрузить распакованное расширение»**
-6. Выберите папку `nmo-helper-chrome-5.1.0`
+6. Выберите папку `nmo-helper-chrome-5.1.1`
 
 <details>
 <summary>📹 Показать GIF-инструкцию</summary>
@@ -66,7 +72,7 @@
 
 **Способ 2 — прямая установка `.xpi`:**
 
-1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.1.0/firefox_nmo_helper.xpi)
+1. Скачайте [`firefox_nmo_helper.xpi`](https://github.com/lKolabrodl/nmo-helper/releases/download/v5.1.1/firefox_nmo_helper.xpi)
 2. Перетащите `.xpi` в окно Firefox, или откройте `about:addons` → ⚙ → **«Установить дополнение из файла»**
 3. Подтвердите установку
 
@@ -222,6 +228,7 @@ MIT
 
 Ниже основные предыдущие релизы. Полная история доступна в [GitHub Releases](https://github.com/lKolabrodl/nmo-helper/releases).
 
+- [v5.1.0](https://github.com/lKolabrodl/nmo-helper/tree/v5.1.0) — просмотр вопросов до начала теста и улучшения бесплатного AI
 - [v5.0.0](https://github.com/lKolabrodl/nmo-helper/tree/v5.0.0) — собственная база ответов NMO Helper, бесплатный AI без ключа и улучшенный авто-поиск
 - [v4.3.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.3.0) — обновлённая панель, расширенный поиск по базам и просмотр источника PDF
 - [v4.2.0](https://github.com/lKolabrodl/nmo-helper/tree/v4.2.0) — автоответ с настраиваемым интервалом
