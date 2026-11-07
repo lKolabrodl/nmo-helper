@@ -1,4 +1,4 @@
-import {render, waitFor} from '@testing-library/react';
+import {act, render, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import {NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
 import type {ISearchResult} from '../../types';
@@ -10,6 +10,13 @@ const mocks = vi.hoisted(() => ({
 	searchNmoSource: vi.fn(),
 	searchThirdSource: vi.fn(),
 }));
+
+const sourceLoaders = [
+	{name: 'Nmo', Loader: VariantLoader.Nmo, search: mocks.searchNmoSource, source: 'nmo-helper'},
+	{name: 'First', Loader: VariantLoader.First, search: mocks.searchFirstSource, source: 'first'},
+	{name: 'Secondary', Loader: VariantLoader.Secondary, search: mocks.searchSecondarySource, source: 'second'},
+	{name: 'Third', Loader: VariantLoader.Third, search: mocks.searchThirdSource, source: 'third'},
+] as const;
 
 vi.mock('../../api/fetch/search-variant-sources', () => ({
 	searchSecondarySource: mocks.searchSecondarySource,
@@ -102,6 +109,78 @@ describe('VariantLoader', () => {
 				error: 'ничего не найдено',
 				data: [],
 			});
+		});
+	});
+
+	describe.each(sourceLoaders)('VariantLoader.$name', ({Loader, search, source}) => {
+		it('ищет только в своём источнике и передаёт состояние загрузки', async () => {
+			const result: ISearchResult = {source, title: 'Найденная тема', url: 'https://example.com/topic'};
+			search.mockResolvedValue([result]);
+			const onChange = vi.fn();
+
+			const {container} = render(<Loader text="  Диагностика  " onChange={onChange}/>);
+
+			expect(container).toBeEmptyDOMElement();
+			expect(onChange).toHaveBeenNthCalledWith(1, {loading: true, error: null, data: []});
+			await waitFor(() => {
+				expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: [result]});
+			});
+			expect(search).toHaveBeenCalledExactlyOnceWith('Диагностика');
+			for (const otherSearch of Object.values(mocks).filter(mock => mock !== search)) {
+				expect(otherSearch).not.toHaveBeenCalled();
+			}
+		});
+
+		it.each([null, '', '   '])('сбрасывает состояние для пустого запроса %j без поиска', text => {
+			const onChange = vi.fn();
+
+			render(<Loader text={text} onChange={onChange}/>);
+
+			expect(onChange).toHaveBeenCalledExactlyOnceWith({loading: false, error: null, data: []});
+			for (const searchSource of Object.values(mocks)) expect(searchSource).not.toHaveBeenCalled();
+		});
+
+		it.each(['пустой ответ', 'ошибка источника'])('сообщает, что ничего не найдено: %s', async scenario => {
+			if (scenario === 'ошибка источника') search.mockRejectedValue(new Error('источник недоступен'));
+			const onChange = vi.fn();
+
+			render(<Loader text="Тема" onChange={onChange}/>);
+
+			await waitFor(() => {
+				expect(onChange).toHaveBeenLastCalledWith({loading: false, error: 'ничего не найдено', data: []});
+			});
+		});
+
+		it('игнорирует результат предыдущего запроса после смены текста', async () => {
+			let finishPrevious!: (results: ISearchResult[]) => void;
+			const previous = new Promise<ISearchResult[]>(resolve => { finishPrevious = resolve; });
+			const result: ISearchResult = {source, title: 'Новая тема', url: 'https://example.com/new'};
+			search.mockReturnValueOnce(previous).mockResolvedValueOnce([result]);
+			const onChange = vi.fn();
+			const {rerender} = render(<Loader text="Старая тема" onChange={onChange}/>);
+
+			rerender(<Loader text="Новая тема" onChange={onChange}/>);
+			await waitFor(() => {
+				expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: [result]});
+			});
+			onChange.mockClear();
+			await act(async () => { finishPrevious([]); });
+
+			expect(search).toHaveBeenNthCalledWith(2, 'Новая тема');
+			expect(onChange).not.toHaveBeenCalled();
+		});
+
+		it('игнорирует результат после размонтирования', async () => {
+			let finishSearch!: (results: ISearchResult[]) => void;
+			search.mockReturnValue(new Promise<ISearchResult[]>(resolve => { finishSearch = resolve; }));
+			const onChange = vi.fn();
+			const {unmount} = render(<Loader text="Тема" onChange={onChange}/>);
+
+			unmount();
+			onChange.mockClear();
+			await act(async () => { finishSearch([]); });
+
+			expect(onChange).not.toHaveBeenCalled();
 		});
 	});
 });
