@@ -10,7 +10,7 @@
 import type {ISearchResult} from '../../types';
 import {FIRST_ANSWER_SOURCE_HOST, NMO_API_HOST, SECOND_ANSWER_SOURCE_HOST, THIRD_ANSWER_SOURCE_HOST} from '../../utils/constants';
 import {parseNmoApiSearchResults, parsePrimarySourceResults, parseSecondarySourceResults, parseThirdSourceResults} from '../../utils/html';
-import {fetchViaBackground} from './fetch';
+import {fetchViaBackground, getResponseText} from './fetch';
 
 const FIRST_SOURCE_URL = `https://${FIRST_ANSWER_SOURCE_HOST}`;
 const SECONDARY_SOURCE_URL = `https://${SECOND_ANSWER_SOURCE_HOST}`;
@@ -65,9 +65,7 @@ async function requestNmoSource(normalizedQuery: string): Promise<ISearchResult[
 		credentials: 'omit',
 	});
 
-	if (response.error || !response.text) return [];
-
-	return parseNmoApiSearchResults(response.text);
+	return parseNmoApiSearchResults(getResponseText(response));
 }
 
 /** Очищает короткий кеш поиска, например после смены активной сессии страницы. */

@@ -140,14 +140,24 @@ describe('VariantLoader', () => {
 			for (const searchSource of Object.values(mocks)) expect(searchSource).not.toHaveBeenCalled();
 		});
 
-		it.each(['пустой ответ', 'ошибка источника'])('сообщает, что ничего не найдено: %s', async scenario => {
-			if (scenario === 'ошибка источника') search.mockRejectedValue(new Error('источник недоступен'));
+		it('возвращает пустой результат без ошибки', async () => {
 			const onChange = vi.fn();
 
 			render(<Loader text="Тема" onChange={onChange}/>);
 
 			await waitFor(() => {
-				expect(onChange).toHaveBeenLastCalledWith({loading: false, error: 'ничего не найдено', data: []});
+				expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: []});
+			});
+		});
+
+		it('передаёт ошибку источника отдельно от пустого результата', async () => {
+			search.mockRejectedValue(new Error('источник недоступен'));
+			const onChange = vi.fn();
+
+			render(<Loader text="Тема" onChange={onChange}/>);
+
+			await waitFor(() => {
+				expect(onChange).toHaveBeenLastCalledWith({loading: false, error: 'источник недоступен', data: []});
 			});
 		});
 

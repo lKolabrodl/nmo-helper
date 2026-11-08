@@ -53,7 +53,9 @@ type AnswerMatch = {indexes: number[]; score: number};
  *  - `{ answers: [], score }` — вопрос нашёлся, но source-ответы не сопоставились с входными variants
  *  - `{ answers: [...], score }` — нормальный матч
  */
-export function findAnswers(model: QaCaseModel[], question: string, variants: string[]): IParse2Result | null {
+export function findAnswers(model: QaCaseModel[] | null | undefined, question: string, variants: string[]): IParse2Result | null {
+	if (!model?.length) return null;
+
 	const normalize = (text: string) => stripQuotes(normalizeDashes(text));
 
 	const normalizedQuestion = normalize(question);

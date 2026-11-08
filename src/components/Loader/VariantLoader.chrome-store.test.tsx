@@ -49,7 +49,7 @@ describe('VariantLoader в chrome-store', () => {
 		render(<Loader text="Тема" onChange={onChange}/>);
 
 		await waitFor(() => {
-			expect(onChange).toHaveBeenLastCalledWith({loading: false, error: 'ничего не найдено', data: []});
+			expect(onChange).toHaveBeenLastCalledWith({loading: false, error: null, data: []});
 		});
 		for (const search of Object.values(mocks)) expect(search).not.toHaveBeenCalled();
 	});

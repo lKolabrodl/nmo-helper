@@ -28,7 +28,7 @@ const SOURCES = {
 };
 const ALL_SOURCES = [...SOURCES.Nmo, ...SOURCES.Secondary, ...SOURCES.First, ...SOURCES.Third];
 
-const useVariantLoader = ({text, onChange}: IVariantLoaderProps, sources: readonly SearchSource[]) => {
+const useVariantLoader = ({text, onChange}: IVariantLoaderProps, sources: readonly SearchSource[], emptyIsError = false) => {
 	useEffect(() => {
 		const query = (text ?? '').trim();
 		if (!query) return onChange({...INIT_STATE});
@@ -38,24 +38,27 @@ const useVariantLoader = ({text, onChange}: IVariantLoaderProps, sources: readon
 		let cancelled = false;
 
 		const search = async () => {
-			const resultGroups = await Promise.all(sources.map(source => source(query).catch(() => [])));
+			const resultGroups = await Promise.allSettled(sources.map(source => source(query)));
 
 			if (cancelled) return;
 
-			const results = resultGroups.flat();
-			if (!results.length) return onChange({loading: false, error: 'ничего не найдено', data: []});
+			const results = resultGroups.flatMap(result => result.status === 'fulfilled' ? result.value : []);
+			const failure = resultGroups.find(result => result.status === 'rejected');
+			const error = failure
+				? (failure.reason instanceof Error ? failure.reason.message : String(failure.reason)) || 'ошибка поиска'
+				: null;
 
-			onChange({loading: false, error: null, data: results});
+			onChange({loading: false, error: results.length ? null : emptyIsError ? 'ничего не найдено' : error, data: results});
 		};
 
 		search();
 
 		return () => { cancelled = true; };
-	}, [text, sources]);
+	}, [text, sources, emptyIsError]);
 };
 
 const VariantLoader = (props: IVariantLoaderProps) => {
-	useVariantLoader(props, ALL_SOURCES);
+	useVariantLoader(props, ALL_SOURCES, true);
 	return null;
 };
 
