@@ -78,7 +78,17 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 		const questionKey = JSON.stringify([topic, question, variants, isSingle]);
 		if (aiAttemptRef.current.questionKey !== questionKey) aiAttemptRef.current = {questionKey, attempted: false};
 
-		if (!question || !variants.length || sourceTopicRef.current !== topic) return;
+		if (sourceTopicRef.current !== topic) return;
+
+		const waitingForSource = loading || (error && source !== 'third');
+		const loadingTitle = url && loading ? StatusTitle.LOADING_ANSWERS : StatusTitle.SEARCHING_ANSWERS;
+
+		if (!question || !variants.length) {
+			setActiveAiQuestionKey(null);
+			return setStatus(waitingForSource
+				? {title: loadingTitle, status: Status.LOADING}
+				: {title: answerModel.data?.length ? StatusTitle.ANSWERS_LOADED : StatusTitle.WAITING_QUESTION, status: Status.OK});
+		}
 
 		if (answerCache.has(topic, question, variants)) {
 			setActiveAiQuestionKey(null);
@@ -102,8 +112,8 @@ const SectionAuto: React.FC = (): React.JSX.Element => {
 			return;
 		}
 
-		if (loading || (error && source !== 'third')) {
-			return setStatus({title: url && loading ? StatusTitle.LOADING_ANSWERS : StatusTitle.SEARCHING_ANSWERS, status: Status.LOADING});
+		if (waitingForSource) {
+			return setStatus({title: loadingTitle, status: Status.LOADING});
 		}
 
 		// Поиск завершён, но ответа на текущий вопрос нет: запускаем AI

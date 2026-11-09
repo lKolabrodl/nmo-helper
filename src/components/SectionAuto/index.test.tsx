@@ -113,19 +113,54 @@ describe('SectionAuto', () => {
 		expect(testState.askFreeAI).not.toHaveBeenCalled();
 	});
 
-	it('загружает тему NMO ещё до появления вопроса', async () => {
-		testState.questionState = {...testState.questionState, question: null};
+	it.each([
+		{label: 'вопроса', state: {question: null}},
+		{label: 'вариантов', state: {variants: []}},
+		{label: 'вопроса и вариантов', state: {question: null, variants: []}},
+	])('после загрузки темы ожидает появления $label без статуса поиска', async ({state}) => {
+		testState.questionState = {...testState.questionState, ...state};
 		const {rerender} = render(<SectionAuto/>);
 		await resolveSearch('nmo-helper', [result('nmo-helper')]);
 		answer('nmo-helper', {data: makeModel('nmo-helper')});
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'ответы загружены, ожидаю вопрос', status: 'ok'});
 		expect(testState.askFreeAI).not.toHaveBeenCalled();
+		expect(testState.cacheSet).not.toHaveBeenCalled();
 
 		testState.foundBySource.set('nmo-helper', {answers: ['Ответ A'], score: 1});
-		testState.questionState = {...testState.questionState, question: 'Вопрос'};
+		testState.questionState = {...testState.questionState, question: 'Вопрос', variants: ['Ответ A', 'Ответ B']};
 		rerender(<SectionAuto/>);
 		expect(testState.searchNmoSource).toHaveBeenCalledOnce();
 		expect(testState.cacheSet).toHaveBeenCalledExactlyOnceWith('Тема', 'Вопрос', ['Ответ A', 'Ответ B'], ['Ответ A']);
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'найдено • nmo-helper', status: 'ok'});
 	});
+
+	it('до появления вопроса показывает загрузку ответов после выбора темы', async () => {
+		testState.questionState = {...testState.questionState, question: null, variants: []};
+		render(<SectionAuto/>);
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: StatusTitle.SEARCHING_ANSWERS, status: 'loading'});
+		await resolveSearch('nmo-helper', [result('nmo-helper')]);
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: StatusTitle.LOADING_ANSWERS, status: 'loading'});
+		expect(testState.askFreeAI).not.toHaveBeenCalled();
+	});
+
+	it.each(['пустого поиска', 'пустой темы', 'ошибок источников'])(
+		'после %s ожидает вопрос без бесконечного поиска и запускает AI при старте теста', async outcome => {
+			testState.questionState = {...testState.questionState, question: null, variants: []};
+			const {rerender} = render(<SectionAuto/>);
+			if (outcome === 'ошибок источников') await exhaustSearches();
+			else if (outcome === 'пустой темы') {
+				await resolveSearch('nmo-helper', [result('nmo-helper')]);
+				answer('nmo-helper', {data: []});
+			}
+			else await resolveSearch('nmo-helper');
+
+			expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'ожидаю вопрос и варианты ответа', status: 'ok'});
+			expect(testState.askFreeAI).not.toHaveBeenCalled();
+			testState.questionState = {...testState.questionState, question: 'Вопрос', variants: ['Ответ A', 'Ответ B']};
+			rerender(<SectionAuto/>);
+			await waitFor(() => expect(testState.askFreeAI).toHaveBeenCalledOnce());
+		},
+	);
 
 	it('передаёт AnswerLoader URL NMO вместе с UID и дожидается ответа', async () => {
 		render(<SectionAuto/>);
