@@ -19,6 +19,7 @@ function resetStorage(state: unknown = { sent: {}, history: [], lastSentAt: 0 })
 function makePayload(overrides: Partial<IBugReportPayload> = {}): IBugReportPayload {
 	return {
 		mode: 'auto',
+		autoSolveEnabled: false,
 		url: 'https://example.com/test',
 		source: 'first',
 		topic: 'Кардиология - 2024',
@@ -207,9 +208,9 @@ describe('submitBugReport', () => {
 		expect(res).toEqual({ ok: false, error: 'server' });
 	});
 
-	it('fetch вызван с правильным URL, методом и телом', async () => {
+	it.each([true, false])('fetch вызван с правильным URL, методом и телом при autoSolveEnabled=%s', async autoSolveEnabled => {
 		mockFetch.mockResolvedValue({ error: false, status: 200, text: '{"ok":true}' });
-		const payload = makePayload({mode: 'sites:search'});
+		const payload = makePayload({mode: 'sites:search', autoSolveEnabled});
 		await submitBugReport(payload);
 		expect(mockFetch).toHaveBeenCalledTimes(1);
 		const [url, opts] = mockFetch.mock.calls[0];
