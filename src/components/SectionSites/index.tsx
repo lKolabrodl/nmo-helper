@@ -28,7 +28,8 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const [url, setUrlRaw] = useState(initialUrl);
 	const [activeUrl, setActiveUrl] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
-	const [activeSearch, setActiveSearch] = useState('');
+	const [activeSearch, setActiveSearch] = useState<string | null>(null);
+	const inputValue = activeSearch ?? topic ?? '';
 	//
 	const [variantModel, setVariantModel] = useState<IVariantModel>({loading: false, error: null, data: []});
 	const [answerModel, setAnswerModel] = useState<IAnswerModel>({loading: false, error: null, data: null});
@@ -52,8 +53,8 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	};
 
 	const search = () => {
-		if (!searchQuery.trim()) return setStatus({title: StatusTitle.ENTER_QUERY, status: Status.ERR});
-		setActiveSearch(searchQuery.trim());
+		if (!inputValue.trim()) return setStatus({title: StatusTitle.ENTER_QUERY, status: Status.ERR});
+		setSearchQuery(inputValue.trim());
 	};
 
 	const _onSelectResult = (result: ISearchResult): void => {
@@ -104,7 +105,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const isOk = status.status === Status.OK;
 
 	const isLoadingAll = variantModel.loading || answerModel.loading;
-	const canSearch = searchQuery.trim().length;
+	const canSearch = inputValue.trim().length;
 
 	// теxt =/
 	let searchButtonText = 'Найти все варианты';
@@ -114,7 +115,7 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	return (
 		<div className="nmo-section">
 			<AnswerLoader url={activeUrl} onChange={_updateHtml}/>
-			<VariantLoader text={activeSearch} onChange={_updateSearchUrl}/>
+			<VariantLoader text={searchQuery} onChange={_updateSearchUrl}/>
 
 			<div className="nmo-section-inner">
 				<div className="nmo-fade-up">
@@ -122,8 +123,8 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 					<textarea className="nmo-input"
 						rows={2}
 						disabled={isRunning || isLoadingAll}
-						value={searchQuery}
-						onChange={e => setSearchQuery(e.target.value)}
+						value={inputValue}
+						onChange={e => setActiveSearch(e.target.value)}
 						onKeyDown={handleKeyDown}
 						placeholder="Например: «Аритмии у взрослых, ФП, антиаритмики IC класса…»"/>
 
