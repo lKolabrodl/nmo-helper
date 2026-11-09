@@ -12,3 +12,12 @@
     cursor: not-allowed;
   }
 }
+
+.nmo-search-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: $text-2;
+  font-size: $fs-sm;
+}
