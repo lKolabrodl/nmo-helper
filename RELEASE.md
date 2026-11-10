@@ -3,6 +3,72 @@
 This file records the project release flow so the next release does not depend
 on memory.
 
+## Version 5.1.2
+
+Prepared on `main` on November 11, 2026. The ten commits from `dev`, through
+`bfae2a5`, were squashed into the single-parent commit `56c8d05`.
+Firefox signing was completed by the owner on the same day.
+
+- Add JarvisClaw and BlockRun to the keyless free AI fallback chain and update
+  route priority.
+- Improve sequential fallback between answer sources and show search, loading
+  and waiting-for-question states in automatic mode.
+- Drive automatic answer selection and navigation with configured intervals;
+  pause the cycle while the mouse is moving.
+- Display site search results as sources finish and preserve a cleared search
+  field instead of restoring the detected topic.
+- Preserve selected answers when collecting a completed quiz for optional
+  sharing, including when the portal replaces or reorders answer elements.
+- Show automatic-answer state in the compact bug report preview.
+
+Local validation:
+
+- `npm test`: 981/981 tests, 59/59 files, both before and after the version bump.
+- `npx tsc --noEmit --pretty false`: clean before and after the version bump.
+- `npm run build`: all four browser targets built successfully.
+- `npm run lint`: no errors, 6 existing warnings.
+- Package metadata, all four source and built manifests, and every popup use
+  `5.1.2`.
+- Archive contents and checksums are recorded in
+  `output/release-5.1.2/artifacts.json` and `output/release-5.1.2/SHA256SUMS.txt`.
+- A clean build from the AMO source archive matches all four browser targets
+  and all three browser ZIP archives byte-for-byte. Results are recorded in
+  `output/release-5.1.2/source-validation-report.json`.
+- The signed Firefox package uses `5.1.2` and `nmo-helper@extension`. Its PKCS7
+  and COSE signatures, certificate chains to the Mozilla production root, and
+  all signed file digests were verified. Code and resources match
+  `dist/firefox/`; the manifest differs only in formatting. Details are in
+  `output/release-5.1.2/signed-package-validation.json`.
+
+Prepared archives in the repository root:
+
+- `nmo-helper-chrome-5.1.2.zip`
+- `nmo-helper-firefox-5.1.2.zip` — unlisted Firefox signing submission.
+- `nmo-helper-firefox-store-5.1.2.zip` — listed AMO submission.
+- `nmo-helper-source-5.1.2.zip`, including updated `BUILD.md`.
+
+Release title:
+`NMO Helper v5.1.2 — улучшения авторежима, поиска и бесплатного AI`.
+Russian release notes and AMO reviewer notes are saved locally in
+`output/release-5.1.2/release-notes.txt` and
+`output/release-5.1.2/notes-to-reviewer.txt`.
+
+README installation links point to `v5.1.2`; the previous versions
+section includes `v5.1.1`. The VirusTotal badge still explicitly refers to
+`5.1.0`; update it only after a confirmed scan of the new Chrome archive.
+
+Release tag: `v5.1.2`. Public manual assets:
+
+- `firefox_nmo_helper.xpi` — signed Firefox package, version `5.1.2`.
+- `nmo-helper-chrome-5.1.2.zip` — Chromium build, version `5.1.2`.
+
+The website mirror uses the exact same Chrome ZIP at
+`https://nmo-helper.ru/assets/downloads/nmo-helper-chrome-5.1.2.zip`.
+The site release card, current download links and `/api/version` use `5.1.2`.
+
+The AMO source archive is retained as submitted, before signing. Its original
+checksum and successful clean rebuild report remain in `output/release-5.1.2/`.
+
 ## Version 5.1.1
 
 Prepared on `main` on November 5, 2026, after merging `dev`
