@@ -27,6 +27,8 @@
     "https://proxyapi.ru/*",
     "https://oai.endpoints.kepler.ai.cloud.ovh.net/*",
     "https://llama-3-3-70b-instruct.endpoints.kepler.ai.cloud.ovh.net/*",
+    "https://api.jarvisclaw.ai/*",
+    "https://blockrun.ai/*",
     "https://ai-gateway.kilo.ai/*",
     "https://oai.aihorde.net/*"
   ],

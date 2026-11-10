@@ -44,7 +44,7 @@ beforeEach(() => {
 });
 
 describe('AIProxyFreeLoader', () => {
-	it.each(['GPT-OSS 120B', 'Qwen 3.8 27B', 'OVH', 'Kilo', 'AI Horde'])('сохраняет ответ и показывает источник %s', async source => {
+	it.each(['Qwen 3.8 27B', 'GPT-OSS 120B', 'JarvisClaw', 'BlockRun', 'OVH', 'Kilo', 'AI Horde'])('сохраняет ответ и показывает источник %s', async source => {
 		mocks.askFreeAI.mockResolvedValue({correctIndexes: [1], source});
 		const onChange = vi.fn();
 
