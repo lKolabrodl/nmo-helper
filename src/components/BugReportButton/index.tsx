@@ -28,7 +28,7 @@ interface IBugReportButtonProps {
 const BugReportButton: React.FC<IBugReportButtonProps> = ({isOpen: openProp, onClose, hideTrigger}) => {
 	// context
 	const {mode: panelMode} = usePanelUi();
-	const {provider: aiProvider} = useSettings().ai;
+	const {ai: {provider: aiProvider}, autoSolve: {enabled: autoSolveEnabled}} = useSettings();
 	const reportContext = useBugReportContext();
 	const {rawTopic, question, variants} = useQuestionFinder();
 
@@ -82,6 +82,7 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({isOpen: openProp, onC
 
 		const res = await submitBugReport({
 			mode: reportMode,
+			autoSolveEnabled,
 			url,
 			source,
 			topic: rawTopic ?? '',
@@ -145,13 +146,14 @@ const BugReportButton: React.FC<IBugReportButtonProps> = ({isOpen: openProp, onC
 			<div className="nmo-bug-preview">
 				<div className="nmo-bug-preview-title">Будет отправлено на сервер:</div>
 				<div className="nmo-bug-preview-data">
-					<div>• Тема: <span>{rawTopic || '—'}</span></div>
-					<div>• Вопрос: <span>{question}</span></div>
-					<div>• Вариантов: <span>{variants.length}</span></div>
-					<div>• Таб: <span>{formatReportMode(reportMode)}</span></div>
-					<div>• Источник: <span>{source || '—'}</span></div>
-					<div>• Ссылка: <span>{formatUrlForDisplay(url || '—')}</span></div>
-					<div>• Версия: <span>{EXT_VERSION} · {getBrowserInfo()}</span></div>
+					<div title={rawTopic || '—'}>• Тема: <span>{rawTopic || '—'}</span></div>
+					<div title={question}>• Вопрос: <span>{question}</span></div>
+					<div title={String(variants.length)}>• Вариантов: <span>{variants.length}</span></div>
+					<div title={formatReportMode(reportMode)}>• Таб: <span>{formatReportMode(reportMode)}</span></div>
+					<div title={autoSolveEnabled ? 'включён' : 'выключен'}>• Автоответ: <span>{autoSolveEnabled ? 'включён' : 'выключен'}</span></div>
+					<div title={source || '—'}>• Источник: <span>{source || '—'}</span></div>
+					<div title={formatUrlForDisplay(url || '—')}>• Ссылка: <span>{formatUrlForDisplay(url || '—')}</span></div>
+					<div title={`${EXT_VERSION} · ${getBrowserInfo()}`}>• Версия: <span>{EXT_VERSION} · {getBrowserInfo()}</span></div>
 				</div>
 			</div>
 

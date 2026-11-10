@@ -29,6 +29,8 @@ const DEDUP_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export interface IBugReportPayload {
 	/** Раздел и подраздел панели: auto / sites:search / sites:url / ai:proxy / etc. */
 	readonly mode: BugReportMode;
+	/** Включён ли автоответ в настройках на момент отправки */
+	readonly autoSolveEnabled: boolean;
 	/** URL страницы в одной из поддерживаемых баз ответов */
 	readonly url: string;
 	/** Внутренний ключ базы ответов или `''`, если источник не определён */

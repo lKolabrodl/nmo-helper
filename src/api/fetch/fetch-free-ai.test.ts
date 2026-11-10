@@ -1,10 +1,15 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+import chromeStoreManifest from '../../manifest.chrome-store.json';
 import type {IRequestResponse} from './fetch';
 import {
 	askFreeAI,
+	BLOCKRUN_AI_MODEL,
+	BLOCKRUN_AI_URL,
 	HORDE_AI_URL,
 	HORDE_ANONYMOUS_KEY,
 	HORDE_MODELS_URL,
+	JARVIS_AI_MODEL,
+	JARVIS_AI_URL,
 	KILO_AI_MODEL,
 	KILO_AI_URL,
 	OVH_AI_MODEL,
@@ -19,6 +24,7 @@ import {
 type SendMessageFn = (msg: unknown, cb: (res: unknown) => void) => void;
 
 const sendMessage = vi.fn();
+const directRouteUrls = [OVH_OPENAI_URL, OVH_OPENAI_URL, JARVIS_AI_URL, BLOCKRUN_AI_URL, OVH_AI_URL, KILO_AI_URL];
 
 beforeEach(() => {
 	sendMessage.mockReset();
@@ -66,6 +72,20 @@ describe('resolveFreeAiRequest', () => {
 			endpoint: OVH_OPENAI_URL,
 			model,
 			requestOptions: {timeoutMs: 30_000, maxTokens: 2048, extraBody},
+		});
+		expect(sendMessage).not.toHaveBeenCalled();
+	});
+
+	it.each([
+		{service: 'jarvis', endpoint: JARVIS_AI_URL, model: JARVIS_AI_MODEL},
+		{service: 'blockrun', endpoint: BLOCKRUN_AI_URL, model: BLOCKRUN_AI_MODEL},
+	] as const)('$service использует бесплатный маршрут без ключа с ограничением времени', async ({service, endpoint, model}) => {
+		expect(chromeStoreManifest.host_permissions).toContain(`${new URL(endpoint).origin}/*`);
+		expect(await resolveFreeAiRequest(service)).toEqual({
+			apiKey: '',
+			endpoint,
+			model,
+			requestOptions: {timeoutMs: 30_000, maxTokens: 2048, extraBody: {temperature: 0}},
 		});
 		expect(sendMessage).not.toHaveBeenCalled();
 	});
@@ -151,55 +171,94 @@ describe('askFreeAI automatic route', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('сначала использует GPT-OSS без ключа и читает только итоговый ответ', async () => {
+	it('сначала использует Qwen без ключа и читает только итоговый ответ', async () => {
 		const answer = JSON.stringify({choices: [{message: {content: '2', reasoning: 'Сравниваю варианты 1, 2 и 3.'}}]});
 		sendMessage.mockImplementation((_msg, cb) => cb({error: false, status: 200, text: answer}));
 
 		const result = await askFreeAI('Вопрос?', ['a', 'b', 'c'], true, 'Тема');
 		const [message] = sendMessage.mock.calls[0] as [Record<string, unknown>, unknown];
 
-		expect(result).toEqual({correctIndexes: [1], source: 'GPT-OSS 120B'});
+		expect(result).toEqual({correctIndexes: [1], source: 'Qwen 3.8 27B'});
 		expect(sendMessage).toHaveBeenCalledTimes(1);
 		expect(message.url).toBe(OVH_OPENAI_URL);
 		expect((message.headers as Record<string, string>).Authorization).toBeUndefined();
-		expect(JSON.parse(message.body as string)).toMatchObject({model: OVH_GPT_OSS_MODEL, max_tokens: 2048, temperature: 0, reasoning_effort: 'low'});
+		expect(JSON.parse(message.body as string)).toMatchObject({model: OVH_QWEN_MODEL, max_tokens: 2048, temperature: 0});
 	});
 
 	it.each([
 		{error: false, status: 429, text: ''},
 		{error: false, status: 503, text: ''},
 		{error: true, status: 0, text: '', message: 'таймаут 30 с'},
-	])('после сбоя GPT-OSS ($status) переходит на Qwen без ключа', async failure => {
+	])('после сбоя Qwen ($status) переходит на GPT-OSS без ключа', async failure => {
 		const answer = JSON.stringify({choices: [{message: {content: '1,3'}}]});
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb) => {
 			const body = JSON.parse(message.body as string);
-			return cb(body.model === OVH_GPT_OSS_MODEL ? failure : {error: false, status: 200, text: answer});
+			return cb(body.model === OVH_QWEN_MODEL ? failure : {error: false, status: 200, text: answer});
 		});
 
 		await expect(askFreeAI('Вопрос?', ['a', 'b', 'c'], false, 'Тема'))
-			.resolves.toEqual({correctIndexes: [0, 2], source: 'Qwen 3.8 27B'});
+			.resolves.toEqual({correctIndexes: [0, 2], source: 'GPT-OSS 120B'});
 		expect(sendMessage).toHaveBeenCalledTimes(2);
-		const qwenRequest = sendMessage.mock.calls[1][0] as Record<string, unknown>;
-		expect(qwenRequest.url).toBe(OVH_OPENAI_URL);
-		expect((qwenRequest.headers as Record<string, string>).Authorization).toBeUndefined();
-		const body = JSON.parse(qwenRequest.body as string);
-		expect(body).toMatchObject({model: OVH_QWEN_MODEL, max_tokens: 2048, temperature: 0});
-		expect(body).not.toHaveProperty('reasoning_effort');
+		const gptRequest = sendMessage.mock.calls[1][0] as Record<string, unknown>;
+		expect(gptRequest.url).toBe(OVH_OPENAI_URL);
+		expect((gptRequest.headers as Record<string, string>).Authorization).toBeUndefined();
+		expect(JSON.parse(gptRequest.body as string)).toMatchObject({model: OVH_GPT_OSS_MODEL, max_tokens: 2048, temperature: 0, reasoning_effort: 'low'});
 	});
 
-	it.each([null, 'не знаю', '99'])('пробует Qwen, если GPT-OSS не выбрал допустимый вариант (%s)', async content => {
+	it.each([null, 'не знаю', '99'])('пробует GPT-OSS, если Qwen не выбрал допустимый вариант (%s)', async content => {
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb) => {
 			const model = JSON.parse(message.body as string).model;
-			const text = JSON.stringify({choices: [{message: {content: model === OVH_GPT_OSS_MODEL ? content : '2', reasoning: 'Вариант 1.'}}]});
+			const text = JSON.stringify({choices: [{message: {content: model === OVH_QWEN_MODEL ? content : '2', reasoning: 'Вариант 1.'}}]});
 			return cb({error: false, status: 200, text});
 		});
 
 		await expect(askFreeAI('Вопрос?', ['a', 'b'], true, ''))
-			.resolves.toEqual({correctIndexes: [1], source: 'Qwen 3.8 27B'});
+			.resolves.toEqual({correctIndexes: [1], source: 'GPT-OSS 120B'});
 		expect(sendMessage).toHaveBeenCalledTimes(2);
 	});
 
-	it('сохраняет Llama как третий вариант, если обе новые модели не определили ответ', async () => {
+	it.each([
+		{source: 'JarvisClaw', endpoint: JARVIS_AI_URL, model: JARVIS_AI_MODEL, position: 2},
+		{source: 'BlockRun', endpoint: BLOCKRUN_AI_URL, model: BLOCKRUN_AI_MODEL, position: 3},
+	])('использует $source без Authorization, сохраняя вопрос и несколько правильных вариантов', async ({source, endpoint, model, position}) => {
+		const answer = JSON.stringify({choices: [{message: {content: '1,3', reasoning: 'Сравниваю 1, 2 и 3.'}}]});
+		sendMessage.mockImplementation((message: Record<string, unknown>, cb) => {
+			return cb(message.url === endpoint
+				? {error: false, status: 200, text: answer}
+				: {error: false, status: 429, text: ''});
+		});
+
+		await expect(askFreeAI('Вопрос?', ['a', 'b', 'c'], false, 'Тема'))
+			.resolves.toEqual({correctIndexes: [0, 2], source});
+		expect(sendMessage.mock.calls.map(([message]) => message.url)).toEqual(directRouteUrls.slice(0, position + 1));
+		const request = sendMessage.mock.calls[position][0] as Record<string, unknown>;
+		expect(request).toMatchObject({method: 'POST', timeoutMs: 30_000});
+		expect(request.headers).toEqual({'Content-Type': 'application/json'});
+		const body = JSON.parse(request.body as string);
+		expect(body).toMatchObject({model, max_tokens: 2048, temperature: 0});
+		expect(body).not.toHaveProperty('reasoning_effort');
+		expect(body.messages).toEqual(JSON.parse(sendMessage.mock.calls[0][0].body as string).messages);
+	});
+
+	it.each([
+		{error: false, status: 429, text: ''},
+		{error: false, status: 503, text: ''},
+		{error: true, status: 0, text: '', message: 'таймаут 30 с'},
+		{error: false, status: 200, text: 'not JSON'},
+		{error: false, status: 200, text: JSON.stringify({choices: [{message: {content: null, reasoning: 'Ответ 2.'}}]})},
+		{error: false, status: 200, text: JSON.stringify({choices: [{message: {content: '99'}}]})},
+	])('при сбое новых шлюзов ($status, $text) продолжает маршрут через Llama', async failure => {
+		sendMessage.mockImplementation((message: Record<string, unknown>, cb) => {
+			if (message.url === OVH_AI_URL) return cb({error: false, status: 200, text: JSON.stringify({choices: [{message: {content: '2'}}]})});
+			return cb(failure);
+		});
+
+		await expect(askFreeAI('Вопрос?', ['a', 'b'], true, ''))
+			.resolves.toEqual({correctIndexes: [1], source: 'OVH'});
+		expect(sendMessage.mock.calls.map(([message]) => message.url)).toEqual(directRouteUrls.slice(0, -1));
+	});
+
+	it('сохраняет Llama после Qwen, GPT-OSS и новых шлюзов, если они не определили ответ', async () => {
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb) => {
 			const content = message.url === OVH_AI_URL ? '2' : null;
 			return cb({error: false, status: 200, text: JSON.stringify({choices: [{message: {content}}]})});
@@ -207,12 +266,12 @@ describe('askFreeAI automatic route', () => {
 
 		await expect(askFreeAI('Вопрос?', ['a', 'b'], true, ''))
 			.resolves.toEqual({correctIndexes: [1], source: 'OVH'});
-		expect(sendMessage).toHaveBeenCalledTimes(3);
+		expect(sendMessage).toHaveBeenCalledTimes(5);
 		expect(sendMessage.mock.calls.map(([message]) => JSON.parse(message.body as string).model))
-			.toEqual([OVH_GPT_OSS_MODEL, OVH_QWEN_MODEL, OVH_AI_MODEL]);
+			.toEqual([OVH_QWEN_MODEL, OVH_GPT_OSS_MODEL, JARVIS_AI_MODEL, BLOCKRUN_AI_MODEL, OVH_AI_MODEL]);
 	});
 
-	it('после лимита всех моделей OVH отправляет тот же вопрос в Kilo без ключа', async () => {
+	it('после лимита предыдущих сервисов отправляет тот же вопрос в Kilo без ключа', async () => {
 		const answer = JSON.stringify({choices: [{message: {content: '1,3', reasoning: 'Сравниваю варианты 1, 2 и 3.'}}]});
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb) => {
 			if (message.url === KILO_AI_URL) return cb({error: false, status: 200, text: answer});
@@ -222,8 +281,8 @@ describe('askFreeAI automatic route', () => {
 		await expect(askFreeAI('Вопрос?', ['a', 'b', 'c'], false, 'Тема'))
 			.resolves.toEqual({correctIndexes: [0, 2], source: 'Kilo'});
 		expect(sendMessage.mock.calls.map(([message]) => message.url))
-			.toEqual([OVH_OPENAI_URL, OVH_OPENAI_URL, OVH_AI_URL, KILO_AI_URL]);
-		const kiloRequest = sendMessage.mock.calls[3][0] as Record<string, unknown>;
+			.toEqual(directRouteUrls);
+		const kiloRequest = sendMessage.mock.calls[5][0] as Record<string, unknown>;
 		expect(kiloRequest).toMatchObject({method: 'POST', timeoutMs: 30_000});
 		expect(kiloRequest.headers).toEqual({'Content-Type': 'application/json'});
 		const body = JSON.parse(kiloRequest.body as string);
@@ -246,19 +305,19 @@ describe('askFreeAI automatic route', () => {
 		const answer = JSON.stringify({choices: [{message: {content: '1,3'}}]});
 
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb) => {
-			if (message.url === OVH_OPENAI_URL || message.url === OVH_AI_URL) return cb({error: false, status: 429, text: ''});
 			if (message.url === KILO_AI_URL) return cb(failure);
 			if (message.url === HORDE_MODELS_URL) return cb({error: false, status: 200, text: models});
-			return cb({error: false, status: 200, text: answer});
+			if (message.url === HORDE_AI_URL) return cb({error: false, status: 200, text: answer});
+			return cb({error: false, status: 429, text: ''});
 		});
 
 		const result = await askFreeAI('Вопрос?', ['a', 'b', 'c'], false, 'Тема');
-		const hordeRequest = sendMessage.mock.calls[5][0] as Record<string, unknown>;
+		const hordeRequest = sendMessage.mock.calls[7][0] as Record<string, unknown>;
 
 		expect(result).toEqual({correctIndexes: [0, 2], source: 'AI Horde'});
-		expect(sendMessage).toHaveBeenCalledTimes(6);
+		expect(sendMessage).toHaveBeenCalledTimes(8);
 		expect(sendMessage.mock.calls.map(([message]) => message.url))
-			.toEqual([OVH_OPENAI_URL, OVH_OPENAI_URL, OVH_AI_URL, KILO_AI_URL, HORDE_MODELS_URL, HORDE_AI_URL]);
+			.toEqual([...directRouteUrls, HORDE_MODELS_URL, HORDE_AI_URL]);
 		expect(hordeRequest.url).toBe(HORDE_AI_URL);
 		expect((hordeRequest.headers as Record<string, string>).Authorization).toBe(`Bearer ${HORDE_ANONYMOUS_KEY}`);
 		expect(JSON.parse(hordeRequest.body as string)).toMatchObject({model: 'horde/auto', timeout: 120});
@@ -271,18 +330,18 @@ describe('askFreeAI automatic route', () => {
 		const emptyAnswer = JSON.stringify({choices: [{message: {content: 'не знаю'}}]});
 		const hordeAnswer = JSON.stringify({choices: [{message: {content: '1'}}]});
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb) => {
-			if (message.url === OVH_OPENAI_URL || message.url === OVH_AI_URL) return cb({error: false, status: 200, text: emptyAnswer});
 			if (message.url === KILO_AI_URL) return cb({error: false, status: 200, text: JSON.stringify({choices: [{message: {content}}]})});
 			if (message.url === HORDE_MODELS_URL) return cb({error: false, status: 200, text: models});
-			return cb({error: false, status: 200, text: hordeAnswer});
+			if (message.url === HORDE_AI_URL) return cb({error: false, status: 200, text: hordeAnswer});
+			return cb({error: false, status: 200, text: emptyAnswer});
 		});
 
 		await expect(askFreeAI('Вопрос?', ['a', 'b'], true, ''))
 			.resolves.toEqual({correctIndexes: [0], source: 'AI Horde'});
-		expect(sendMessage).toHaveBeenCalledTimes(6);
+		expect(sendMessage).toHaveBeenCalledTimes(8);
 	});
 
-	it('сохраняет ошибку Kilo в итоговом сообщении, если все сервисы недоступны', async () => {
+	it('сохраняет ошибки обоих новых шлюзов и Kilo, если все сервисы недоступны', async () => {
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb) => cb({
 			error: false,
 			status: message.url === KILO_AI_URL ? 403 : 401,
@@ -290,16 +349,20 @@ describe('askFreeAI automatic route', () => {
 		}));
 
 		await expect(askFreeAI('Вопрос?', ['a', 'b'], true, ''))
-			.rejects.toThrow(/Kilo — .*; Horde — /);
-		expect(sendMessage).toHaveBeenCalledTimes(5);
-		expect(sendMessage.mock.calls[4][0].url).toBe(HORDE_MODELS_URL);
+			.rejects.toThrow(/JarvisClaw — .*; BlockRun — .*; OVH — .*; Kilo — .*; Horde — /);
+		expect(sendMessage).toHaveBeenCalledTimes(7);
+		expect(sendMessage.mock.calls[6][0].url).toBe(HORDE_MODELS_URL);
 	});
 
-	it('после остановки во время запроса Kilo не обращается к Horde', async () => {
+	it.each([
+		{name: 'JarvisClaw', endpoint: JARVIS_AI_URL, position: 2},
+		{name: 'BlockRun', endpoint: BLOCKRUN_AI_URL, position: 3},
+		{name: 'Kilo', endpoint: KILO_AI_URL, position: 5},
+	])('после остановки во время запроса $name не обращается к следующим сервисам', async ({endpoint, position}) => {
 		let finishRequest!: (res: IRequestResponse) => void;
 		const requestStarted = new Promise<void>(resolve => {
 			sendMessage.mockImplementation((message: Record<string, unknown>, cb) => {
-				if (message.url !== KILO_AI_URL) return cb({error: false, status: 429, text: ''});
+				if (message.url !== endpoint) return cb({error: false, status: 429, text: ''});
 				finishRequest = cb;
 				resolve();
 			});
@@ -314,10 +377,10 @@ describe('askFreeAI automatic route', () => {
 
 		expect(await outcome).toMatchObject({name: 'AbortError'});
 		expect(sendMessage.mock.calls.map(([message]) => message.url))
-			.toEqual([OVH_OPENAI_URL, OVH_OPENAI_URL, OVH_AI_URL, KILO_AI_URL]);
+			.toEqual(directRouteUrls.slice(0, position + 1));
 	});
 
-	it('после остановки во время запроса GPT-OSS не обращается к остальным моделям', async () => {
+	it('после остановки во время запроса Qwen не обращается к остальным моделям', async () => {
 		let finishRequest!: (res: IRequestResponse) => void;
 		const requestStarted = new Promise<void>(resolve => {
 			sendMessage.mockImplementation((_message, cb) => {
@@ -349,7 +412,7 @@ describe('askFreeAI recovery', () => {
 	function mockHordeResponses(responses: IRequestResponse[]) {
 		let index = 0;
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb: (res: IRequestResponse) => void) => {
-			if (message.url === OVH_OPENAI_URL || message.url === OVH_AI_URL || message.url === KILO_AI_URL) return cb({error: false, status: 429, text: ''});
+			if (directRouteUrls.includes(message.url as string)) return cb({error: false, status: 429, text: ''});
 			if (message.url === HORDE_MODELS_URL) return cb({error: false, status: 200, text: models});
 			return cb(responses[Math.min(index++, responses.length - 1)]);
 		});
@@ -373,9 +436,9 @@ describe('askFreeAI recovery', () => {
 
 		await vi.advanceTimersByTimeAsync(0);
 		expect(onRetry).toHaveBeenCalledWith({attempt: 2, maxAttempts: 3, delayMs: 3000, reason: 'ошибка 500'});
-		expect(sendMessage).toHaveBeenCalledTimes(6);
+		expect(sendMessage).toHaveBeenCalledTimes(8);
 		await vi.advanceTimersByTimeAsync(2999);
-		expect(sendMessage).toHaveBeenCalledTimes(6);
+		expect(sendMessage).toHaveBeenCalledTimes(8);
 		await vi.advanceTimersByTimeAsync(1);
 
 		expect(await outcome).toEqual({value: {correctIndexes: [1], source: 'AI Horde'}});
@@ -400,7 +463,7 @@ describe('askFreeAI recovery', () => {
 		await vi.advanceTimersByTimeAsync(3000);
 
 		expect(await outcome).toEqual({value: {correctIndexes: [1], source: 'AI Horde'}});
-		expect(sendMessage).toHaveBeenCalledTimes(8);
+		expect(sendMessage).toHaveBeenCalledTimes(10);
 	});
 
 	it('ограничивает постоянную ошибку сервера тремя попытками с паузами 3 и 6 секунд', async () => {
@@ -410,16 +473,16 @@ describe('askFreeAI recovery', () => {
 			.catch(error => error);
 
 		await vi.advanceTimersByTimeAsync(3000);
-		expect(sendMessage).toHaveBeenCalledTimes(8);
+		expect(sendMessage).toHaveBeenCalledTimes(10);
 		await vi.advanceTimersByTimeAsync(5999);
-		expect(sendMessage).toHaveBeenCalledTimes(8);
+		expect(sendMessage).toHaveBeenCalledTimes(10);
 		await vi.advanceTimersByTimeAsync(1);
 
 		expect(await outcome).toMatchObject({message: expect.stringContaining('Horde — ошибка 503')});
 		expect(onRetry.mock.calls.map(([retry]) => retry.delayMs)).toEqual([3000, 6000]);
-		expect(sendMessage).toHaveBeenCalledTimes(10);
+		expect(sendMessage).toHaveBeenCalledTimes(12);
 		await vi.advanceTimersByTimeAsync(60_000);
-		expect(sendMessage).toHaveBeenCalledTimes(10);
+		expect(sendMessage).toHaveBeenCalledTimes(12);
 	});
 
 	it('не повторяет запрос с неверным ключом', async () => {
@@ -429,14 +492,14 @@ describe('askFreeAI recovery', () => {
 		await expect(askFreeAI('Вопрос?', ['a', 'b'], true, '', {onRetry}))
 			.rejects.toThrow('Horde — неверный API-ключ');
 		await vi.advanceTimersByTimeAsync(60_000);
-		expect(sendMessage).toHaveBeenCalledTimes(6);
+		expect(sendMessage).toHaveBeenCalledTimes(8);
 		expect(onRetry).not.toHaveBeenCalled();
 	});
 
 	it('восстанавливается после 500 при получении списка моделей', async () => {
 		let modelRequests = 0;
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb: (res: IRequestResponse) => void) => {
-			if (message.url === OVH_OPENAI_URL || message.url === OVH_AI_URL || message.url === KILO_AI_URL) return cb({error: false, status: 429, text: ''});
+			if (directRouteUrls.includes(message.url as string)) return cb({error: false, status: 429, text: ''});
 			if (message.url === HORDE_MODELS_URL) {
 				modelRequests += 1;
 				return cb(modelRequests === 1
@@ -452,7 +515,7 @@ describe('askFreeAI recovery', () => {
 
 		expect(await outcome).toEqual({value: {correctIndexes: [1], source: 'AI Horde'}});
 		expect(modelRequests).toBe(2);
-		expect(sendMessage).toHaveBeenCalledTimes(7);
+		expect(sendMessage).toHaveBeenCalledTimes(9);
 	});
 
 	it('отменяет отложенный повтор при остановке', async () => {
@@ -462,18 +525,18 @@ describe('askFreeAI recovery', () => {
 			.catch(error => error);
 
 		await vi.advanceTimersByTimeAsync(0);
-		expect(sendMessage).toHaveBeenCalledTimes(6);
+		expect(sendMessage).toHaveBeenCalledTimes(8);
 		controller.abort();
 		expect(await outcome).toMatchObject({name: 'AbortError'});
 		expect(vi.getTimerCount()).toBe(0);
 		await vi.advanceTimersByTimeAsync(60_000);
-		expect(sendMessage).toHaveBeenCalledTimes(6);
+		expect(sendMessage).toHaveBeenCalledTimes(8);
 	});
 
 	it('не повторяет ошибку запроса, завершившегося после отмены', async () => {
 		let finishCompletion!: (res: IRequestResponse) => void;
 		sendMessage.mockImplementation((message: Record<string, unknown>, cb: (res: IRequestResponse) => void) => {
-			if (message.url === OVH_OPENAI_URL || message.url === OVH_AI_URL || message.url === KILO_AI_URL) return cb({error: false, status: 429, text: ''});
+			if (directRouteUrls.includes(message.url as string)) return cb({error: false, status: 429, text: ''});
 			if (message.url === HORDE_MODELS_URL) return cb({error: false, status: 200, text: models});
 			finishCompletion = cb;
 		});
@@ -488,6 +551,6 @@ describe('askFreeAI recovery', () => {
 		expect(await outcome).toMatchObject({name: 'AbortError'});
 		await vi.advanceTimersByTimeAsync(60_000);
 		expect(onRetry).not.toHaveBeenCalled();
-		expect(sendMessage).toHaveBeenCalledTimes(6);
+		expect(sendMessage).toHaveBeenCalledTimes(8);
 	});
 });

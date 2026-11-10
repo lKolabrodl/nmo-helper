@@ -10,7 +10,7 @@ import {findAnswers} from '../../utils/cases';
 import AnswerLoader from '../Loader/AnswerLoader';
 import VariantLoader from '../Loader/VariantLoader';
 import type {IAnswerModel} from '../Loader/AnswerLoader';
-import type {IVariantModel} from '../Loader/VariantLoader';
+import type {IVariantSearchModel} from '../Loader/VariantLoader';
 import {Status, type ISearchResult} from '../../types';
 import {StatusTitle, LOW_CONFIDENCE_THRESHOLD} from '../../utils/constants';
 import {IconSearch} from '../icons';
@@ -28,9 +28,10 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const [url, setUrlRaw] = useState(initialUrl);
 	const [activeUrl, setActiveUrl] = useState('');
 	const [searchQuery, setSearchQuery] = useState('');
-	const [activeSearch, setActiveSearch] = useState('');
+	const [activeSearch, setActiveSearch] = useState<string | null>(null);
+	const inputValue = activeSearch ?? topic ?? '';
 	//
-	const [variantModel, setVariantModel] = useState<IVariantModel>({loading: false, error: null, data: []});
+	const [variantModel, setVariantModel] = useState<IVariantSearchModel>({loading: false, firstLoading: false, error: null, data: []});
 	const [answerModel, setAnswerModel] = useState<IAnswerModel>({loading: false, error: null, data: null});
 
 	// для дебаг мода
@@ -44,16 +45,18 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 		else if (state.data) setStatus({title: StatusTitle.RUNNING, status: Status.OK});
 	};
 
-	const _updateSearchUrl = (state: IVariantModel): void => {
+	const _updateSearchUrl = (state: IVariantSearchModel): void => {
 		setVariantModel(state);
-		if (state.loading) setStatus({title: StatusTitle.SEARCHING, status: Status.LOADING});
+		if (activeUrl) return;
+		if (state.loading) setStatus({title: state.firstLoading ? StatusTitle.SEARCHING : 'ещё подгружаются результаты…', status: Status.LOADING});
 		else if (state.error) setStatus({title: state.error, status: Status.WARN});
 		else if (state.data.length) setStatus({title: `найдено ${state.data.length} результат(ов)`, status: Status.OK});
 	};
 
 	const search = () => {
-		if (!searchQuery.trim()) return setStatus({title: StatusTitle.ENTER_QUERY, status: Status.ERR});
-		setActiveSearch(searchQuery.trim());
+		if (!inputValue.trim()) return setStatus({title: StatusTitle.ENTER_QUERY, status: Status.ERR});
+		setActiveUrl('');
+		setSearchQuery(inputValue.trim());
 	};
 
 	const _onSelectResult = (result: ISearchResult): void => {
@@ -104,17 +107,17 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 	const isOk = status.status === Status.OK;
 
 	const isLoadingAll = variantModel.loading || answerModel.loading;
-	const canSearch = searchQuery.trim().length;
+	const canSearch = inputValue.trim().length;
 
 	// теxt =/
 	let searchButtonText = 'Найти все варианты';
-	if (variantModel.loading) searchButtonText = 'Ищу в базе…';
+	if (variantModel.loading) searchButtonText = variantModel.firstLoading ? 'Ищу в базе…' : 'Продолжаю поиск…';
 	if (answerModel.loading) searchButtonText = 'Загружаю ответы…';
 
 	return (
 		<div className="nmo-section">
 			<AnswerLoader url={activeUrl} onChange={_updateHtml}/>
-			<VariantLoader text={activeSearch} onChange={_updateSearchUrl}/>
+			<VariantLoader text={searchQuery} onChange={_updateSearchUrl}/>
 
 			<div className="nmo-section-inner">
 				<div className="nmo-fade-up">
@@ -122,8 +125,8 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 					<textarea className="nmo-input"
 						rows={2}
 						disabled={isRunning || isLoadingAll}
-						value={searchQuery}
-						onChange={e => setSearchQuery(e.target.value)}
+						value={inputValue}
+						onChange={e => setActiveSearch(e.target.value)}
 						onKeyDown={handleKeyDown}
 						placeholder="Например: «Аритмии у взрослых, ФП, антиаритмики IC класса…»"/>
 
@@ -138,6 +141,12 @@ const SectionSites: React.FC<{initialUrl: string}> = ({initialUrl}) => {
 					</button>
 
 					<SearchResults results={variantModel.data} selectedUrl={url} onSelect={_onSelectResult}/>
+					{variantModel.loading && !variantModel.firstLoading && (
+						<div className="nmo-search-progress" role="status">
+							<span className="nmo-spinner" aria-hidden="true"/>
+							Ещё подгружаются результаты…
+						</div>
+					)}
 				</div>
 			</div>
 

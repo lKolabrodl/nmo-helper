@@ -1,7 +1,7 @@
 import {fetchViaBackground} from './fetch';
 import {AiRequestError, askAI, type IAiRequestOptions} from './fetch-ai';
 
-export type FreeAiService = 'gpt-oss' | 'qwen' | 'ovh' | 'kilo' | 'horde';
+export type FreeAiService = 'qwen' | 'gpt-oss' | 'jarvis' | 'blockrun' | 'ovh' | 'kilo' | 'horde';
 
 export interface IFreeAiRequestConfig {
 	readonly apiKey: string;
@@ -12,7 +12,7 @@ export interface IFreeAiRequestConfig {
 
 export interface IFreeAiAnswer {
 	readonly correctIndexes: number[];
-	readonly source: 'GPT-OSS 120B' | 'Qwen 3.8 27B' | 'OVH' | 'Kilo' | 'AI Horde';
+	readonly source: 'Qwen 3.8 27B' | 'GPT-OSS 120B' | 'JarvisClaw' | 'BlockRun' | 'OVH' | 'Kilo' | 'AI Horde';
 }
 
 export interface IFreeAiRetryInfo {
@@ -42,6 +42,10 @@ export const OVH_AI_MODEL = 'Meta-Llama-3_3-70B-Instruct';
 export const OVH_OPENAI_URL = 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions';
 export const OVH_GPT_OSS_MODEL = 'gpt-oss-120b';
 export const OVH_QWEN_MODEL = 'Qwen3.8-27B';
+export const JARVIS_AI_URL = 'https://api.jarvisclaw.ai/v1/chat/completions';
+export const JARVIS_AI_MODEL = 'auto/free';
+export const BLOCKRUN_AI_URL = 'https://blockrun.ai/api/v1/chat/completions';
+export const BLOCKRUN_AI_MODEL = 'nvidia/nemotron-3.5-lightning';
 export const KILO_AI_URL = 'https://ai-gateway.kilo.ai/api/v1/chat/completions';
 export const KILO_AI_MODEL = 'kilo-auto/free';
 export const HORDE_AI_URL = 'https://oai.aihorde.net/v1/chat/completions';
@@ -49,21 +53,27 @@ export const HORDE_MODELS_URL = 'https://oai.aihorde.net/v1/models';
 export const HORDE_ANONYMOUS_KEY = '0000000000';
 
 const OVH_TIMEOUT_MS = 30_000;
+const FREE_GATEWAY_TIMEOUT_MS = 30_000;
 const KILO_TIMEOUT_MS = 30_000;
 const HORDE_QUEUE_TIMEOUT_SECONDS = 120;
 const HORDE_CLIENT_TIMEOUT_MS = 125_000;
 const HORDE_MODELS_TIMEOUT_MS = 10_000;
 const HORDE_MAX_ATTEMPTS = 3;
 const HORDE_RETRY_DELAY_MS = 3000;
+
+// Начальный приоритет по общим возможностям, скорости и доступности, без оценки на базе НМО.
+// У шлюзов модель может меняться: в источнике показываем сервис, а не обещаем конкретную модель.
 const FREE_AI_ROUTES = [
-	{service: 'gpt-oss', source: 'GPT-OSS 120B'},
 	{service: 'qwen', source: 'Qwen 3.8 27B'},
+	{service: 'gpt-oss', source: 'GPT-OSS 120B'},
+	{service: 'jarvis', source: 'JarvisClaw'},
+	{service: 'blockrun', source: 'BlockRun'},
 	{service: 'ovh', source: 'OVH'},
 	{service: 'kilo', source: 'Kilo'},
 ] as const;
 
 /**
- * Бесплатный автоматический маршрут: GPT-OSS → Qwen → Llama → Kilo → AI Horde.
+ * Бесплатный маршрут: Qwen → GPT-OSS → JarvisClaw → BlockRun → Llama → Kilo → AI Horde.
  * При ошибке или пустом ответе пробует следующую модель без регистрации.
  * Временные ошибки Horde повторяются с паузой,
  * каждый раз со свежим выбором доступной модели.
@@ -121,6 +131,22 @@ export async function resolveFreeAiRequest(service: FreeAiService): Promise<IFre
 				// Лимит включает рассуждение: 32 токена обрывают ответ до выбора варианта.
 				maxTokens: 2048,
 				extraBody: isGptOss ? {temperature: 0, reasoning_effort: 'low'} : {temperature: 0},
+			},
+		};
+	}
+
+	if (service === 'jarvis' || service === 'blockrun') {
+		const isJarvis = service === 'jarvis';
+		return {
+			// JarvisClaw auto/free принимает только запросы без Authorization.
+			apiKey: '',
+			endpoint: isJarvis ? JARVIS_AI_URL : BLOCKRUN_AI_URL,
+			model: isJarvis ? JARVIS_AI_MODEL : BLOCKRUN_AI_MODEL,
+			requestOptions: {
+				timeoutMs: FREE_GATEWAY_TIMEOUT_MS,
+				// Бесплатный пул может включать модели с внутренним рассуждением.
+				maxTokens: 2048,
+				extraBody: {temperature: 0},
 			},
 		};
 	}

@@ -213,8 +213,8 @@ describe('findAnswers — температура из баг-репорта', ()
 
 describe('findAnswers — нет совпадений', () => {
 
-	it('пустая модель → null', () => {
-		expect(findAnswers([], 'любой вопрос', ['a'])).toBeNull();
+	it.each([[], null, undefined])('пустая модель (%j) → null', model => {
+		expect(findAnswers(model, 'любой вопрос', ['a'])).toBeNull();
 	});
 
 	it('ни один вопрос не похож → null', () => {

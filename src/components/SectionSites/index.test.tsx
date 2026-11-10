@@ -1,6 +1,6 @@
 import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import {NMO_API_TOPIC_ENDPOINT} from '../../utils/constants';
+import {NMO_API_TOPIC_ENDPOINT, StatusTitle} from '../../utils/constants';
 import SectionSites from './index';
 
 interface ITestSearchResult {
@@ -11,6 +11,7 @@ interface ITestSearchResult {
 
 interface ITestVariantModel {
 	readonly loading: boolean;
+	readonly firstLoading: boolean;
 	readonly error: string | null;
 	readonly data: ITestSearchResult[];
 }
@@ -131,6 +132,7 @@ describe('SectionSites', () => {
 		act(() => {
 			testState.variantChange?.({
 				loading: false,
+				firstLoading: false,
 				error: null,
 				data: [result],
 			});
@@ -163,7 +165,7 @@ describe('SectionSites', () => {
 		render(<SectionSites initialUrl=""/>);
 
 		act(() => {
-			testState.variantChange?.({loading: false, error: null, data: [result]});
+			testState.variantChange?.({loading: false, firstLoading: false, error: null, data: [result]});
 		});
 		fireEvent.click(screen.getByRole('button', {name: /Вариант из NMO API/}));
 
@@ -173,5 +175,78 @@ describe('SectionSites', () => {
 			});
 		});
 		expect(testState.storageSet).not.toHaveBeenCalled();
+	});
+
+	it('позволяет выбрать первый результат, пока остальные источники ещё загружаются', async () => {
+		const result: ITestSearchResult = {source: 'first', title: 'Первый результат', url: 'https://rosmedicinfo.ru/first'};
+		const laterResult: ITestSearchResult = {source: 'second', title: 'Поздний результат', url: 'https://24forcare.com/later'};
+		render(<SectionSites initialUrl=""/>);
+
+		act(() => {
+			testState.variantChange?.({loading: true, firstLoading: true, error: null, data: []});
+		});
+		expect(screen.getByRole('button', {name: 'Ищу в базе…'})).toBeDisabled();
+		expect(screen.queryByText('Ещё подгружаются результаты…')).not.toBeInTheDocument();
+
+		act(() => {
+			testState.variantChange?.({loading: true, firstLoading: false, error: null, data: [result]});
+		});
+		expect(screen.getByRole('status')).toHaveTextContent('Ещё подгружаются результаты…');
+		const resultButton = screen.getByRole('button', {name: /Первый результат/});
+		expect(resultButton).toBeEnabled();
+		fireEvent.click(resultButton);
+		await waitFor(() => expect(testState.answerRequest).toEqual({url: result.url}));
+
+		act(() => {
+			testState.answerChange?.({loading: true, error: null, data: null});
+		});
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: StatusTitle.LOADING_ANSWERS, status: 'loading'});
+		expect(screen.getByRole('button', {name: 'Загружаю ответы…'})).toBeDisabled();
+		expect(screen.getByRole('status')).toHaveTextContent('Ещё подгружаются результаты…');
+		testState.setStatus.mockClear();
+
+		act(() => {
+			testState.variantChange?.({loading: false, firstLoading: false, error: null, data: [laterResult, result]});
+		});
+		expect(screen.getByRole('button', {name: /Первый результат/})).toHaveAttribute('aria-pressed', 'true');
+		expect(screen.getByRole('button', {name: /Поздний результат/})).toBeEnabled();
+		expect(screen.queryByText('Ещё подгружаются результаты…')).not.toBeInTheDocument();
+		expect(testState.setStatus).not.toHaveBeenCalled();
+	});
+
+	it('продолжает показывать поиск после первого пустого результата и сообщает об окончательной пустой выдаче', () => {
+		render(<SectionSites initialUrl=""/>);
+
+		act(() => {
+			testState.variantChange?.({loading: true, firstLoading: false, error: null, data: []});
+		});
+		expect(screen.getByRole('status')).toHaveTextContent('Ещё подгружаются результаты…');
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'ещё подгружаются результаты…', status: 'loading'});
+
+		act(() => {
+			testState.variantChange?.({loading: false, firstLoading: false, error: 'ничего не найдено', data: []});
+		});
+		expect(screen.queryByText('Ещё подгружаются результаты…')).not.toBeInTheDocument();
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: 'ничего не найдено', status: 'warn'});
+	});
+
+	it('обновляет статус нового поиска после ошибки загрузки выбранного результата', () => {
+		const result: ITestSearchResult = {source: 'first', title: 'Первый результат', url: 'https://rosmedicinfo.ru/first'};
+		render(<SectionSites initialUrl=""/>);
+		act(() => {
+			testState.variantChange?.({loading: false, firstLoading: false, error: null, data: [result]});
+		});
+		fireEvent.click(screen.getByRole('button', {name: /Первый результат/}));
+		act(() => {
+			testState.answerChange?.({loading: false, error: 'источник недоступен', data: null});
+		});
+
+		fireEvent.change(screen.getByPlaceholderText(/Например:/), {target: {value: 'Новый тест'}});
+		fireEvent.click(screen.getByRole('button', {name: 'Найти все варианты'}));
+		act(() => {
+			testState.variantChange?.({loading: true, firstLoading: true, error: null, data: []});
+		});
+
+		expect(testState.setStatus).toHaveBeenLastCalledWith({title: StatusTitle.SEARCHING, status: 'loading'});
 	});
 });

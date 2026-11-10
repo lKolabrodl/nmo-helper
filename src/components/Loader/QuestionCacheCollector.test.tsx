@@ -21,11 +21,13 @@ beforeAll(() => {
 
 beforeEach(() => {
 	mocks.setQuestion.mockReset();
+	delete window.__NMO_HELPER_STATE__;
 	document.body.innerHTML = createQuizMarkup('Следующий вопрос');
 });
 
 afterEach(() => {
 	cleanup();
+	delete window.__NMO_HELPER_STATE__;
 	document.body.innerHTML = '';
 });
 
@@ -52,6 +54,28 @@ describe('QuestionCacheCollector', () => {
 		render(<QuestionCacheCollector/>);
 
 		fireEvent.click(document.querySelector('.other-button')!);
+
+		expect(mocks.setQuestion).not.toHaveBeenCalled();
+	});
+
+	it('сохраняет выбор до нажатия кнопки перехода', () => {
+		render(<QuestionCacheCollector/>);
+
+		fireEvent.change(document.querySelector('input')!);
+
+		expect(mocks.setQuestion).toHaveBeenCalledWith(
+			'Кардиология - 2024',
+			'Какой вариант правильный?',
+			['Вариант A', 'Вариант B', 'Вариант C'],
+			['Вариант A', 'Вариант C'],
+		);
+	});
+
+	it('игнорирует изменение настроек расширения вне текущего вопроса', () => {
+		document.body.insertAdjacentHTML('beforeend', '<input class="setting" type="checkbox">');
+		render(<QuestionCacheCollector/>);
+
+		fireEvent.change(document.querySelector('.setting')!);
 
 		expect(mocks.setQuestion).not.toHaveBeenCalled();
 	});
@@ -103,7 +127,100 @@ describe('collectCurrentQuestion', () => {
 
 		expect(mocks.setQuestion).not.toHaveBeenCalled();
 	});
+
+	it('берёт варианты из State и сопоставляет их с input без старых классов Material', () => {
+		usePageState();
+		useNewAnswerMarkup();
+
+		collectCurrentQuestion();
+
+		expect(mocks.setQuestion).toHaveBeenCalledWith(
+			'Кардиология - 2024',
+			'Какой вариант правильный?',
+			['Вариант A', 'Вариант B', 'Вариант C'],
+			['Вариант A', 'Вариант C'],
+		);
+	});
+
+	it('использует State, если текст вопроса ещё не появился в DOM', () => {
+		usePageState();
+		useNewAnswerMarkup();
+		document.querySelector('.question-title-text')?.remove();
+
+		collectCurrentQuestion();
+
+		expect(mocks.setQuestion).toHaveBeenCalledWith(
+			'Кардиология - 2024',
+			'Какой вариант правильный?',
+			['Вариант A', 'Вариант B', 'Вариант C'],
+			['Вариант A', 'Вариант C'],
+		);
+	});
+
+	it('не смешивает варианты из State с другим вопросом в DOM', () => {
+		usePageState();
+		window.__NMO_HELPER_STATE__ = {
+			...window.__NMO_HELPER_STATE__!,
+			question: {question: 'Другой вопрос', variants: ['Другой A', 'Другой B'], isSingle: true},
+		};
+
+		collectCurrentQuestion();
+
+		expect(mocks.setQuestion).toHaveBeenCalledWith(
+			'Кардиология - 2024',
+			'Какой вариант правильный?',
+			['Вариант A', 'Вариант B', 'Вариант C'],
+			['Вариант A', 'Вариант C'],
+		);
+	});
+
+	it('не смешивает State другой темы с текущим тестом', () => {
+		usePageState();
+		window.__NMO_HELPER_STATE__ = {...window.__NMO_HELPER_STATE__!, topic: 'Другая тема'};
+		useNewAnswerMarkup();
+
+		collectCurrentQuestion();
+
+		expect(mocks.setQuestion).not.toHaveBeenCalled();
+	});
+
+	it('не сохраняет неполный набор вариантов, пока DOM не готов', () => {
+		usePageState();
+		useNewAnswerMarkup();
+		document.querySelector('label[for="answer-b"]')?.remove();
+
+		collectCurrentQuestion();
+
+		expect(mocks.setQuestion).not.toHaveBeenCalled();
+	});
 });
+
+function usePageState(): void {
+	const question = {
+		question: 'Какой вариант правильный?',
+		variants: ['Вариант A', 'Вариант B', 'Вариант C'],
+		isSingle: false,
+	};
+	window.__NMO_HELPER_STATE__ = {
+		topic: 'Кардиология - 2024 - Предварительное тестирование',
+		question,
+		questions: [question],
+	};
+}
+
+function useNewAnswerMarkup(): void {
+	document.querySelectorAll('.mdc-form-field').forEach((element, index) => {
+		const id = `answer-${['a', 'b', 'c'][index]}`;
+		element.outerHTML = `
+			<mat-checkbox>
+				<div class="mat-internal-form-field">
+					<input id="${id}" type="checkbox" ${index !== 1 ? 'checked' : ''}>
+					<label for="${id}"><span><b>Вариант ${['A', 'B', 'C'][index]}</b></span></label>
+				</div>
+			</mat-checkbox>
+		`;
+	});
+}
 
 function createQuizMarkup(forwardButtonText: string): string {
 	return `

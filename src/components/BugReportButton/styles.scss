@@ -85,6 +85,7 @@
 }
 
 .nmo-bug-preview {
+  min-width: 0;
   padding: 8px 10px;
   background: rgba(0, 0, 0, 0.18);
   border: 1px solid rgba(245, 193, 75, 0.18);
@@ -110,12 +111,12 @@
 
   span {
     color: #fff;
-    word-break: break-word;
   }
 
   > div {
     overflow: hidden;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 

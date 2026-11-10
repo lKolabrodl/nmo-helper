@@ -83,6 +83,8 @@ export const StatusTitle = {
 	SEARCHING: 'ищу в базах ответов...',
 	SEARCHING_ANSWERS: 'ищу ответы...',
 	LOADING_ANSWERS: 'загружаю ответы...',
+	ANSWERS_LOADED: 'ответы загружены, ожидаю вопрос',
+	WAITING_QUESTION: 'ожидаю вопрос и варианты ответа',
 	LOADING_FAILED: 'не удалось загрузить ответы',
 	NOT_FOUND: 'ответы не найдены в базах',
 	ANSWER_NOT_FOUND: 'ответ не найден',

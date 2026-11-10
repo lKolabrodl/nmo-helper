@@ -1,333 +1,317 @@
-import {act, cleanup, fireEvent, render} from '@testing-library/react';
+import {act, cleanup, fireEvent, render, type RenderResult} from '@testing-library/react';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {Status} from '../../types';
 import AutoSolveLoader from './AutoSolveLoader';
 
 const mocks = vi.hoisted(() => ({
-	autoSolveEnabled: true,
-	delayMinSeconds: 0,
-	delayMaxSeconds: 0,
+	enabled: true,
+	min: 5,
+	max: 12,
+	count: 0,
 	status: 'ok',
 	topic: 'Кардиология - 2025',
-	question: 'Какой вариант правильный?',
+	question: 'Какой вариант правильный?' as string | null,
 	variants: ['Вариант A', 'Вариант B', 'Вариант C'],
 	isSingle: true,
 	getCachedAnswer: vi.fn(),
+	cycleCounter: vi.fn(),
 }));
 
+vi.mock('../../hooks/useCycleCounter', () => ({useCycleCounter: mocks.cycleCounter}));
 vi.mock('../../contexts/SettingsContext', () => ({
-	useSettings: () => ({
-		autoSolve: {
-			enabled: mocks.autoSolveEnabled,
-			delayMinSeconds: mocks.delayMinSeconds,
-			delayMaxSeconds: mocks.delayMaxSeconds,
-		},
-	}),
+	useSettings: () => ({autoSolve: {enabled: mocks.enabled, delayMinSeconds: mocks.min, delayMaxSeconds: mocks.max}}),
 }));
-
 vi.mock('../../contexts/PanelStatusContext', () => ({
-	usePanelStatus: () => ({
-		status: {
-			title: 'Ответ найден',
-			status: mocks.status,
-		},
-	}),
+	usePanelStatus: () => ({status: {title: 'Ответ найден', status: mocks.status}}),
 }));
-
 vi.mock('../../contexts/QuestionFinderContext', () => ({
 	useQuestionFinder: () => ({
-		topic: mocks.topic,
-		question: mocks.question,
-		variants: mocks.variants,
-		isSingle: mocks.isSingle,
+		topic: mocks.topic, question: mocks.question, variants: mocks.variants, isSingle: mocks.isSingle,
 	}),
 }));
-
-vi.mock('../../utils/answer-cache', () => ({
-	answerCache: {get: mocks.getCachedAnswer},
-}));
+vi.mock('../../utils/answer-cache', () => ({answerCache: {get: mocks.getCachedAnswer}}));
 
 beforeEach(() => {
-	vi.useFakeTimers();
-	vi.setSystemTime(new Date('2026-08-22T10:00:00Z'));
-
-	mocks.autoSolveEnabled = true;
-	mocks.delayMinSeconds = 0;
-	mocks.delayMaxSeconds = 0;
+	mocks.enabled = true;
+	mocks.min = 5;
+	mocks.max = 12;
+	mocks.count = 0;
 	mocks.status = Status.OK;
 	mocks.topic = 'Кардиология - 2025';
 	mocks.question = 'Какой вариант правильный?';
 	mocks.variants = ['Вариант A', 'Вариант B', 'Вариант C'];
 	mocks.isSingle = true;
-	mocks.getCachedAnswer.mockReset().mockReturnValue({
-		id: 'cached-answer-1',
-		answers: ['Вариант B'],
-		idx: [1],
-	});
-
+	mocks.cycleCounter.mockReset().mockImplementation(() => mocks.count);
+	mocks.getCachedAnswer.mockReset().mockReturnValue({id: 'cached-answer', answers: ['Вариант B'], idx: [1]});
 	document.body.innerHTML = createQuizMarkup('radio');
 });
 
 afterEach(() => {
 	cleanup();
-	document.body.innerHTML = '';
-	vi.clearAllTimers();
 	vi.useRealTimers();
+	document.body.innerHTML = '';
 });
 
-describe('AutoSolveLoader', () => {
-	it('выбирает сохранённый radio-ответ, переходит дальше и не отвечает повторно', async () => {
-		const inputs = getAnswerInputs();
-		const answerClick = vi.fn();
-		const nextClick = vi.fn();
-		inputs[1].addEventListener('click', answerClick);
-		getNextButton().addEventListener('click', nextClick);
-
-		render(<AutoSolveLoader/>);
-		await advanceTime(900);
-
-		expect(mocks.getCachedAnswer).toHaveBeenCalledWith(
-			'Кардиология - 2025',
-			'Какой вариант правильный?',
-			['Вариант A', 'Вариант B', 'Вариант C'],
-		);
-		expect(inputs[0]).not.toBeChecked();
-		expect(inputs[1]).toBeChecked();
-		expect(inputs[2]).not.toBeChecked();
-		expect(answerClick).toHaveBeenCalledOnce();
-		expect(nextClick).toHaveBeenCalledOnce();
-
-		await advanceTime(3000);
-
-		expect(answerClick).toHaveBeenCalledOnce();
-		expect(nextClick).toHaveBeenCalledOnce();
-	});
-
-	it('соблюдает настроенную задержку перед выбором ответа', async () => {
-		mocks.delayMinSeconds = 2;
-		mocks.delayMaxSeconds = 2;
-		const inputs = getAnswerInputs();
-		const nextClick = vi.fn();
-		getNextButton().addEventListener('click', nextClick);
-
-		render(<AutoSolveLoader/>);
-		await advanceTime(2399);
-
-		expect(inputs[1]).not.toBeChecked();
-		expect(nextClick).not.toHaveBeenCalled();
-
-		await advanceTime(1);
-
-		expect(inputs[1]).toBeChecked();
-		expect(nextClick).not.toHaveBeenCalled();
-
-		await advanceTime(300);
-
-		expect(nextClick).toHaveBeenCalledOnce();
-	});
-
-	it('синхронизирует checkbox-варианты с сохранённым множественным ответом', async () => {
-		mocks.isSingle = false;
-		mocks.getCachedAnswer.mockReturnValue({
-			id: 'cached-multi-answer',
-			answers: ['Вариант A', 'Вариант C'],
-			idx: [0, 2],
-		});
-		document.body.innerHTML = createQuizMarkup('checkbox', [1, 2]);
-		const inputs = getAnswerInputs();
-		const clicks = inputs.map(() => vi.fn());
-		const nextClick = vi.fn();
-		inputs.forEach((input, index) => input.addEventListener('click', clicks[index]));
-		getNextButton().addEventListener('click', nextClick);
-
-		render(<AutoSolveLoader/>);
-		await advanceTime(3400);
-
-		expect(inputs[0]).toBeChecked();
-		expect(inputs[1]).not.toBeChecked();
-		expect(inputs[2]).toBeChecked();
-		expect(clicks[0]).toHaveBeenCalledOnce();
-		expect(clicks[1]).toHaveBeenCalledOnce();
-		expect(clicks[2]).not.toHaveBeenCalled();
-		expect(nextClick).toHaveBeenCalledOnce();
-	});
-
-	it('откладывает ответ до периода бездействия после последнего движения мыши', async () => {
-		const inputs = getAnswerInputs();
-		const nextClick = vi.fn();
-		getNextButton().addEventListener('click', nextClick);
-		render(<AutoSolveLoader/>);
-
-		fireEvent.mouseMove(document);
-		await advanceTime(1499);
-		fireEvent.mouseMove(document);
-		await advanceTime(1500);
-
-		expect(inputs[1]).not.toBeChecked();
-
-		await advanceTime(301);
-
-		expect(inputs[1]).toBeChecked();
-		expect(nextClick).not.toHaveBeenCalled();
-
-		await advanceTime(300);
-
-		expect(nextClick).toHaveBeenCalledOnce();
-	});
-
-	it('подтверждает завершение теста после появления диалога', async () => {
-		mocks.status = Status.WARN;
-		document.body.innerHTML = createQuizMarkup('radio', [], true);
-		const finishClick = vi.fn();
-		const confirmClick = vi.fn();
-		getNextButton().addEventListener('click', () => {
-			finishClick();
-			window.setTimeout(() => {
-				document.body.insertAdjacentHTML('beforeend', createFinishDialogMarkup());
-				document.querySelector('#finish-confirm')?.addEventListener('click', confirmClick);
-			}, 100);
-		});
-
-		render(<AutoSolveLoader/>);
-		await advanceTime(1000);
-
-		expect(finishClick).toHaveBeenCalledOnce();
-		expect(confirmClick).toHaveBeenCalledOnce();
-	});
-
-	it.each([
-		['настройка выключена', false, Status.OK, true],
-		['статус панели не разрешает автоответ', true, Status.LOADING, true],
-		['ответ отсутствует в кеше', true, Status.OK, false],
-	] as const)('ничего не нажимает, если %s', async (_name, enabled, status, hasCachedAnswer) => {
-		mocks.autoSolveEnabled = enabled;
-		mocks.status = status;
-		if (!hasCachedAnswer) mocks.getCachedAnswer.mockReturnValue(null);
-		const inputs = getAnswerInputs();
-		const nextClick = vi.fn();
-		getNextButton().addEventListener('click', nextClick);
-
-		render(<AutoSolveLoader/>);
-		await advanceTime(5000);
-
-		expect(inputs.every(input => !input.checked)).toBe(true);
-		expect(nextClick).not.toHaveBeenCalled();
-	});
-
-	it('игнорирует кешированную запись без индексов ответа', async () => {
-		mocks.getCachedAnswer.mockReturnValue({
-			id: 'cached-empty-answer',
-			answers: [],
-			idx: [],
-		});
-		const nextClick = vi.fn();
-		getNextButton().addEventListener('click', nextClick);
-
-		render(<AutoSolveLoader/>);
-		await advanceTime(5000);
-
-		expect(getAnswerInputs().every(input => !input.checked)).toBe(true);
-		expect(nextClick).not.toHaveBeenCalled();
-	});
-
-	it('не нажимает недоступную кнопку перехода', async () => {
-		const nextButton = getNextButton();
-		nextButton.setAttribute('aria-disabled', 'true');
-		const nextClick = vi.fn();
-		nextButton.addEventListener('click', nextClick);
-
-		render(<AutoSolveLoader/>);
-		await advanceTime(1000);
-
-		expect(getAnswerInputs()[1]).toBeChecked();
-		expect(nextClick).not.toHaveBeenCalled();
-	});
-
-	it('использует контейнер варианта, если у radio-ответа нет input', async () => {
-		document.body.innerHTML = createQuizMarkupWithoutInputs();
-		const variants = Array.from(document.querySelectorAll<HTMLElement>('.mdc-form-field span'));
-		const answerClick = vi.fn();
-		const nextClick = vi.fn();
-		variants[1].addEventListener('click', answerClick);
-		getNextButton().addEventListener('click', nextClick);
-
-		render(<AutoSolveLoader/>);
-		await advanceTime(1000);
-
-		expect(answerClick).toHaveBeenCalledOnce();
-		expect(nextClick).toHaveBeenCalledOnce();
-	});
-});
-
-async function advanceTime(ms: number): Promise<void> {
-	await act(async () => {
-		await vi.advanceTimersByTimeAsync(ms);
-	});
+function nextCycle(view: RenderResult): void {
+	mocks.count += 1;
+	view.rerender(<AutoSolveLoader/>);
 }
 
 function getAnswerInputs(): HTMLInputElement[] {
 	return Array.from(document.querySelectorAll<HTMLInputElement>('#questionAnchor input'));
 }
 
-function getNextButton(): HTMLButtonElement {
-	return document.querySelector<HTMLButtonElement>('.question-buttons-primary')!;
+function watchNext(): ReturnType<typeof vi.fn> {
+	const click = vi.fn();
+	document.querySelector('.question-buttons-primary')!.addEventListener('click', click);
+	return click;
 }
 
-function createQuizMarkup(
-	type: 'radio' | 'checkbox',
-	checkedIndexes: readonly number[] = [],
-	finish = false,
-): string {
-	const variants = ['Вариант A', 'Вариант B', 'Вариант C']
-		.map((variant, index) => `
-			<div class="mdc-form-field">
-				<input
-					id="answer-${index}"
-					type="${type}"
-					name="answer"
-					${checkedIndexes.includes(index) ? 'checked' : ''}>
-				<label for="answer-${index}"><span>${variant}</span></label>
-			</div>
-		`)
-		.join('');
+describe('AutoSolveLoader', () => {
+	it('с реальным хуком ждёт интервал перед выбором и новый цикл после движения мыши', async () => {
+		const {useCycleCounter} = await vi.importActual<typeof import('../../hooks/useCycleCounter')>('../../hooks/useCycleCounter');
+		mocks.cycleCounter.mockImplementation(useCycleCounter);
+		mocks.min = 2;
+		mocks.max = 2;
+		vi.useFakeTimers();
+		const next = watchNext();
+		render(<AutoSolveLoader/>);
+		act(() => vi.advanceTimersByTime(1999));
+		expect(getAnswerInputs()[1]).not.toBeChecked();
+		act(() => vi.advanceTimersByTime(1));
+		expect(getAnswerInputs()[1]).toBeChecked();
+		expect(next).not.toHaveBeenCalled();
+		fireEvent.mouseMove(document);
+		act(() => vi.advanceTimersByTime(1500));
+		act(() => vi.advanceTimersByTime(1999));
+		expect(next).not.toHaveBeenCalled();
+		act(() => vi.advanceTimersByTime(1));
+		expect(next).toHaveBeenCalledOnce();
+	});
 
+	it('передаёт хуку только enabled, min и max и ждёт первого цикла', () => {
+		render(<AutoSolveLoader/>);
+		expect(mocks.cycleCounter).toHaveBeenLastCalledWith(true, 5, 12);
+		expect(mocks.getCachedAnswer).not.toHaveBeenCalled();
+		expect(getAnswerInputs().every(input => !input.checked)).toBe(true);
+	});
+
+	it('отмечает radio-ответ на одном цикле и переходит на следующем', () => {
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(getAnswerInputs().map(input => input.checked)).toEqual([false, true, false]);
+		expect(next).not.toHaveBeenCalled();
+		nextCycle(view);
+		expect(next).toHaveBeenCalledOnce();
+	});
+
+	it('читает свежий вопрос и статус только при изменении count', () => {
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(mocks.getCachedAnswer).toHaveBeenCalledOnce();
+
+		mocks.topic = 'Другая тема';
+		mocks.question = 'Другой вопрос';
+		mocks.status = Status.WARN;
+		document.querySelector('.question-title-text')!.textContent = mocks.question;
+		getAnswerInputs()[1].checked = false;
+		view.rerender(<AutoSolveLoader/>);
+		expect(mocks.getCachedAnswer).toHaveBeenCalledOnce();
+		expect(getAnswerInputs()[1]).not.toBeChecked();
+		expect(next).not.toHaveBeenCalled();
+
+		nextCycle(view);
+		expect(mocks.getCachedAnswer).toHaveBeenLastCalledWith(mocks.topic, mocks.question, mocks.variants);
+		expect(getAnswerInputs()[1]).toBeChecked();
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it('на следующем цикле замечает ответ, появившийся в кеше', () => {
+		mocks.getCachedAnswer.mockReturnValue(null);
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(getAnswerInputs()[1]).not.toBeChecked();
+		mocks.getCachedAnswer.mockReturnValue({id: 'cached-answer', answers: ['Вариант B'], idx: [1]});
+		view.rerender(<AutoSolveLoader/>);
+		expect(getAnswerInputs()[1]).not.toBeChecked();
+		nextCycle(view);
+		expect(getAnswerInputs()[1]).toBeChecked();
+	});
+
+	it('синхронизирует весь множественный ответ и проверяет его следующим циклом', () => {
+		mocks.isSingle = false;
+		mocks.getCachedAnswer.mockReturnValue({id: 'multi', answers: ['Вариант A', 'Вариант C'], idx: [0, 2]});
+		document.body.innerHTML = createQuizMarkup('checkbox', [1, 2]);
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(getAnswerInputs().map(input => input.checked)).toEqual([true, false, true]);
+		expect(next).not.toHaveBeenCalled();
+		nextCycle(view);
+		expect(next).toHaveBeenCalledOnce();
+	});
+
+	it('ищет следующий checkbox заново после синхронной перерисовки портала', () => {
+		mocks.isSingle = false;
+		mocks.getCachedAnswer.mockReturnValue({id: 'multi', answers: ['Вариант A', 'Вариант C'], idx: [0, 2]});
+		document.body.innerHTML = createQuizMarkup('checkbox');
+		const next = watchNext();
+		const refresh = () => {
+			const checked = getAnswerInputs().flatMap((input, index) => input.checked ? [index] : []);
+			const template = document.createElement('template');
+			template.innerHTML = createQuizMarkup('checkbox', checked);
+			document.getElementById('questionAnchor')!.replaceWith(template.content.querySelector('#questionAnchor')!);
+			getAnswerInputs().forEach(input => input.addEventListener('click', refresh));
+		};
+		getAnswerInputs().forEach(input => input.addEventListener('click', refresh));
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(getAnswerInputs().map(input => input.checked)).toEqual([true, false, true]);
+		expect(next).not.toHaveBeenCalled();
+		nextCycle(view);
+		expect(next).toHaveBeenCalledOnce();
+	});
+
+	it('не переходит дальше при неудачном клике и пробует снова только на новом count', () => {
+		const answerClick = vi.fn((event: Event) => event.preventDefault());
+		getAnswerInputs()[1].addEventListener('click', answerClick);
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(answerClick).toHaveBeenCalledOnce();
+		expect(getAnswerInputs()[1]).not.toBeChecked();
+		view.rerender(<AutoSolveLoader/>);
+		expect(answerClick).toHaveBeenCalledOnce();
+		nextCycle(view);
+		expect(answerClick).toHaveBeenCalledTimes(2);
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it('ждёт полного множественного ответа, если один из checkbox недоступен', () => {
+		mocks.isSingle = false;
+		mocks.getCachedAnswer.mockReturnValue({id: 'multi', answers: ['Вариант A', 'Вариант C'], idx: [0, 2]});
+		document.body.innerHTML = createQuizMarkup('checkbox');
+		getAnswerInputs()[2].disabled = true;
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		nextCycle(view);
+		expect(getAnswerInputs().map(input => input.checked)).toEqual([true, false, false]);
+		expect(next).not.toHaveBeenCalled();
+		getAnswerInputs()[2].disabled = false;
+		nextCycle(view);
+		expect(getAnswerInputs()[2]).toBeChecked();
+		expect(next).not.toHaveBeenCalled();
+		nextCycle(view);
+		expect(next).toHaveBeenCalledOnce();
+	});
+
+	it('сразу нажимает next, если правильный вариант уже отмечен вручную', () => {
+		getAnswerInputs()[1].checked = true;
+		const answerClick = vi.fn();
+		getAnswerInputs()[1].addEventListener('click', answerClick);
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(answerClick).not.toHaveBeenCalled();
+		expect(next).toHaveBeenCalledOnce();
+	});
+
+	it('сопоставляет ответы по тексту, когда порядок вариантов и сохранённые индексы различаются', () => {
+		mocks.variants = ['Вариант B', 'Вариант A', 'Вариант C'];
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(getAnswerInputs().map(input => input.checked)).toEqual([false, true, false]);
+		expect(next).not.toHaveBeenCalled();
+		nextCycle(view);
+		expect(next).toHaveBeenCalledOnce();
+	});
+
+	it.each([
+		['выключен', false, Status.OK, true],
+		['ответ ещё загружается', true, Status.LOADING, true],
+		['ошибка поиска', true, Status.ERR, true],
+		['ответа нет в кеше', true, Status.OK, false],
+	] as const)('ничего не нажимает, если %s', (_name, enabled, status, hasAnswer) => {
+		mocks.enabled = enabled;
+		mocks.status = status;
+		if (!hasAnswer) mocks.getCachedAnswer.mockReturnValue(null);
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(getAnswerInputs().every(input => !input.checked)).toBe(true);
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it('не выбирает ответ, если DOM уже показывает другой вопрос', () => {
+		document.querySelector('.question-title-text')!.textContent = 'Другой вопрос';
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(mocks.getCachedAnswer).not.toHaveBeenCalled();
+		expect(getAnswerInputs().every(input => !input.checked)).toBe(true);
+	});
+
+	it('не переходит дальше без возможности прочитать отметки', () => {
+		document.querySelectorAll('#questionAnchor input').forEach(input => input.remove());
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		nextCycle(view);
+		expect(next).not.toHaveBeenCalled();
+	});
+
+	it('не нажимает недоступную кнопку перехода', () => {
+		getAnswerInputs()[1].checked = true;
+		const button = document.querySelector('.question-buttons-primary')!;
+		button.setAttribute('aria-disabled', 'true');
+		const next = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(next).not.toHaveBeenCalled();
+		button.removeAttribute('aria-disabled');
+		nextCycle(view);
+		expect(next).toHaveBeenCalledOnce();
+	});
+
+	it('подтверждает завершение на следующем цикле после появления диалога', () => {
+		document.body.innerHTML = createQuizMarkup('radio', [1], true);
+		const finish = watchNext();
+		const view = render(<AutoSolveLoader/>);
+		nextCycle(view);
+		expect(finish).toHaveBeenCalledOnce();
+		document.body.insertAdjacentHTML('beforeend', `
+			<div class="mat-mdc-dialog-surface">
+				<p>Выйти из тестирования?</p>
+				<div class="mat-mdc-dialog-actions"><button id="confirm">Да</button></div>
+			</div>
+		`);
+		const confirm = vi.fn();
+		document.getElementById('confirm')!.addEventListener('click', confirm);
+		mocks.question = null;
+		mocks.status = Status.LOADING;
+		view.rerender(<AutoSolveLoader/>);
+		expect(confirm).not.toHaveBeenCalled();
+		nextCycle(view);
+		expect(confirm).toHaveBeenCalledOnce();
+	});
+});
+
+function createQuizMarkup(type: 'radio' | 'checkbox', checked: readonly number[] = [], finish = false): string {
 	return `
 		<div id="questionAnchor">
 			<div class="question-title-text">Какой вариант правильный?</div>
-			${variants}
+			${['Вариант A', 'Вариант B', 'Вариант C'].map((text, index) => `
+				<div class="mdc-form-field">
+					<input id="answer-${index}" type="${type}" name="answer" ${checked.includes(index) ? 'checked' : ''}>
+					<label for="answer-${index}"><span>${text}</span></label>
+				</div>
+			`).join('')}
 		</div>
 		<div class="question-buttons">
-			<button class="question-buttons-primary">
-				${finish ? 'Завершить тестирование' : 'Следующий вопрос'}
-			</button>
-		</div>
-	`;
-}
-
-function createQuizMarkupWithoutInputs(): string {
-	const variants = ['Вариант A', 'Вариант B', 'Вариант C']
-		.map(variant => `<div class="mdc-form-field"><span>${variant}</span></div>`)
-		.join('');
-
-	return `
-		<div id="questionAnchor">
-			<div class="question-title-text">Какой вариант правильный?</div>
-			${variants}
-		</div>
-		<div class="question-buttons">
-			<button class="question-buttons-primary">Следующий вопрос</button>
-		</div>
-	`;
-}
-
-function createFinishDialogMarkup(): string {
-	return `
-		<div class="mat-mdc-dialog-surface">
-			<p>Выйти из тестирования?</p>
-			<div class="mat-mdc-dialog-actions">
-				<button>Нет</button>
-				<button id="finish-confirm">Да</button>
-			</div>
+			<button class="question-buttons-primary">${finish ? 'Завершить тестирование' : 'Следующий вопрос'}</button>
 		</div>
 	`;
 }

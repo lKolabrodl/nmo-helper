@@ -253,6 +253,34 @@ GitHub automatically adds:
 So the release UI should show four assets total: two manual assets plus the two
 automatic source-code archives.
 
+## Required ZIP mirror on the website
+
+Every release must also provide the public Chromium ZIP directly from
+`nmo-helper.ru`, so users can download it when GitHub is unavailable.
+The website must offer the latest published stable version. Upload its ZIP
+and update all current-version download and mirror links in the same site
+deployment before completing the release.
+
+1. Copy the exact `nmo-helper-chrome-<version>.zip` prepared for the GitHub
+   Release into `assets/downloads/` in the sibling `nmo-helper.ru` repository.
+   Keep the version in the filename. Do not rebuild or repackage the mirror.
+2. Compare SHA-256 checksums of the release ZIP and the website copy; they
+   must match. Commit the mirrored ZIP with the website changes; this path is
+   explicitly allowed by the website's `.gitignore`.
+3. Update the current version and mirror links on `/install`,
+   `/install/chrome`, `/install/yandex`, `/update`, and the current release
+   card on `/releases`. Put “Скачать с сайта” below each ZIP download button
+   or in parentheses next to a text link, pointing directly to
+   `/assets/downloads/nmo-helper-chrome-<version>.zip` on the same site.
+4. Follow the website's `AGENTS.md` and deploy the static site through
+   `python scripts/deploy.py --component site`. The deploy script includes
+   `assets/downloads/` automatically. Keep previously published mirrors.
+5. Verify that the public mirror URL downloads a ZIP directly from
+   `nmo-helper.ru` without redirecting to GitHub, returns HTTP 200, and has the
+   same SHA-256 checksum and manifest version as the release ZIP.
+
+The release is not complete until its website mirror is available and verified.
+
 ## Commit, tag, push
 
 Commit the release after AMO approves and the signed xpi is updated:

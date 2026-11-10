@@ -138,6 +138,19 @@ describe('searchNmoSource', () => {
 		expect(mockFetch).not.toHaveBeenCalled();
 	});
 
+	it.each([
+		{response: {error: true, status: 0, text: ''}, message: 'ошибка сети'},
+		{response: {error: true, status: 0, text: '', message: 'NMO installation registration failed: 401'}, message: 'ошибка сети'},
+		{response: {error: false, status: 401, text: '{}'}, message: 'ошибка 401'},
+		{response: {error: false, status: 503, text: '{}'}, message: 'ошибка 503'},
+	])('передаёт ошибку запроса и не сохраняет её в кеше: $message', async ({response, message}) => {
+		mockFetch.mockResolvedValueOnce(response).mockResolvedValue(ok('{"items":[]}'));
+
+		await expect(searchNmoSource('Тема')).rejects.toThrow(message);
+		await expect(searchNmoSource('Тема')).resolves.toEqual([]);
+		expect(mockFetch).toHaveBeenCalledTimes(2);
+	});
+
 	it('повторно использует результат нормализованного запроса', async () => {
 		mockFetch.mockResolvedValue(ok(JSON.stringify({
 			items: [{title: 'Тема', uid: 'cached.uid'}],

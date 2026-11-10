@@ -1,17 +1,23 @@
 import {useEffect} from 'react';
 import {
 	cleanTopic,
+	findVariantElements,
 	getAnswerInput,
 	getNextQuestionButton,
+	getQuestionAnchor,
+	getQuestionState,
 	getQuestionText,
 	getTopicElement,
+	getTopicState,
 	getVariantElements,
+	getVariantsState,
+	normalizeText,
 } from '../../utils';
 import {questionCache} from '../../utils/question-cache';
 
 /**
- * Headless-компонент: перед переходом к следующему вопросу определяет тему
- * и всегда сохраняет все варианты с выбранными пользователем ответами в памяти.
+ * Сохраняет все варианты и выбранные ответы при изменении выбора и перед
+ * переходом к следующему вопросу независимо от настройки отправки данных.
  *
  * Обработчик установлен на `document` в capture-фазе. Поэтому он успевает
  * прочитать текущий вопрос до того, как портал НМО заменит его DOM, и продолжает
@@ -28,8 +34,21 @@ const QuestionCacheCollector = () => {
 			collectCurrentQuestion();
 		};
 
+		const collectOnAnswerChange = (event: Event): void => {
+			const input = event.target;
+			if (!(input instanceof HTMLInputElement)
+				|| (input.type !== 'radio' && input.type !== 'checkbox')
+				|| !getQuestionAnchor()?.contains(input)) return;
+
+			collectCurrentQuestion();
+		};
+
 		document.addEventListener('click', collectOnForwardClick, true);
-		return () => document.removeEventListener('click', collectOnForwardClick, true);
+		document.addEventListener('change', collectOnAnswerChange, true);
+		return () => {
+			document.removeEventListener('click', collectOnForwardClick, true);
+			document.removeEventListener('change', collectOnAnswerChange, true);
+		};
 	}, []);
 
 	return null;
@@ -38,8 +57,9 @@ const QuestionCacheCollector = () => {
 export default QuestionCacheCollector;
 
 /**
- * Считывает текущую тему, текст вопроса, варианты ответа и состояние связанных
- * radio/checkbox из DOM страницы НМО, затем сохраняет их в {@link questionCache}.
+ * Берёт вопрос и варианты из State страницы, если они соответствуют текущему
+ * DOM, иначе использует DOM. Выбранные ответы читает из связанных radio/checkbox,
+ * найденных по текстам вариантов, и сохраняет их в {@link questionCache}.
  *
  * Тема очищается через {@link cleanTopic} и передаётся в кеш только для
  * определения смены теста. В саму модель сохранённого вопроса она не входит.
@@ -50,18 +70,27 @@ export default QuestionCacheCollector;
  */
 export function collectCurrentQuestion(): void {
 	const topicText = getTopicElement()?.textContent?.replace(/\s+/g, ' ').trim() ?? null;
-	const topic = cleanTopic(topicText);
-	if (!topic) return;
+	const domTopic = cleanTopic(topicText);
+	const stateTopic = cleanTopic(getTopicState());
+	const domQuestion = getQuestionText();
+	const stateQuestion = getQuestionState();
+	const usePageState = stateQuestion !== null
+		&& (domQuestion === null || normalizeText(domQuestion) === normalizeText(stateQuestion))
+		&& (!domTopic || !stateTopic || normalizeText(domTopic) === normalizeText(stateTopic));
 
-	const question = getQuestionText();
-	if (!question) return;
+	const topic = domTopic ?? (usePageState ? stateTopic : null);
+	const question = domQuestion ?? (usePageState ? stateQuestion : null);
+	if (!topic || !question) return;
 
-	const variantElements = getVariantElements();
-	if (!variantElements.length) return;
+	const variants = (usePageState ? getVariantsState() : null)
+		?? getVariantElements().map(element => element.innerText.trim());
+	if (!variants.length) return;
 
-	const variants = variantElements.map(element => element.innerText.trim());
-	const selectedVariants = variantElements.flatMap((element, index) =>
-		getAnswerInput(element)?.checked ? [variants[index]] : []
+	const inputs = findVariantElements(variants).map(element => element ? getAnswerInput(element) : null);
+	// Частичный DOM и повторные совпадения не должны портить уже сохранённый вопрос.
+	if (inputs.some(input => input === null) || new Set(inputs).size !== variants.length) return;
+	const selectedVariants = inputs.flatMap((input, index) =>
+		input?.checked ? [variants[index]] : []
 	);
 
 	if (!selectedVariants.length) return;
